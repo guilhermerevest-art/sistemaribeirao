@@ -62,6 +62,8 @@ interface Actions {
     observacaoGeral?: string;
   }) => Pedido;
   atualizarStatusPedido: (id: string, status: StatusPedido) => void;
+  atualizarPedido: (id: string, patch: Partial<Pedido>) => void;
+  cancelarPedido: (id: string) => void;
   marcarImpresso: (id: string) => void;
   criarOferta: (o: Oferta) => void;
   atualizarOferta: (o: Oferta) => void;
@@ -70,6 +72,11 @@ interface Actions {
   reiniciarDemonstracao: () => void;
   gerarPedidoTeste: () => Pedido;
   debitarPontos: (clienteId: string, resgateId: string) => boolean;
+  criarCliente: (c: Omit<Cliente, 'id' | 'criadoEm' | 'saldoCashback' | 'pontos' | 'pontosAcumuladoTotal'>) => Cliente;
+  atualizarCliente: (c: Cliente) => void;
+  removerCliente: (id: string) => void;
+  creditarCashback: (clienteId: string, valor: number) => void;
+  atualizarProduto: (p: Produto) => void;
   hydrating: () => void;
   carregarOfertas: (o: Oferta[]) => void;
 }
@@ -274,6 +281,56 @@ export const useStore = create<State & Actions>()(
       },
 
       carregarOfertas: (o) => set({ ofertas: o }),
+
+      atualizarPedido: (id, patch) =>
+        set((s) => ({
+          pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+        })),
+
+      cancelarPedido: (id) =>
+        set((s) => {
+          const ped = s.pedidos.find((p) => p.id === id);
+          if (!ped) return s;
+          // Devolve cashback ao cliente.
+          const novosClientes = s.clientes.map((c) =>
+            c.id === ped.clienteId
+              ? { ...c, saldoCashback: c.saldoCashback + ped.cashbackUsado }
+              : c,
+          );
+          return {
+            pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, status: 'cancelado' as const } : p)),
+            clientes: novosClientes,
+          };
+        }),
+
+      criarCliente: (c) => {
+        const novo: Cliente = {
+          id: `c-${Date.now()}`,
+          criadoEm: new Date().toISOString(),
+          saldoCashback: 0,
+          pontos: 0,
+          pontosAcumuladoTotal: 0,
+          ...c,
+        };
+        set((s) => ({ clientes: [...s.clientes, novo] }));
+        return novo;
+      },
+
+      atualizarCliente: (c) =>
+        set((s) => ({ clientes: s.clientes.map((x) => (x.id === c.id ? c : x)) })),
+
+      removerCliente: (id) =>
+        set((s) => ({ clientes: s.clientes.filter((c) => c.id !== id) })),
+
+      creditarCashback: (clienteId, valor) =>
+        set((s) => ({
+          clientes: s.clientes.map((c) =>
+            c.id === clienteId ? { ...c, saldoCashback: c.saldoCashback + valor } : c,
+          ),
+        })),
+
+      atualizarProduto: (p) =>
+        set((s) => ({ produtos: s.produtos.map((x) => (x.id === p.id ? p : x)) })),
     }),
     {
       name: 'ribeirao-mock-v1',
