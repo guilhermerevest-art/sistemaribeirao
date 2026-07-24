@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* Ribeirão — tokens visuais. Açougue de bairro bem cuidado. */
+:root {
+  --sangue: #7B1113;
+  --brasa: #C8461F;
+  --papel: #F7F4EE;
+  --azulejo: #FFFFFF;
+  --carvao: #1C1A19;
+  --sebo: #E8DFCC;
+  --sebo-claro: #F1ECDC;
+  --verde-fiel: #2F5D3A;
+  --amarelo-novo: #B68A2E;
+  --vermelho-risco: #9B2C2C;
+}
+
+@theme inline {
+  --color-sangue: var(--sangue);
+  --color-brasa: var(--brasa);
+  --color-papel: var(--papel);
+  --color-azulejo: var(--azulejo);
+  --color-carvao: var(--carvao);
+  --color-sebo: var(--sebo);
+  --color-sebo-claro: var(--sebo-claro);
+  --color-verde-fiel: var(--verde-fiel);
+  --color-amarelo-novo: var(--amarelo-novo);
+  --color-vermelho-risco: var(--vermelho-risco);
+
+  --color-background: var(--papel);
+  --color-foreground: var(--carvao);
+
+  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jet);
+}
+
+html, body {
+  background: var(--papel);
+  color: var(--carvao);
+}
+
+/* Foco visível forte — público-alvo no balcão. */
+*:focus-visible {
+  outline: 2px solid var(--sangue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Cartão-etiqueta serrilhado. */
+.etiqueta {
+  background: var(--azulejo);
+  position: relative;
+  isolation: isolate;
+}
+.etiqueta::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 0, var(--papel) 5px, transparent 6px);
+  background-size: 10px 10px;
+  background-repeat: repeat-x;
+  background-position: bottom;
+  z-index: 1;
+}
+.etiqueta::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--sebo);
+}
+
+.barcode {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--carvao) 0 1px,
+    transparent 1px 2px,
+    var(--carvao) 2px 4px,
+    transparent 4px 6px,
+    var(--carvao) 6px 7px,
+    transparent 7px 9px,
+    var(--carvao) 9px 12px,
+    transparent 12px 13px,
+    var(--carvao) 13px 14px,
+    transparent 14px 16px
+  );
+  height: 28px;
+  opacity: 0.5;
+}
+
+/* Cupom 80mm — só ativo em /bancada/cupom/[id] */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+.cupom {
+  font-family: var(--font-jet), monospace;
+  color: #000;
+  background: #fff;
+  width: 80mm;
+  margin: 0 auto;
+  padding: 6mm 4mm;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Cabeçalho fixo do celular. */
+.header-fixo {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--azulejo);
+  border-bottom: 1px solid var(--sebo);
+}
+
+/* Tarja do painel da bancada. */
+.bancada-bg {
+  background: var(--carvao);
+  color: var(--papel);
+}
+
+@media (min-width: 768px) {
+  .cupom {
+    font-size: 13px;
+  }
+}

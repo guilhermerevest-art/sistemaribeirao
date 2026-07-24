@@ -1,0 +1,200 @@
+'use client';
+
+import Link from 'next/link';
+import { useMemo } from 'react';
+import { useStore } from '@/lib/store';
+import { HeaderLoja } from '@/components/loja/header';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, Trash2, ChefHat } from 'lucide-react';
+import { brl, formatarPeso } from '@/lib/formato';
+import { CASHBACK_POR_CATEGORIA } from '@/lib/types';
+import { nivelPorPontos } from '@/lib/regras';
+
+interface Sugestao {
+  produtoId: string;
+  motivo: string;
+}
+
+function sugerirParaItens(categorias: Set<string>): Sugestao[] {
+  const out: Sugestao[] = [];
+  if (categorias.has('bovino')) {
+    out.push({ produtoId: 'p-carvao', motivo: 'Vai bem no churrasco' });
+    out.push({ produtoId: 'p-sal-grosso', motivo: 'Combina com o sal grosso' });
+    out.push({ produtoId: 'p-linguica-toscana', motivo: 'Linguiça toscana pra acompanhar' });
+  }
+  if (categorias.has('aves')) {
+    out.push({ produtoId: 'p-bacon', motivo: 'Bacon pra envolver' });
+    out.push({ produtoId: 'p-linguica-apimentada', motivo: 'Pra rechear a carne' });
+    out.push({ produtoId: 'p-almondega', motivo: 'Almôndega também?' });
+  }
+  if (categorias.has('embutidos')) {
+    out.push({ produtoId: 'p-carvao', motivo: 'Carvão pra assar' });
+    out.push({ produtoId: 'p-pao-alho', motivo: 'Pão de alho' });
+    out.push({ produtoId: 'p-calabresa', motivo: 'Calabresa também?' });
+  }
+  return out.slice(0, 3);
+}
+
+export default function CarrinhoPage() {
+  const itens = useStore((s) => s.carrinho.itens);
+  const produtos = useStore((s) => s.produtos);
+  const ofertas = useStore((s) => s.ofertas);
+  const clienteAtual = useStore((s) => s.clientes.find((c) => c.id === s.clienteAtualId));
+  const atualizarItem = useStore((s) => s.atualizarItemCarrinho);
+  const removerItem = useStore((s) => s.removerItemCarrinho);
+
+  const produtoMap = useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
+
+  const subtotal = itens.reduce((s, i) => s + i.subtotal, 0);
+  const categorias = new Set(itens.map((i) => produtoMap.get(i.produtoId)?.categoria).filter(Boolean) as string[]);
+  const sugestoes = useMemo(() => {
+    const base = sugerirParaItens(categorias);
+    // Filtra produtos já no carrinho.
+    const noCarrinho = new Set(itens.map((i) => i.produtoId));
+    return base.filter((s) => !noCarrinho.has(s.produtoId));
+  }, [categorias, itens]);
+
+  const nivel = clienteAtual ? nivelPorPontos(clienteAtual.pontosAcumuladoTotal) : 'bronze';
+  const projecaoCashback = itens.reduce((s, i) => {
+    const p = produtoMap.get(i.produtoId);
+    if (!p) return s;
+    return s + i.subtotal * (CASHBACK_POR_CATEGORIA[p.categoria] + (nivel === 'prata' ? 0.01 : nivel === 'ouro' ? 0.02 : 0));
+  }, 0);
+  const projecaoPontos = Math.floor(subtotal);
+
+  const atual = (idx: number, novoPeso: number) => {
+    const it = itens[idx];
+    if (!it) return;
+    const novoSubtotal = Math.round(novoPeso * it.precoUnitarioAplicado * 100) / 100;
+    atualizarItem(idx, { ...it, pesoKg: novoPeso, subtotal: novoSubtotal });
+  };
+
+  return (
+    <>
+      <HeaderLoja />
+      <main className="mx-auto max-w-3xl px-4 pb-40">
+        <Link href="/loja" className="inline-flex items-center gap-1 text-sm text-carvao/60 hover:text-carvao mt-3">
+          <ChevronLeft className="w-4 h-4" /> continuar comprando
+        </Link>
+
+        <h1 className="font-display font-extrabold text-2xl uppercase mt-3">Seu carrinho</h1>
+
+        {itens.length === 0 ? (
+          <div className="mt-8 rounded-xl bg-azulejo border border-sebo p-8 text-center">
+            <div className="text-5xl mb-2">🥩</div>
+            <p className="text-carvao/70">Seu carrinho está vazio.</p>
+            <Button className="mt-4" onClick={() => (window.location.href = '/loja')}>Ver a vitrine</Button>
+          </div>
+        ) : (
+          <>
+            <ul className="mt-4 space-y-3">
+              {itens.map((it, idx) => {
+                const p = produtoMap.get(it.produtoId);
+                if (!p) return null;
+                return (
+                  <li key={idx} className="bg-azulejo border border-sebo rounded-xl p-4 flex gap-3">
+                    <img src={p.imagem} alt={p.nome} className="w-20 h-20 rounded-md object-cover bg-sebo-claro" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display font-bold uppercase text-sm leading-tight">{p.nome}</div>
+                      {it.preparos.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {it.preparos.map((pr) => (
+                            <span key={pr} className="text-[11px] px-2 py-0.5 rounded-full bg-sebo-claro text-carvao">{pr}</span>
+                          ))}
+                        </div>
+                      )}
+                      {it.observacao && (
+                        <div className="text-xs text-carvao/60 mt-1 italic">"{it.observacao}"</div>
+                      )}
+                      <div className="mt-2 flex items-center gap-2">
+                        <label className="text-xs text-carvao/70">Peso</label>
+                        <input
+                          type="number"
+                          step={0.1}
+                          min={0.1}
+                          max={10}
+                          value={it.pesoKg}
+                          onChange={(e) => atual(idx, Number(e.target.value))}
+                          className="w-20 h-9 rounded-md border border-sebo px-2 font-mono text-sm"
+                        />
+                        <span className="text-xs text-carvao/60">kg</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono font-bold tabular-nums">{brl(it.subtotal)}</div>
+                      <button
+                        onClick={() => removerItem(idx)}
+                        className="mt-2 text-xs text-carvao/60 hover:text-vermelho-risco inline-flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> remover
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {sugestoes.length > 0 && (
+              <section className="mt-6">
+                <div className="flex items-center gap-2 font-display font-bold uppercase text-sm">
+                  <ChefHat className="w-4 h-4" /> Vai bem com isso
+                </div>
+                <div className="grid grid-cols-3 gap-3 mt-3">
+                  {sugestoes.map((s) => {
+                    const p = produtoMap.get(s.produtoId);
+                    if (!p) return null;
+                    return (
+                      <Link
+                        key={s.produtoId}
+                        href={`/loja/produto/${p.slug}`}
+                        className="etiqueta rounded-md overflow-hidden hover:shadow-md transition-shadow"
+                      >
+                        <div className="aspect-square bg-sebo-claro">
+                          <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="px-2 py-2">
+                          <div className="font-display font-bold text-xs uppercase leading-tight line-clamp-2">{p.nome}</div>
+                          <div className="font-mono text-sm font-bold">{brl(p.precoKg)}<span className="text-[10px] text-carvao/60">/kg</span></div>
+                          <div className="text-[10px] text-brasa font-semibold mt-0.5">{s.motivo}</div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            <section className="mt-6 bg-azulejo border border-sebo rounded-xl p-4">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm text-carvao/70">Subtotal</span>
+                <span className="font-mono text-sm">{brl(subtotal)}</span>
+              </div>
+              <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-sebo">
+                <span className="font-display font-bold uppercase">Total</span>
+                <span className="font-mono font-bold text-xl">{brl(subtotal)}</span>
+              </div>
+              <div className="mt-3 rounded-md bg-sebo-claro px-3 py-2 text-sm">
+                Este pedido gera <span className="font-mono font-bold">{brl(projecaoCashback)}</span> de cashback e{' '}
+                <span className="font-mono font-bold">{projecaoPontos}</span> pontos.
+              </div>
+            </section>
+          </>
+        )}
+      </main>
+
+      {itens.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-azulejo border-t border-sebo p-3">
+          <div className="mx-auto max-w-3xl flex items-center gap-3">
+            <div className="flex-1 text-sm">
+              <div className="text-carvao/60">Total</div>
+              <div className="font-mono font-bold text-xl">{brl(subtotal)}</div>
+            </div>
+            <Link href="/loja/checkout">
+              <Button size="lg">Ir ao checkout</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
