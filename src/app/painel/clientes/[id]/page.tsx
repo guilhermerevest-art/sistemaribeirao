@@ -25,15 +25,17 @@ export default function ClienteDetalhePage() {
   const whatsapp = `https://wa.me/55${cliente.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi ${cliente.nome.split(' ')[0]}, aqui é do Açougue Ribeirão.`)}`;
 
   return (
-    <div className="min-h-screen bg-papel">
-      <header className="bg-carvao text-papel p-4 sticky top-0 z-30">
-        <div className="mx-auto max-w-4xl flex items-center gap-3">
-          <Link href="/painel/clientes"><ChevronLeft className="w-5 h-5" /></Link>
-          <div className="font-display font-extrabold text-xl uppercase">{cliente.nome}</div>
+    <div className="min-h-screen bg-papel pb-8">
+      <header className="bg-carvao text-papel sticky top-0 z-30">
+        <div className="mx-auto max-w-4xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
+          <Link href="/painel/clientes" aria-label="Voltar" className="shrink-0 grid place-items-center w-10 h-10 -ml-1.5 rounded-md hover:bg-papel/10">
+            <ChevronLeft className="w-5 h-5" />
+          </Link>
+          <div className="font-display font-extrabold text-base sm:text-xl uppercase truncate min-w-0">{cliente.nome}</div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
+      <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
         <section className="bg-azulejo border border-sebo rounded-xl p-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Campo label="Telefone" valor={formatarTelefone(cliente.telefone)} />
@@ -42,8 +44,8 @@ export default function ClienteDetalhePage() {
             <Campo label="Acumulado" valor={String(cliente.pontosAcumuladoTotal)} />
           </div>
           {cliente.aceitaWhatsapp && (
-            <a href={whatsapp} target="_blank" rel="noreferrer" className="inline-block mt-4">
-              <Button><MessageCircle className="w-4 h-4 mr-1" /> Chamar no WhatsApp</Button>
+            <a href={whatsapp} target="_blank" rel="noreferrer" className="block mt-4">
+              <Button size="lg" className="w-full sm:w-auto"><MessageCircle className="w-4 h-4 mr-1" /> Chamar no WhatsApp</Button>
             </a>
           )}
         </section>
@@ -84,9 +86,9 @@ export default function ClienteDetalhePage() {
 
 function Campo({ label, valor }: { label: string; valor: string }) {
   return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wider text-carvao/60">{label}</div>
-      <div className="font-mono font-semibold mt-1">{valor}</div>
+    <div className="min-w-0">
+      <div className="text-[10px] uppercase tracking-wider text-carvao/60 truncate">{label}</div>
+      <div className="font-mono font-semibold mt-1 truncate">{valor}</div>
     </div>
   );
 }

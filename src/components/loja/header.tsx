@@ -13,43 +13,42 @@ export function HeaderLoja() {
 
   return (
     <header className="header-fixo">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
-        <Link href="/loja" className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-md bg-sangue text-papel grid place-items-center font-display font-extrabold text-lg">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
+        <Link href="/loja" className="flex items-center gap-2 min-w-0 shrink">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-sangue text-papel grid place-items-center font-display font-extrabold text-base sm:text-lg shrink-0">
             R
           </div>
-          <div className="leading-tight">
-            <div className="font-display font-extrabold text-carvao text-lg">Açougue Ribeirão</div>
-            <div className="text-[11px] uppercase tracking-wider text-carvao/60 -mt-0.5">desde 1998</div>
+          <div className="leading-tight min-w-0">
+            <div className="font-display font-extrabold text-carvao text-sm sm:text-lg truncate">Açougue Ribeirão</div>
+            <div className="hidden sm:block text-[11px] uppercase tracking-wider text-carvao/60 -mt-0.5">desde 1998</div>
           </div>
         </Link>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-3 shrink-0">
           {cliente ? (
-            <Link href="/minha-conta" className="hidden sm:flex items-center gap-2 text-sm">
-              <span className="text-carvao/60">Oi,</span>
-              <span className="font-semibold">{cliente.nome.split(' ')[0]}</span>
+            <Link href="/minha-conta" className="flex items-center gap-1 text-xs sm:text-sm max-w-[68px] sm:max-w-none">
+              <span className="hidden sm:inline text-carvao/60">Oi,</span>
+              <span className="font-semibold truncate">{cliente.nome.split(' ')[0]}</span>
             </Link>
           ) : (
-            <Link href="/loja/checkout" className="hidden sm:flex items-center gap-1 text-sm font-semibold">
+            <Link href="/loja/checkout" className="flex items-center gap-1 text-xs sm:text-sm font-semibold" aria-label="Entrar">
               <Phone className="w-4 h-4" />
-              Entrar
+              <span className="hidden sm:inline">Entrar</span>
             </Link>
           )}
 
           {cliente && cliente.saldoCashback > 0 && (
             <Link
               href="/minha-conta"
-              className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-sebo-claro text-xs"
+              className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-md bg-sebo-claro text-[11px] sm:text-xs"
             >
-              <Sparkles className="w-3.5 h-3.5 text-brasa" />
-              <span className="font-mono font-semibold">{brl(cliente.saldoCashback)}</span>
+              <Sparkles className="w-3.5 h-3.5 text-brasa shrink-0" />
+              <span className="font-mono font-semibold whitespace-nowrap">{brl(cliente.saldoCashback)}</span>
             </Link>
           )}
 
-          <Link href="/loja/carrinho" className="relative inline-flex items-center gap-1 px-3 h-11 rounded-md bg-carvao text-papel">
+          <Link href="/loja/carrinho" className="relative inline-flex items-center justify-center w-11 h-11 rounded-md bg-carvao text-papel shrink-0" aria-label="Carrinho">
             <ShoppingCart className="w-5 h-5" />
-            <span className="font-mono text-sm">{qtdItens}</span>
             {qtdItens > 0 && (
               <span className="absolute -top-1 -right-1 bg-brasa text-papel text-[10px] font-bold rounded-full w-5 h-5 grid place-items-center">
                 {qtdItens}

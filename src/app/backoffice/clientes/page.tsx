@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { brl, formatarData, formatarTelefone, normalizarTelefone } from '@/lib/formato';
 import { Button } from '@/components/ui/button';
-import { Home, Search, Plus, Pencil, Trash2, MessageCircle, X, Save } from 'lucide-react';
+import { AdminHeader } from '@/components/ui/admin-header';
+import { Search, Plus, Pencil, Trash2, MessageCircle, X, Save, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Cliente } from '@/lib/types';
 
@@ -18,7 +18,6 @@ export default function BackofficeClientesPage() {
   const creditarCashback = useStore((s) => s.creditarCashback);
 
   const [busca, setBusca] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
   const [modal, setModal] = useState<{ tipo: 'criar' | 'editar' | 'creditar' | null; cliente?: Cliente }>({ tipo: null });
 
   const filtrados = useMemo(() => {
@@ -33,17 +32,10 @@ export default function BackofficeClientesPage() {
   }, [clientes, busca]);
 
   return (
-    <div className="min-h-screen bg-papel">
-      <header className="bg-carvao text-papel p-4 sticky top-0 z-30">
-        <div className="mx-auto max-w-6xl flex items-center gap-3">
-          <Link href="/backoffice" className="flex items-center gap-2">
-            <Home className="w-5 h-5" />
-            <div className="font-display font-extrabold text-xl uppercase">Backoffice · Clientes</div>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-papel pb-8">
+      <AdminHeader titulo="Backoffice · Clientes" voltarPara="/backoffice" />
 
-      <main className="mx-auto max-w-6xl px-4 py-4 space-y-4">
+      <main className="mx-auto max-w-3xl px-4 py-4 space-y-3">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-carvao/40" />
@@ -51,86 +43,83 @@ export default function BackofficeClientesPage() {
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar por nome ou telefone…"
-              className="w-full h-11 pl-10 pr-3 rounded-md border border-sebo"
+              className="w-full h-12 pl-10 pr-3 rounded-md border border-sebo bg-azulejo"
             />
           </div>
-          <Button onClick={() => setModal({ tipo: 'criar' })}>
+          <Button onClick={() => setModal({ tipo: 'criar' })} size="lg" className="sm:w-auto">
             <Plus className="w-4 h-4 mr-1" /> Cadastrar cliente
           </Button>
         </div>
 
-        <div className="bg-azulejo border border-sebo rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-sebo-claro text-carvao/70 text-xs uppercase">
-              <tr>
-                <th className="text-left p-3">Cliente</th>
-                <th className="text-left p-3">Telefone</th>
-                <th className="text-right p-3">Cashback</th>
-                <th className="text-right p-3">Pontos</th>
-                <th className="text-right p-3">Pedidos</th>
-                <th className="text-right p-3">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((c) => {
-                const totalPedidos = pedidos.filter((p) => p.clienteId === c.id).length;
-                return (
-                  <tr key={c.id} className="border-t border-sebo">
-                    <td className="p-3">
-                      <div className="font-display font-bold uppercase">{c.nome}</div>
-                      <div className="text-xs text-carvao/60">Desde {formatarData(c.criadoEm)}</div>
-                    </td>
-                    <td className="p-3 font-mono text-xs">{formatarTelefone(c.telefone)}</td>
-                    <td className="p-3 text-right font-mono">{brl(c.saldoCashback)}</td>
-                    <td className="p-3 text-right font-mono">{c.pontos}</td>
-                    <td className="p-3 text-right font-mono">{totalPedidos}</td>
-                    <td className="p-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => setModal({ tipo: 'creditar', cliente: c })}
-                          className="h-9 px-2 rounded-md bg-sebo-claro text-carvao text-xs font-semibold inline-flex items-center gap-1"
-                          title="Creditar cashback"
-                        >
-                          <Plus className="w-3.5 h-3.5" /> cb
-                        </button>
-                        <button
-                          onClick={() => setModal({ tipo: 'editar', cliente: c })}
-                          className="h-9 w-9 grid place-items-center rounded-md bg-sebo-claro text-carvao"
-                          title="Editar"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <a
-                          href={`https://wa.me/55${c.telefone.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="h-9 w-9 grid place-items-center rounded-md bg-verde-fiel text-papel"
-                          title="WhatsApp"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </a>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Remover ${c.nome}?`)) remover(c.id);
-                          }}
-                          className="h-9 w-9 grid place-items-center rounded-md bg-vermelho-risco text-papel"
-                          title="Remover"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {filtrados.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-carvao/60">Nenhum cliente encontrado.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <div className="text-xs text-carvao/60">{filtrados.length} cliente{filtrados.length === 1 ? '' : 's'}</div>
+
+        <ul className="space-y-2">
+          {filtrados.map((c) => {
+            const totalPedidos = pedidos.filter((p) => p.clienteId === c.id).length;
+            return (
+              <li key={c.id} className="bg-azulejo border border-sebo rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display font-bold uppercase truncate">{c.nome}</div>
+                    <div className="text-xs text-carvao/60 font-mono">{formatarTelefone(c.telefone)}</div>
+                    <div className="text-[11px] text-carvao/50 mt-0.5">Cliente desde {formatarData(c.criadoEm)}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-mono font-bold text-brasa">{brl(c.saldoCashback)}</div>
+                    <div className="text-[11px] text-carvao/60">{c.pontos} pts · {totalPedidos} pedido{totalPedidos === 1 ? '' : 's'}</div>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  <button
+                    onClick={() => setModal({ tipo: 'creditar', cliente: c })}
+                    className="h-11 rounded-md bg-sebo-claro text-carvao text-xs font-semibold flex flex-col items-center justify-center gap-0.5"
+                    title="Creditar cashback"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    Cashback
+                  </button>
+                  <button
+                    onClick={() => setModal({ tipo: 'editar', cliente: c })}
+                    className="h-11 rounded-md bg-sebo-claro text-carvao text-xs font-semibold flex flex-col items-center justify-center gap-0.5"
+                    title="Editar"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Editar
+                  </button>
+                  {c.aceitaWhatsapp ? (
+                    <a
+                      href={`https://wa.me/55${c.telefone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="h-11 rounded-md bg-verde-fiel text-papel text-xs font-semibold flex flex-col items-center justify-center gap-0.5"
+                      title="WhatsApp"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                  ) : (
+                    <div className="h-11 rounded-md bg-sebo text-carvao/40 text-[11px] font-semibold flex items-center justify-center text-center px-1">
+                      Sem WhatsApp
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (confirm(`Remover ${c.nome}?`)) remover(c.id);
+                    }}
+                    className="h-11 rounded-md bg-vermelho-risco text-papel text-xs font-semibold flex flex-col items-center justify-center gap-0.5"
+                    title="Remover"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Remover
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+          {filtrados.length === 0 && (
+            <li className="p-10 text-center text-carvao/60 bg-azulejo border border-sebo rounded-xl">Nenhum cliente encontrado.</li>
+          )}
+        </ul>
       </main>
 
       {modal.tipo === 'criar' && (
@@ -189,29 +178,29 @@ function ModalCliente({
   const [aceita, setAceita] = useState(cliente?.aceitaWhatsapp ?? true);
 
   return (
-    <div className="fixed inset-0 z-50 bg-carvao/60 grid place-items-center p-4">
-      <div className="bg-azulejo rounded-xl p-5 w-full max-w-md shadow-xl">
-        <div className="flex items-center justify-between mb-4">
+    <div className="fixed inset-0 z-50 bg-carvao/60 flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-azulejo rounded-t-2xl sm:rounded-xl w-full sm:max-w-md shadow-xl max-h-[92vh] overflow-auto">
+        <div className="p-4 sm:p-5 border-b border-sebo flex items-center justify-between sticky top-0 bg-azulejo">
           <div className="font-display font-extrabold uppercase">{cliente ? 'Editar cliente' : 'Cadastrar cliente'}</div>
-          <button onClick={onClose}><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-1 -mr-1"><X className="w-5 h-5" /></button>
         </div>
-        <div className="space-y-3">
+        <div className="p-4 sm:p-5 space-y-3">
           <label className="block">
             <span className="text-xs text-carvao/70">Nome</span>
-            <input value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1 w-full h-11 rounded-md border border-sebo px-3" />
+            <input value={nome} onChange={(e) => setNome(e.target.value)} className="mt-1 w-full h-12 rounded-md border border-sebo px-3" />
           </label>
           <label className="block">
             <span className="text-xs text-carvao/70">Telefone (somente números, com DDD)</span>
-            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="34999998888" className="mt-1 w-full h-11 rounded-md border border-sebo px-3 font-mono" />
+            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="34999998888" inputMode="numeric" className="mt-1 w-full h-12 rounded-md border border-sebo px-3 font-mono" />
           </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={aceita} onChange={(e) => setAceita(e.target.checked)} className="w-4 h-4" />
+          <label className="flex items-center gap-2 text-sm py-1">
+            <input type="checkbox" checked={aceita} onChange={(e) => setAceita(e.target.checked)} className="w-5 h-5" />
             Aceita receber mensagens no WhatsApp
           </label>
         </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onSalvar({ nome, telefone, aceitaWhatsapp: aceita })}>
+        <div className="p-4 sm:p-5 border-t border-sebo flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sticky bottom-0 bg-azulejo">
+          <Button variant="ghost" onClick={onClose} size="lg">Cancelar</Button>
+          <Button onClick={() => onSalvar({ nome, telefone, aceitaWhatsapp: aceita })} size="lg">
             <Save className="w-4 h-4 mr-1" /> Salvar
           </Button>
         </div>
@@ -231,29 +220,32 @@ function ModalCreditarCashback({
 }) {
   const [valor, setValor] = useState('5');
   return (
-    <div className="fixed inset-0 z-50 bg-carvao/60 grid place-items-center p-4">
-      <div className="bg-azulejo rounded-xl p-5 w-full max-w-sm shadow-xl">
-        <div className="flex items-center justify-between mb-4">
+    <div className="fixed inset-0 z-50 bg-carvao/60 flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-azulejo rounded-t-2xl sm:rounded-xl w-full sm:max-w-sm shadow-xl">
+        <div className="p-4 sm:p-5 flex items-center justify-between">
           <div className="font-display font-extrabold uppercase">Creditar cashback</div>
-          <button onClick={onClose}><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-1 -mr-1"><X className="w-5 h-5" /></button>
         </div>
-        <p className="text-sm text-carvao/70 mb-3">
-          Para <strong>{cliente.nome}</strong>. Saldo atual: {brl(cliente.saldoCashback)}.
-        </p>
-        <label className="block">
-          <span className="text-xs text-carvao/70">Valor (R$)</span>
-          <input
-            type="number"
-            step="0.50"
-            min="0.50"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            className="mt-1 w-full h-11 rounded-md border border-sebo px-3 font-mono"
-          />
-        </label>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => {
+        <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+          <p className="text-sm text-carvao/70 mb-3">
+            Para <strong>{cliente.nome}</strong>. Saldo atual: {brl(cliente.saldoCashback)}.
+          </p>
+          <label className="block">
+            <span className="text-xs text-carvao/70">Valor (R$)</span>
+            <input
+              type="number"
+              step="0.50"
+              min="0.50"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              inputMode="decimal"
+              className="mt-1 w-full h-12 rounded-md border border-sebo px-3 font-mono"
+            />
+          </label>
+        </div>
+        <div className="p-4 sm:p-5 border-t border-sebo flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} size="lg">Cancelar</Button>
+          <Button size="lg" onClick={() => {
             const v = Number(valor);
             if (!v || v <= 0) { toast.error('Valor inválido'); return; }
             onCreditar(v);

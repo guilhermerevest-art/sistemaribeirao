@@ -134,6 +134,16 @@ html, body {
   border-bottom: 1px solid var(--sebo);
 }
 
+/* Some a barra de rolagem mas mantém o scroll — usado em navegações
+   horizontais de header que não podem quebrar linha em telas pequenas. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Tarja do painel da bancada. */
 .bancada-bg {
   background: var(--carvao);

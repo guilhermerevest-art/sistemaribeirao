@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { brl } from '@/lib/formato';
-import { Home, Users, ShoppingBag, Tag, Package, ChevronRight, BarChart3, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Users, ShoppingBag, Tag, Package, ChevronRight, BarChart3, RotateCcw } from 'lucide-react';
+import { AdminHeader } from '@/components/ui/admin-header';
 
 export default function BackofficePage() {
   const pedidos = useStore((s) => s.pedidos);
@@ -27,26 +27,23 @@ export default function BackofficePage() {
   const ativas = ofertas.filter((o) => o.ativa).length;
 
   return (
-    <div className="min-h-screen bg-papel">
-      <header className="bg-carvao text-papel p-4 sticky top-0 z-30">
-        <div className="mx-auto max-w-6xl flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Home className="w-5 h-5" />
-            <div className="font-display font-extrabold text-2xl uppercase">Backoffice</div>
-          </Link>
-          <div className="ml-auto">
-            <button
-              onClick={() => { if (confirm('Reiniciar a demonstração?')) reiniciar(); }}
-              className="text-papel/70 hover:text-papel p-2"
-              title="Reiniciar demonstração"
-            >
-              <RotateCcw />
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-papel pb-8">
+      <AdminHeader
+        titulo="Backoffice"
+        voltarPara="/"
+        acoes={
+          <button
+            onClick={() => { if (confirm('Reiniciar a demonstração?')) reiniciar(); }}
+            className="w-10 h-10 grid place-items-center rounded-md text-papel/80 hover:text-papel hover:bg-papel/10"
+            title="Reiniciar demonstração"
+            aria-label="Reiniciar demonstração"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </button>
+        }
+      />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+      <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KPI label="Pedidos hoje" valor={String(pedHoje.length)} />
           <KPI label="Faturamento hoje" valor={brl(fat)} />
@@ -105,9 +102,9 @@ export default function BackofficePage() {
 
 function KPI({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className="bg-azulejo border border-sebo rounded-xl p-4">
-      <div className="text-[10px] uppercase tracking-wider text-carvao/60">{label}</div>
-      <div className="font-mono font-extrabold text-2xl mt-2 tabular-nums">{valor}</div>
+    <div className="bg-azulejo border border-sebo rounded-xl p-3 sm:p-4 min-w-0">
+      <div className="text-[10px] sm:text-xs uppercase tracking-wider text-carvao/60 truncate">{label}</div>
+      <div className="font-mono font-extrabold text-lg sm:text-2xl mt-1.5 sm:mt-2 tabular-nums truncate">{valor}</div>
     </div>
   );
 }
@@ -116,7 +113,7 @@ function Modulo({ href, icon, titulo, subtitulo, descricao }: { href: string; ic
   return (
     <Link
       href={href}
-      className="bg-azulejo border border-sebo rounded-xl p-5 hover:shadow-md transition-shadow flex flex-col gap-2"
+      className="bg-azulejo border border-sebo rounded-xl p-5 hover:shadow-md active:bg-sebo-claro transition-shadow flex flex-col gap-2"
     >
       <div className="w-12 h-12 rounded-md bg-sangue text-papel grid place-items-center">{icon}</div>
       <div className="font-display font-extrabold uppercase text-lg">{titulo}</div>

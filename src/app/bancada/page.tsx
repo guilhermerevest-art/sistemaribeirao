@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Printer, Volume2, VolumeX, Plus, Bike, Store } from 'lucide-react';
+import { Printer, PrinterCheck, Volume2, VolumeX, Plus, Bike, Store } from 'lucide-react';
 import { useStore } from '@/lib/store';
-import { useAutoAvanco, useSyncEntreAbas } from '@/components/ui/sync';
+import { ImpressaoAutomatica, useAutoAvanco, useSyncEntreAbas } from '@/components/ui/sync';
 import { Button } from '@/components/ui/button';
 import { brl, formatarHora, formatarTelefone } from '@/lib/formato';
 import type { Pedido, StatusPedido } from '@/lib/types';
@@ -23,6 +23,8 @@ export default function BancadaPage() {
   const marcarImpresso = useStore((s) => s.marcarImpresso);
   const somBancada = useStore((s) => s.somBancada);
   const setSomBancada = useStore((s) => s.setSomBancada);
+  const impressaoAutomatica = useStore((s) => s.impressaoAutomatica);
+  const setImpressaoAutomatica = useStore((s) => s.setImpressaoAutomatica);
   const gerarPedidoTeste = useStore((s) => s.gerarPedidoTeste);
   const produtos = useStore((s) => s.produtos);
 
@@ -39,27 +41,43 @@ export default function BancadaPage() {
 
   return (
     <div className="min-h-screen bancada-bg">
-      <header className="bg-carvao border-b border-papel/20 px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-papel">R</div>
-          <div className="font-display font-extrabold text-2xl text-papel uppercase">Bancada</div>
+      <header className="bg-carvao border-b border-papel/20 px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 sticky top-0 z-30">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-papel">R</div>
+          <div className="font-display font-extrabold text-lg sm:text-2xl text-papel uppercase">Bancada</div>
         </Link>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar [&>*]:shrink-0 max-w-[62vw] sm:max-w-none -mr-1 pr-1 py-1">
+          <button
+            onClick={() => setImpressaoAutomatica(!impressaoAutomatica)}
+            className={`w-10 h-10 grid place-items-center rounded-md ${impressaoAutomatica ? 'text-verde-fiel' : 'text-papel/50'} hover:bg-papel/10`}
+            title={impressaoAutomatica ? 'Impressão automática ligada — clique para desligar' : 'Impressão automática desligada — clique para ligar'}
+            aria-label="Impressão automática"
+          >
+            {impressaoAutomatica ? <PrinterCheck className="w-5 h-5" /> : <Printer className="w-5 h-5" />}
+          </button>
           <button
             onClick={() => setSomBancada(!somBancada)}
-            className="text-papel/80 hover:text-papel p-2"
+            className="w-10 h-10 grid place-items-center rounded-md text-papel/80 hover:bg-papel/10"
             title={somBancada ? 'Mudo' : 'Som ligado'}
+            aria-label="Som"
           >
-            {somBancada ? <Volume2 /> : <VolumeX />}
+            {somBancada ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>
           <Link href="/painel">
-            <Button variant="secondary" size="sm">Painel do dono</Button>
+            <Button variant="secondary" size="sm">Painel</Button>
           </Link>
           <Button onClick={gerarPedidoTeste} size="sm">
-            <Plus className="w-4 h-4 mr-1" /> Gerar pedido de teste
+            <Plus className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Gerar pedido de teste</span>
+            <span className="sm:hidden">Teste</span>
           </Button>
         </div>
       </header>
+
+      {/* Impressão automática: pedidos novos disparam o cupom sozinhos
+          num iframe oculto. Exige a impressora térmica como padrão do
+          Windows e o navegador aberto com --kiosk-printing (ver README). */}
+      <ImpressaoAutomatica />
 
       <main className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3" key={tick}>
         <Coluna titulo="Novos" pedidos={novos} tone="sangue" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} />
@@ -156,14 +174,14 @@ function Coluna({
               <div className="grid grid-cols-2 gap-2 mt-3">
                 <button
                   onClick={() => onAcao(p, 'imprimir')}
-                  className="h-12 rounded-md bg-carvao text-papel font-semibold flex items-center justify-center gap-1"
+                  className="h-14 rounded-md bg-carvao text-papel font-semibold flex items-center justify-center gap-1 active:opacity-80"
                 >
                   <Printer className="w-4 h-4" /> Imprimir
                 </button>
                 {p.status === 'novo' && (
                   <button
                     onClick={() => onAcao(p, 'iniciar')}
-                    className="h-12 rounded-md bg-brasa text-papel font-semibold"
+                    className="h-14 rounded-md bg-brasa text-papel font-semibold active:opacity-80"
                   >
                     Iniciar
                   </button>
@@ -171,7 +189,7 @@ function Coluna({
                 {p.status === 'preparando' && (
                   <button
                     onClick={() => onAcao(p, 'pronto')}
-                    className="h-12 rounded-md bg-verde-fiel text-papel font-semibold"
+                    className="h-14 rounded-md bg-verde-fiel text-papel font-semibold active:opacity-80"
                   >
                     Pronto
                   </button>
@@ -179,7 +197,7 @@ function Coluna({
                 {p.status === 'pronto' && (
                   <button
                     onClick={() => onAcao(p, 'entregue')}
-                    className="h-12 rounded-md bg-sebo text-carvao font-semibold"
+                    className="h-14 rounded-md bg-sebo text-carvao font-semibold active:opacity-80"
                   >
                     Entregue
                   </button>

@@ -21,6 +21,24 @@ export default function CupomPage() {
     if (!pedido) router.push('/bancada');
   }, [pedido, router]);
 
+  // Impressão automática: quando aberto com ?auto=1 (usado pela bancada
+  // dentro de um iframe oculto), imprime sozinho e avisa a janela pai.
+  useEffect(() => {
+    if (!pedido) return;
+    if (typeof window === 'undefined') return;
+    const auto = new URLSearchParams(window.location.search).get('auto') === '1';
+    if (!auto || jaImpresso.current) return;
+    jaImpresso.current = true;
+    marcarImpresso(pedido.id);
+    const avisarPai = () => {
+      window.parent?.postMessage({ tipo: 'ribeirao-cupom-impresso', pedidoId: pedido.id }, '*');
+    };
+    window.onafterprint = avisarPai;
+    // Pequeno atraso pra garantir que o layout terminou de pintar.
+    const t = setTimeout(() => window.print(), 350);
+    return () => clearTimeout(t);
+  }, [pedido, marcarImpresso]);
+
   if (!pedido || !cliente) return null;
 
   const nivel = nivelPorPontos(cliente.pontosAcumuladoTotal);

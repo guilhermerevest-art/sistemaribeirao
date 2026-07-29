@@ -6,6 +6,7 @@ import { useStore } from '@/lib/store';
 import { brl, formatarData, formatarTelefone } from '@/lib/formato';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AdminHeader } from '@/components/ui/admin-header';
 import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight } from 'lucide-react';
 import type { Cliente, Frequencia, Pedido } from '@/lib/types';
 
@@ -112,32 +113,31 @@ export default function PainelPage() {
   const maxFat = Math.max(1, ...fat30d.map((d) => d.valor));
 
   return (
-    <div className="min-h-screen bg-papel">
-      <header className="bg-carvao text-papel p-4 sticky top-0 z-30">
-        <div className="mx-auto max-w-6xl flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-papel">R</div>
-            <div className="font-display font-extrabold text-2xl uppercase">Painel do dono</div>
-          </Link>
-          <div className="ml-auto flex items-center gap-2">
+    <div className="min-h-screen bg-papel pb-8">
+      <AdminHeader
+        titulo="Painel do dono"
+        voltarPara="/"
+        acoes={
+          <>
             <Link href="/bancada"><Button variant="secondary" size="sm">Bancada</Button></Link>
             <Link href="/painel/clientes"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Clientes</Button></Link>
-            <Link href="/painel/ofertas"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Ofertas</Button></Link>
+            <Link href="/backoffice/promocoes"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Ofertas</Button></Link>
             <Link href="/painel/campanhas"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Campanhas</Button></Link>
             <button
               onClick={() => {
                 if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) reiniciar();
               }}
-              className="text-papel/70 hover:text-papel p-2"
+              className="w-10 h-10 grid place-items-center rounded-md text-papel/70 hover:text-papel hover:bg-papel/10"
               title="Reiniciar demonstração"
+              aria-label="Reiniciar demonstração"
             >
-              <RotateCcw />
+              <RotateCcw className="w-5 h-5" />
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+      <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPIs */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KPI label="Faturamento do dia" valor={brl(stats.fatDia)} icon={<DollarSign />} />
@@ -149,17 +149,20 @@ export default function PainelPage() {
         {/* Faturamento 30d */}
         <section className="bg-azulejo border border-sebo rounded-xl p-4">
           <div className="font-display font-bold uppercase text-sm mb-3">Faturamento — últimos 30 dias</div>
-          <div className="flex items-end gap-1 h-40">
-            {fat30d.map((d) => (
-              <div key={d.dia} className="flex-1 flex flex-col items-center gap-1" title={`${d.dia}: ${brl(d.valor)}`}>
-                <div
-                  className="w-full bg-sangue rounded-t-sm"
-                  style={{ height: `${(d.valor / maxFat) * 100}%`, minHeight: d.valor > 0 ? '4px' : '0' }}
-                />
-                <div className="text-[9px] text-carvao/60 font-mono -rotate-45 origin-top-left">{d.dia}</div>
-              </div>
-            ))}
+          <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+            <div className="flex items-end gap-1 h-40 min-w-[620px]">
+              {fat30d.map((d) => (
+                <div key={d.dia} className="flex-1 flex flex-col items-center gap-1" title={`${d.dia}: ${brl(d.valor)}`}>
+                  <div
+                    className="w-full bg-sangue rounded-t-sm"
+                    style={{ height: `${(d.valor / maxFat) * 100}%`, minHeight: d.valor > 0 ? '4px' : '0' }}
+                  />
+                  <div className="text-[9px] text-carvao/60 font-mono -rotate-45 origin-top-left whitespace-nowrap">{d.dia}</div>
+                </div>
+              ))}
+            </div>
           </div>
+          <div className="text-[11px] text-carvao/40 mt-2 sm:hidden">Arraste para o lado para ver os outros dias →</div>
         </section>
 
         {/* Frequência */}
@@ -179,15 +182,15 @@ export default function PainelPage() {
         {/* Top produtos */}
         <section className="bg-azulejo border border-sebo rounded-xl p-4">
           <div className="font-display font-bold uppercase text-sm mb-3">Top 10 produtos</div>
-          <ul className="text-sm space-y-1">
+          <ul className="text-sm divide-y divide-sebo">
             {topProdutos.map((t, i) => {
               const p = produtos.find((x) => x.id === t.produtoId);
               return (
-                <li key={t.produtoId} className="flex items-center gap-2">
-                  <span className="font-mono text-carvao/60 w-6">{i + 1}.</span>
-                  <span className="flex-1">{p?.nome}</span>
-                  <span className="font-mono text-carvao/70">{t.qtd.toFixed(1)} kg</span>
-                  <span className="font-mono font-semibold w-28 text-right">{brl(t.receita)}</span>
+                <li key={t.produtoId} className="flex items-center gap-2 py-2 first:pt-0 last:pb-0">
+                  <span className="font-mono text-carvao/60 w-5 shrink-0">{i + 1}.</span>
+                  <span className="flex-1 min-w-0 truncate">{p?.nome}</span>
+                  <span className="font-mono text-carvao/70 text-xs shrink-0">{t.qtd.toFixed(1)} kg</span>
+                  <span className="font-mono font-semibold w-24 text-right shrink-0">{brl(t.receita)}</span>
                 </li>
               );
             })}
@@ -195,12 +198,12 @@ export default function PainelPage() {
         </section>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-4 pb-8 text-center text-xs text-carvao/50">
+      <footer className="mx-auto max-w-6xl px-4 pb-4 text-center text-xs text-carvao/50">
         <button
           onClick={() => {
             if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) reiniciar();
           }}
-          className="underline hover:text-carvao"
+          className="underline hover:text-carvao py-2 px-2 -mx-2"
         >
           Reiniciar demonstração
         </button>
@@ -211,12 +214,12 @@ export default function PainelPage() {
 
 function KPI({ label, valor, icon }: { label: string; valor: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-azulejo border border-sebo rounded-xl p-4">
-      <div className="flex items-center gap-2 text-carvao/60 text-xs uppercase tracking-wider">
-        {icon}
-        {label}
+    <div className="bg-azulejo border border-sebo rounded-xl p-3 sm:p-4 min-w-0">
+      <div className="flex items-center gap-1.5 text-carvao/60 text-[10px] sm:text-xs uppercase tracking-wider">
+        <span className="shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4">{icon}</span>
+        <span className="truncate">{label}</span>
       </div>
-      <div className="font-mono font-extrabold text-2xl mt-2 tabular-nums">{valor}</div>
+      <div className="font-mono font-extrabold text-lg sm:text-2xl mt-1.5 sm:mt-2 tabular-nums truncate">{valor}</div>
     </div>
   );
 }

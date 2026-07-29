@@ -87,9 +87,10 @@ function ClientesInner() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
+        <div className="text-xs text-carvao/60 mb-2">{rows.length} cliente{rows.length === 1 ? '' : 's'}</div>
         <ul className="space-y-2">
           {rows.map(({ c, info: i }) => (
-            <li key={c.id} className="bg-azulejo border border-sebo rounded-xl p-3 flex items-center gap-3">
+            <li key={c.id} className="bg-azulejo border border-sebo rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link href={`/painel/clientes/${c.id}`} className="font-display font-bold uppercase">{c.nome}</Link>
@@ -101,12 +102,15 @@ function ClientesInner() {
                 </div>
               </div>
               {c.aceitaWhatsapp && (
-                <a href={whatsapp(c, i.dias, c.saldoCashback)} target="_blank" rel="noreferrer">
-                  <Button size="sm"><MessageCircle className="w-4 h-4 mr-1" /> Chamar no WhatsApp</Button>
+                <a href={whatsapp(c, i.dias, c.saldoCashback)} target="_blank" rel="noreferrer" className="shrink-0">
+                  <Button size="lg" className="w-full sm:w-auto"><MessageCircle className="w-4 h-4 mr-1" /> Chamar no WhatsApp</Button>
                 </a>
               )}
             </li>
           ))}
+          {rows.length === 0 && (
+            <li className="p-10 text-center text-carvao/60 bg-azulejo border border-sebo rounded-xl">Nenhum cliente nesse grupo.</li>
+          )}
         </ul>
       </main>
     </div>

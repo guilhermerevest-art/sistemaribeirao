@@ -42,6 +42,7 @@ interface State {
   carrinho: CarrinhoState;
   clienteAtualId?: string;
   somBancada: boolean;
+  impressaoAutomatica: boolean;
   proximoPedido: number;
 }
 
@@ -69,6 +70,7 @@ interface Actions {
   atualizarOferta: (o: Oferta) => void;
   desativarOferta: (id: string) => void;
   setSomBancada: (v: boolean) => void;
+  setImpressaoAutomatica: (v: boolean) => void;
   reiniciarDemonstracao: () => void;
   gerarPedidoTeste: () => Pedido;
   debitarPontos: (clienteId: string, resgateId: string) => boolean;
@@ -91,6 +93,7 @@ const initialState: State = {
   carrinho: { itens: [] },
   clienteAtualId: undefined,
   somBancada: true,
+  impressaoAutomatica: true,
   proximoPedido: 600,
 };
 
@@ -201,6 +204,7 @@ export const useStore = create<State & Actions>()(
         })),
 
       setSomBancada: (v) => set({ somBancada: v }),
+      setImpressaoAutomatica: (v) => set({ impressaoAutomatica: v }),
 
       reiniciarDemonstracao: () => {
         set({ ...initialState, hydrating: () => set({ carregado: true }) }) ;
@@ -214,6 +218,7 @@ export const useStore = create<State & Actions>()(
           carrinho: { itens: [] },
           clienteAtualId: undefined,
           somBancada: true,
+          impressaoAutomatica: true,
           proximoPedido: 600,
           carregado: true,
         });
@@ -346,6 +351,7 @@ export const useStore = create<State & Actions>()(
         resgates: s.resgates,
         clienteAtualId: s.clienteAtualId,
         somBancada: s.somBancada,
+        impressaoAutomatica: s.impressaoAutomatica,
         proximoPedido: s.proximoPedido,
       }),
     },

@@ -41,17 +41,17 @@ export default function CozinhaPage() {
 
   return (
     <div className="min-h-screen bg-papel">
-      <header className="bg-carvao text-papel p-4 sticky top-0 z-30">
-        <div className="mx-auto max-w-6xl flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Home className="w-5 h-5" />
-            <div className="font-display font-extrabold text-2xl uppercase flex items-center gap-2">
-              <ChefHat className="w-6 h-6" /> Cozinha
+      <header className="bg-carvao text-papel p-3 sm:p-4 sticky top-0 z-30">
+        <div className="mx-auto max-w-6xl flex items-center gap-2 sm:gap-3">
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <Home className="w-5 h-5 shrink-0" />
+            <div className="font-display font-extrabold text-lg sm:text-2xl uppercase flex items-center gap-1.5 sm:gap-2 truncate">
+              <ChefHat className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" /> Cozinha
             </div>
           </Link>
-          <div className="ml-auto flex items-center gap-2 text-papel/70">
+          <div className="ml-auto flex items-center gap-2 text-papel/70 shrink-0">
             <Bell className="w-4 h-4" />
-            <span className="font-mono">{fila.length} pedido{fila.length === 1 ? '' : 's'}</span>
+            <span className="font-mono text-sm">{fila.length} pedido{fila.length === 1 ? '' : 's'}</span>
           </div>
         </div>
       </header>

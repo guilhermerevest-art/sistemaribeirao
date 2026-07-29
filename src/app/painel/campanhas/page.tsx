@@ -49,15 +49,17 @@ export default function CampanhasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-papel">
-      <header className="bg-carvao text-papel p-4 sticky top-0 z-30">
-        <div className="mx-auto max-w-4xl flex items-center gap-3">
-          <Link href="/painel"><ChevronLeft className="w-5 h-5" /></Link>
-          <div className="font-display font-extrabold text-xl uppercase">Campanhas</div>
+    <div className="min-h-screen bg-papel pb-8">
+      <header className="bg-carvao text-papel sticky top-0 z-30">
+        <div className="mx-auto max-w-4xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
+          <Link href="/painel" aria-label="Voltar" className="shrink-0 grid place-items-center w-10 h-10 -ml-1.5 rounded-md hover:bg-papel/10">
+            <ChevronLeft className="w-5 h-5" />
+          </Link>
+          <div className="font-display font-extrabold text-base sm:text-xl uppercase">Campanhas</div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6 space-y-6">
+      <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <p className="text-sm text-carvao/70">
           Monte listas de mensagens prontas para enviar no WhatsApp Business.
           Cada link abre a conversa com o cliente e a mensagem personalizada.
@@ -69,17 +71,17 @@ export default function CampanhasPage() {
               {grupos[g].slice(0, 5).map((c) => {
                 const i = info(c, pedidos);
                 return (
-                  <li key={c.id} className="flex items-center gap-2 text-sm">
-                    <span className="flex-1">{c.nome}</span>
-                    <span className="font-mono text-xs text-carvao/60">{formatarTelefone(c.telefone)}</span>
-                    <a href={linkPara(c, i.dias)} target="_blank" rel="noreferrer">
-                      <Button variant="ghost" size="sm"><MessageCircle className="w-4 h-4" /></Button>
+                  <li key={c.id} className="flex items-center gap-2 text-sm py-1">
+                    <span className="flex-1 min-w-0 truncate">{c.nome}</span>
+                    <span className="font-mono text-xs text-carvao/60 hidden sm:inline shrink-0">{formatarTelefone(c.telefone)}</span>
+                    <a href={linkPara(c, i.dias)} target="_blank" rel="noreferrer" className="shrink-0">
+                      <Button variant="ghost" size="sm" className="w-11 h-11 p-0"><MessageCircle className="w-4 h-4" /></Button>
                     </a>
                   </li>
                 );
               })}
               {grupos[g].length > 5 && (
-                <li className="text-xs text-carvao/60">+ {grupos[g].length - 5} outros. Veja a lista completa em <Link href="/painel/clientes" className="underline">Clientes</Link>.</li>
+                <li className="text-xs text-carvao/60 py-1">+ {grupos[g].length - 5} outros. Veja a lista completa em <Link href="/painel/clientes" className="underline">Clientes</Link>.</li>
               )}
             </ul>
           </section>
