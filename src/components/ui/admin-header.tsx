@@ -11,20 +11,24 @@ export function AdminHeader({
   titulo,
   voltarPara = '/backoffice',
   acoes,
-  tom = 'carvao',
+  tom = 'preto',
 }: {
   titulo: string;
   voltarPara?: string;
   acoes?: ReactNode;
-  tom?: 'carvao' | 'sangue';
+  tom?: 'preto' | 'vermelho' | 'carvao' | 'sangue';
 }) {
+  const bg =
+    tom === 'vermelho' || tom === 'sangue'
+      ? 'bg-vermelho'
+      : 'bg-preto';
   return (
-    <header className={`${tom === 'sangue' ? 'bg-sangue' : 'bg-carvao'} text-papel sticky top-0 z-30`}>
+    <header className={`${bg} text-branco sticky top-0 z-30`}>
       <div className="mx-auto max-w-6xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
         <Link
           href={voltarPara}
           aria-label="Voltar"
-          className="shrink-0 grid place-items-center w-10 h-10 -ml-1.5 rounded-md hover:bg-papel/10 active:bg-papel/20"
+          className="shrink-0 grid place-items-center w-10 h-10 -ml-1.5 rounded-md hover:bg-branco/10 active:bg-branco/20"
         >
           <Home className="w-5 h-5" />
         </Link>

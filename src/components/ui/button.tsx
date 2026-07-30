@@ -3,15 +3,16 @@
 import { cn } from '@/lib/formato';
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'amarelo';
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
 const variantClass: Record<Variant, string> = {
-  primary: 'bg-sangue text-papel hover:bg-brasa active:translate-y-px',
-  secondary: 'bg-carvao text-papel hover:bg-sebo hover:text-carvao active:translate-y-px',
-  ghost: 'bg-transparent text-carvao hover:bg-sebo-claro',
-  danger: 'bg-vermelho-risco text-papel hover:bg-brasa active:translate-y-px',
-  outline: 'bg-transparent border-2 border-carvao text-carvao hover:bg-carvao hover:text-papel',
+  primary: 'bg-vermelho text-branco hover:bg-vermelho/90 active:translate-y-px',
+  amarelo: 'bg-amarelo text-preto hover:bg-amarelo/90 active:translate-y-px',
+  secondary: 'bg-preto text-branco hover:bg-cinza-claro hover:text-preto active:translate-y-px',
+  ghost: 'bg-transparent text-preto hover:bg-cinza-claro',
+  danger: 'bg-vermelho-risco text-branco hover:bg-vermelho/90 active:translate-y-px',
+  outline: 'bg-transparent border-2 border-preto text-preto hover:bg-preto hover:text-branco',
 };
 
 const sizeClass: Record<Size, string> = {

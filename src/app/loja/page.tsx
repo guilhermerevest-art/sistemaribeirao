@@ -9,30 +9,14 @@ import { OfertaRelampago, OfertasSemana } from '@/components/loja/ofertas';
 import { QueTalAdicionar } from '@/components/loja/que-tal-adicionar';
 import { CATEGORIAS, type Categoria } from '@/lib/types';
 import { CATEGORIA_ICONE, CATEGORIA_LABELS_LONG } from '@/lib/icons';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ArrowRight, ChefHat } from 'lucide-react';
 import { cn } from '@/lib/formato';
-
-const HERO_SLIDES = [
-  {
-    titulo: 'Corte do dia, peso certo, sem fila.',
-    subtitulo: 'Faça seu pedido pelo celular, retire no balcão com o cupom já pronto.',
-  },
-  {
-    titulo: 'Volta dinheiro toda semana.',
-    subtitulo: 'Até 5% de cashback em selecionados. Acumula, usa, e quanto mais compra, mais sobe de nível.',
-  },
-  {
-    titulo: 'Picanha, linguiça, carvão. No mesmo pedido.',
-    subtitulo: 'Açougue + empório. Já separa tudo no balcão com um único cupom.',
-  },
-];
 
 export default function LojaPage() {
   const produtos = useStore((s) => s.produtos);
   const carregado = useStore((s) => s.carregado);
   const [categoriaAtiva, setCategoriaAtiva] = useState<Categoria | 'todas'>('todas');
   const [busca, setBusca] = useState('');
-  const [slide, setSlide] = useState(0);
 
   const contagemPorCategoria = useMemo(() => {
     const m: Record<string, number> = { todas: produtos.length };
@@ -42,14 +26,20 @@ export default function LojaPage() {
     return m;
   }, [produtos]);
 
-  const produtosFiltrados = useMemo(() => {
-    const termo = busca.trim().toLowerCase();
-    return produtos.filter((p) => {
-      if (categoriaAtiva !== 'todas' && p.categoria !== categoriaAtiva) return false;
-      if (termo && !p.nome.toLowerCase().includes(termo)) return false;
-      return true;
-    });
-  }, [produtos, categoriaAtiva, busca]);
+  const termo = busca.trim().toLowerCase();
+  const porCategoria = useMemo(() => {
+    const out: { id: Categoria | 'todas'; label: string; produtos: typeof produtos }[] = [];
+    if (categoriaAtiva === 'todas') {
+      for (const c of CATEGORIAS) {
+        const lista = produtos.filter((p) => p.categoria === c.id && (!termo || p.nome.toLowerCase().includes(termo)));
+        if (lista.length > 0) out.push({ id: c.id, label: CATEGORIA_LABELS_LONG[c.id], produtos: lista });
+      }
+    } else {
+      const lista = produtos.filter((p) => p.categoria === categoriaAtiva && (!termo || p.nome.toLowerCase().includes(termo)));
+      out.push({ id: categoriaAtiva, label: CATEGORIA_LABELS_LONG[categoriaAtiva], produtos: lista });
+    }
+    return out;
+  }, [produtos, categoriaAtiva, termo]);
 
   return (
     <>
@@ -59,31 +49,33 @@ export default function LojaPage() {
       <main className="mx-auto max-w-6xl px-3 sm:px-4 pb-24">
         {/* atalhos super discretos no topo */}
         <nav className="pt-3 flex gap-3 text-xs">
-          <Link href="/bancada" className="text-carvao/60 hover:text-carvao underline">Bancada</Link>
-          <Link href="/painel" className="text-carvao/60 hover:text-carvao underline">Painel do dono</Link>
+          <Link href="/bancada" className="text-preto/60 hover:text-preto underline">Bancada</Link>
+          <Link href="/painel" className="text-preto/60 hover:text-preto underline">Painel do dono</Link>
         </nav>
 
-        {/* Hero carousel */}
-        <section className="pt-3 pb-2">
-          <div className="rounded-xl bg-carvao text-papel p-5 sm:p-7 relative overflow-hidden">
-            <div className="font-display font-extrabold text-xl sm:text-3xl leading-tight max-w-[80%]">
-              {HERO_SLIDES[slide].titulo}
-            </div>
-            <p className="text-sm text-papel/70 mt-2 max-w-xl">
-              {HERO_SLIDES[slide].subtitulo}
-            </p>
-            <div className="absolute bottom-3 right-3 flex gap-1">
-              {HERO_SLIDES.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSlide(i)}
-                  aria-label={`Slide ${i + 1}`}
-                  className={cn(
-                    'w-2 h-2 rounded-full transition-colors',
-                    i === slide ? 'bg-brasa' : 'bg-papel/30 hover:bg-papel/50',
-                  )}
-                />
-              ))}
+        {/* Hero Angelina */}
+        <section className="pt-3">
+          <div className="relative rounded-2xl overflow-hidden bg-vermelho text-branco h-[42vh] sm:h-[60vh] min-h-[280px] sm:min-h-[420px]">
+            <img
+              src="/produtos/picanha.jpg"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover opacity-50"
+              onError={(e) => ((e.currentTarget.style.display = 'none'))}
+            />
+            <div className="relative h-full flex flex-col justify-end p-6 sm:p-10">
+              <div className="font-display font-extrabold text-3xl sm:text-5xl leading-[1.05] max-w-xl uppercase tracking-tight">
+                Carne boa, do balcão pro celular.
+              </div>
+              <p className="mt-3 text-base sm:text-lg text-branco/90 max-w-xl">
+                Picanha, linguiça, carvão. Peça pelo app, retire no balcão com o cupom pronto.
+              </p>
+              <a
+                href="#produtos"
+                className="mt-5 inline-flex items-center gap-2 bg-amarelo text-preto font-extrabold uppercase tracking-wide px-5 py-3 rounded-md self-start hover:bg-amarelo/90"
+              >
+                Ver a vitrine
+                <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </section>
@@ -92,21 +84,21 @@ export default function LojaPage() {
         <OfertasSemana />
 
         {/* Busca */}
-        <section className="mt-2">
+        <section className="mt-4">
           <label className="relative block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-carvao/40" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-preto/40" />
             <input
               type="search"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar corte, produto…"
-              className="w-full h-11 pl-9 pr-3 rounded-md bg-azulejo border border-sebo text-sm placeholder:text-carvao/40 focus:outline-none focus:border-sangue"
+              className="w-full h-11 pl-9 pr-3 rounded-md bg-branco border border-cinza-claro text-sm placeholder:text-preto/40 focus:outline-none focus:border-vermelho"
             />
           </label>
         </section>
 
-        {/* Chips com ícone */}
-        <div className="sticky top-[68px] z-20 bg-papel/95 backdrop-blur -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 border-y border-sebo mt-3">
+        {/* Categorias — Angelina style: chips grandes com ícones */}
+        <div className="sticky top-[68px] z-20 bg-branco/95 backdrop-blur -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 border-b border-cinza-claro mt-4">
           <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <ChipCategoria
               ativa={categoriaAtiva === 'todas'}
@@ -129,23 +121,34 @@ export default function LojaPage() {
           </div>
         </div>
 
-        {/* Grade de produtos */}
-        <section className="mt-4">
+        {/* Grade de produtos — por seção / categoria */}
+        <section id="produtos" className="mt-6 space-y-10">
           {!carregado && produtos.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-md bg-sebo-claro aspect-[3/4] animate-pulse" />
+                <div key={i} className="rounded-lg bg-cinza-claro aspect-[3/4] animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {produtosFiltrados.map((p) => (
-                <ProdutoCard key={p.id} produto={p} />
-              ))}
-            </div>
+            porCategoria.map((sec) => (
+              <div key={sec.id} id={`cat-${sec.id}`} className="scroll-mt-32">
+                <div className="flex items-center gap-2 mb-3">
+                  <ChefHat className="w-4 h-4 text-vermelho" />
+                  <h2 className="font-display font-extrabold uppercase text-xl tracking-tight">
+                    {sec.label}
+                  </h2>
+                  <span className="text-xs text-preto/60 ml-1">{sec.produtos.length} itens</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {sec.produtos.map((p) => (
+                    <ProdutoCard key={p.id} produto={p} />
+                  ))}
+                </div>
+              </div>
+            ))
           )}
-          {produtosFiltrados.length === 0 && carregado && (
-            <div className="text-center py-16 text-carvao/60 text-sm">
+          {porCategoria.every((s) => s.produtos.length === 0) && carregado && (
+            <div className="text-center py-16 text-preto/60 text-sm">
               Nada encontrado. Limpe a busca ou troque a categoria.
             </div>
           )}
@@ -176,10 +179,10 @@ function ChipCategoria({
       onClick={onClick}
       title={title}
       className={cn(
-        'shrink-0 h-11 px-3 rounded-md text-sm font-semibold border transition-colors inline-flex items-center gap-1.5',
+        'shrink-0 h-11 px-4 rounded-full text-sm font-semibold border transition-colors inline-flex items-center gap-1.5',
         ativa
-          ? 'bg-sangue text-papel border-sangue'
-          : 'bg-azulejo border-sebo text-carvao hover:border-carvao',
+          ? 'bg-preto text-branco border-preto'
+          : 'bg-branco border-cinza-claro text-preto hover:border-preto',
       )}
     >
       {Icon && <Icon className="w-4 h-4" />}
@@ -187,14 +190,13 @@ function ChipCategoria({
       {typeof contador === 'number' && (
         <span
           className={cn(
-            'ml-1 px-1.5 rounded-full text-[10px] font-mono tabular-nums',
-            ativa ? 'bg-papel/20 text-papel' : 'bg-sebo-claro text-carvao/60',
+            'ml-1 px-1.5 rounded-full text-[10px] tabular-nums',
+            ativa ? 'bg-amarelo text-preto' : 'bg-cinza-claro text-preto/60',
           )}
         >
           {contador}
         </span>
       )}
-      {!icone && ativa && <ChevronRight className="w-3 h-3 ml-0.5" />}
     </button>
   );
 }

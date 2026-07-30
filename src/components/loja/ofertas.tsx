@@ -40,7 +40,7 @@ export function OfertaRelampago() {
   const acabou = oferta.quantidadeTotalKg !== undefined && oferta.quantidadeVendidaKg >= oferta.quantidadeTotalKg;
   const pct = oferta.quantidadeTotalKg ? Math.min(100, (oferta.quantidadeVendidaKg / oferta.quantidadeTotalKg) * 100) : 0;
   return (
-    <section className="rounded-xl bg-brasa text-papel p-4 my-4">
+    <section className="rounded-xl bg-amarelo text-preto p-4 my-4">
       <div className="flex items-center gap-2">
         <Zap className="w-5 h-5" />
         <div className="font-display font-extrabold uppercase text-lg">Oferta relâmpago</div>
@@ -59,15 +59,15 @@ export function OfertaRelampago() {
             <div className="text-sm">{oferta.chamada}</div>
           </div>
           <div className="text-right">
-            <div className="font-mono line-through text-papel/70 text-sm">{brl(oferta.precoDe)}</div>
+            <div className="font-mono line-through text-preto/60 text-sm">{brl(oferta.precoDe)}</div>
             <div className="font-mono font-extrabold text-2xl">{brl(oferta.precoPor)}</div>
           </div>
         </div>
       </Link>
       {oferta.quantidadeTotalKg && (
         <div className="mt-3">
-          <div className="h-2 rounded-full bg-papel/30 overflow-hidden">
-            <div className="h-full bg-papel" style={{ width: `${pct}%` }} />
+          <div className="h-2 rounded-full bg-preto/20 overflow-hidden">
+            <div className="h-full bg-preto" style={{ width: `${pct}%` }} />
           </div>
           <div className="text-xs mt-1 font-mono">
             já saíram {oferta.quantidadeVendidaKg.toFixed(0)} kg dos {oferta.quantidadeTotalKg} kg
@@ -98,7 +98,7 @@ export function OfertasSemana() {
 
   return (
     <section className="my-4">
-      <div className="font-display font-extrabold uppercase text-lg mb-2">Ofertas da semana</div>
+      <div className="font-display font-extrabold uppercase text-xl tracking-tight mb-2">Ofertas da semana</div>
       <div className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-2 snap-x">
         {visiveis.map((o) => {
           const p = produtos.find((x) => x.id === o.produtoId);
@@ -107,25 +107,25 @@ export function OfertasSemana() {
             <Link
               key={o.id}
               href={`/loja/produto/${p.slug}`}
-              className="snap-start shrink-0 w-56 rounded-xl bg-azulejo border border-sebo overflow-hidden hover:shadow-md transition-shadow"
+              className="snap-start shrink-0 w-56 rounded-xl bg-branco border border-cinza-claro overflow-hidden hover:shadow-md transition-shadow"
             >
-              <div className="aspect-square bg-sebo-claro">
+              <div className="aspect-square bg-cinza-claro">
                 <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
               </div>
               <div className="p-3">
                 <div className="flex items-center justify-between">
                   <div className="font-display font-bold uppercase text-sm">{p.nome}</div>
                   {isOuro && (
-                    <span className="bg-[color:var(--amarelo-novo)] text-papel text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="bg-amarelo text-preto text-[10px] font-bold px-2 py-0.5 rounded-full">
                       Antecipado Ouro
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-carvao/70 mt-1">{o.chamada}</div>
+                <div className="text-xs text-preto/70 mt-1">{o.chamada}</div>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="font-mono line-through text-carvao/50 text-sm">{brl(o.precoDe)}</span>
-                  <span className="font-mono font-extrabold text-xl text-brasa">{brl(o.precoPor)}</span>
-                  <span className="text-xs text-carvao/60">/kg</span>
+                  <span className="font-mono line-through text-preto/50 text-sm">{brl(o.precoDe)}</span>
+                  <span className="font-mono font-extrabold text-xl text-vermelho">{brl(o.precoPor)}</span>
+                  <span className="text-xs text-preto/60">/kg</span>
                 </div>
               </div>
             </Link>

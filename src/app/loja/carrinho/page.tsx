@@ -49,7 +49,6 @@ export default function CarrinhoPage() {
   const categorias = new Set(itens.map((i) => produtoMap.get(i.produtoId)?.categoria).filter(Boolean) as string[]);
   const sugestoes = useMemo(() => {
     const base = sugerirParaItens(categorias);
-    // Filtra produtos já no carrinho.
     const noCarrinho = new Set(itens.map((i) => i.produtoId));
     return base.filter((s) => !noCarrinho.has(s.produtoId));
   }, [categorias, itens]);
@@ -73,16 +72,16 @@ export default function CarrinhoPage() {
     <>
       <HeaderLoja />
       <main className="mx-auto max-w-3xl px-4 pb-40">
-        <Link href="/loja" className="inline-flex items-center gap-1 text-sm text-carvao/60 hover:text-carvao mt-3">
+        <Link href="/loja" className="inline-flex items-center gap-1 text-sm text-preto/60 hover:text-preto mt-3">
           <ChevronLeft className="w-4 h-4" /> continuar comprando
         </Link>
 
-        <h1 className="font-display font-extrabold text-2xl uppercase mt-3">Seu carrinho</h1>
+        <h1 className="font-display font-extrabold text-3xl uppercase mt-3 tracking-tight">Seu carrinho</h1>
 
         {itens.length === 0 ? (
-          <div className="mt-8 rounded-xl bg-azulejo border border-sebo p-8 text-center">
+          <div className="mt-8 rounded-xl bg-branco border border-cinza-claro p-8 text-center">
             <div className="text-5xl mb-2">🥩</div>
-            <p className="text-carvao/70">Seu carrinho está vazio.</p>
+            <p className="text-preto/70">Seu carrinho está vazio.</p>
             <Button className="mt-4" onClick={() => (window.location.href = '/loja')}>Ver a vitrine</Button>
           </div>
         ) : (
@@ -92,22 +91,22 @@ export default function CarrinhoPage() {
                 const p = produtoMap.get(it.produtoId);
                 if (!p) return null;
                 return (
-                  <li key={idx} className="bg-azulejo border border-sebo rounded-xl p-4 flex gap-3">
-                    <img src={p.imagem} alt={p.nome} className="w-20 h-20 rounded-md object-cover bg-sebo-claro" />
+                  <li key={idx} className="bg-branco border border-cinza-claro rounded-xl p-4 flex gap-3">
+                    <img src={p.imagem} alt={p.nome} className="w-20 h-20 rounded-md object-cover bg-cinza-claro" />
                     <div className="flex-1 min-w-0">
                       <div className="font-display font-bold uppercase text-sm leading-tight">{p.nome}</div>
                       {it.preparos.length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {it.preparos.map((pr) => (
-                            <span key={pr} className="text-[11px] px-2 py-0.5 rounded-full bg-sebo-claro text-carvao">{pr}</span>
+                            <span key={pr} className="text-[11px] px-2 py-0.5 rounded-full bg-cinza-claro text-preto">{pr}</span>
                           ))}
                         </div>
                       )}
                       {it.observacao && (
-                        <div className="text-xs text-carvao/60 mt-1 italic">"{it.observacao}"</div>
+                        <div className="text-xs text-preto/60 mt-1 italic">"{it.observacao}"</div>
                       )}
                       <div className="mt-2 flex items-center gap-2">
-                        <label className="text-xs text-carvao/70">Peso</label>
+                        <label className="text-xs text-preto/70">Peso</label>
                         <input
                           type="number"
                           step={0.1}
@@ -115,16 +114,16 @@ export default function CarrinhoPage() {
                           max={10}
                           value={it.pesoKg}
                           onChange={(e) => atual(idx, Number(e.target.value))}
-                          className="w-20 h-9 rounded-md border border-sebo px-2 font-mono text-sm"
+                          className="w-20 h-9 rounded-md border border-cinza-claro px-2 font-sans text-sm"
                         />
-                        <span className="text-xs text-carvao/60">kg</span>
+                        <span className="text-xs text-preto/60">kg</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono font-bold tabular-nums">{brl(it.subtotal)}</div>
+                      <div className="font-sans font-bold tabular-nums text-lg">{brl(it.subtotal)}</div>
                       <button
                         onClick={() => removerItem(idx)}
-                        className="mt-2 text-xs text-carvao/60 hover:text-vermelho-risco inline-flex items-center gap-1"
+                        className="mt-2 text-xs text-preto/60 hover:text-vermelho inline-flex items-center gap-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> remover
                       </button>
@@ -136,8 +135,8 @@ export default function CarrinhoPage() {
 
             {sugestoes.length > 0 && (
               <section className="mt-6">
-                <div className="flex items-center gap-2 font-display font-bold uppercase text-sm">
-                  <ChefHat className="w-4 h-4" /> Vai bem com isso
+                <div className="flex items-center gap-2 font-display font-bold uppercase text-base">
+                  <ChefHat className="w-4 h-4 text-vermelho" /> Vai bem com isso
                 </div>
                 <div className="grid grid-cols-3 gap-3 mt-3">
                   {sugestoes.map((s) => {
@@ -147,15 +146,15 @@ export default function CarrinhoPage() {
                       <Link
                         key={s.produtoId}
                         href={`/loja/produto/${p.slug}`}
-                        className="etiqueta rounded-md overflow-hidden hover:shadow-md transition-shadow"
+                        className="rounded-lg overflow-hidden bg-branco border border-cinza-claro hover:border-vermelho hover:shadow-md transition-all"
                       >
-                        <div className="aspect-square bg-sebo-claro">
+                        <div className="aspect-square bg-cinza-claro">
                           <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
                         </div>
                         <div className="px-2 py-2">
                           <div className="font-display font-bold text-xs uppercase leading-tight line-clamp-2">{p.nome}</div>
-                          <div className="font-mono text-sm font-bold">{brl(p.precoKg)}<span className="text-[10px] text-carvao/60">/kg</span></div>
-                          <div className="text-[10px] text-brasa font-semibold mt-0.5">{s.motivo}</div>
+                          <div className="font-sans text-sm font-bold">{brl(p.precoKg)}<span className="text-[10px] text-preto/60">/kg</span></div>
+                          <div className="text-[10px] text-vermelho font-semibold mt-0.5">{s.motivo}</div>
                         </div>
                       </Link>
                     );
@@ -164,16 +163,16 @@ export default function CarrinhoPage() {
               </section>
             )}
 
-            <section className="mt-6 bg-azulejo border border-sebo rounded-xl p-4">
+            <section className="mt-6 bg-vermelho text-branco rounded-xl p-4">
               <div className="flex items-baseline justify-between">
-                <span className="text-sm text-carvao/70">Subtotal</span>
+                <span className="text-sm opacity-90">Subtotal</span>
                 <span className="font-mono text-sm">{brl(subtotal)}</span>
               </div>
-              <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-sebo">
+              <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-branco/30">
                 <span className="font-display font-bold uppercase">Total</span>
-                <span className="font-mono font-bold text-xl">{brl(subtotal)}</span>
+                <span className="font-mono font-bold text-2xl">{brl(subtotal)}</span>
               </div>
-              <div className="mt-3 rounded-md bg-sebo-claro px-3 py-2 text-sm">
+              <div className="mt-3 rounded-md bg-branco/15 px-3 py-2 text-sm">
                 Este pedido gera <span className="font-mono font-bold">{brl(projecaoCashback)}</span> de cashback e{' '}
                 <span className="font-mono font-bold">{projecaoPontos}</span> pontos.
               </div>
@@ -183,14 +182,17 @@ export default function CarrinhoPage() {
       </main>
 
       {itens.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-azulejo border-t border-sebo p-3">
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-branco border-t border-cinza-claro p-3">
           <div className="mx-auto max-w-3xl flex items-center gap-3">
             <div className="flex-1 text-sm">
-              <div className="text-carvao/60">Total</div>
-              <div className="font-mono font-bold text-xl">{brl(subtotal)}</div>
+              <div className="text-preto/60">Total</div>
+              <div className="font-mono font-bold text-2xl">{brl(subtotal)}</div>
             </div>
-            <Link href="/loja/checkout">
-              <Button size="lg">Ir ao checkout</Button>
+            <Link
+              href="/loja/checkout"
+              className="h-14 px-6 rounded-lg bg-amarelo text-preto font-extrabold uppercase tracking-wide flex items-center gap-2 hover:bg-amarelo/90 active:translate-y-px"
+            >
+              Ir ao checkout
             </Link>
           </div>
         </div>

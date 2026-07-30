@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
-import { Button } from '@/components/ui/button';
-import { brl, cn, formatarTelefone, normalizarTelefone } from '@/lib/formato';
+import { brl, formatarTelefone, normalizarTelefone } from '@/lib/formato';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,7 +14,6 @@ import {
   Bike,
   CreditCard,
   Banknote,
-  MapPin,
   Navigation,
   Loader2,
   ShieldCheck,
@@ -177,17 +175,17 @@ export default function CheckoutPage() {
     <>
       <HeaderLoja />
 
-      {/* Faixa do açougue — sempre visível, dá identidade e confiança. */}
-      <div className="bg-carvao text-papel">
+      {/* Faixa do açougue — sinaliza "é açougue real". */}
+      <div className="bg-preto text-branco">
         <div className="mx-auto max-w-3xl px-4 py-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-brasa grid place-items-center font-display font-extrabold text-papel shrink-0">
+          <div className="w-10 h-10 rounded-full bg-vermelho grid place-items-center font-display font-extrabold text-branco shrink-0">
             AR
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-display font-extrabold uppercase text-sm leading-tight">
               Açougue Ribeirão
             </div>
-            <div className="text-[11px] text-papel/60 leading-tight">
+            <div className="text-[11px] text-branco/60 leading-tight">
               Rua das Flores, 123 · Centro · Ribeirão
             </div>
           </div>
@@ -195,7 +193,7 @@ export default function CheckoutPage() {
             href="https://wa.me/553490000000"
             target="_blank"
             rel="noreferrer"
-            className="w-9 h-9 grid place-items-center rounded-md bg-papel/10 hover:bg-papel/20"
+            className="w-9 h-9 grid place-items-center rounded-md bg-branco/10 hover:bg-branco/20"
             aria-label="Falar no WhatsApp"
           >
             <MessagesSquare className="w-4 h-4" />
@@ -206,54 +204,54 @@ export default function CheckoutPage() {
       <main className="mx-auto max-w-3xl px-4 pb-32 pt-4">
         <Link
           href="/loja/carrinho"
-          className="inline-flex items-center gap-1 text-sm text-carvao/60 hover:text-carvao"
+          className="inline-flex items-center gap-1 text-sm text-preto/60 hover:text-preto"
         >
           <ChevronLeft className="w-4 h-4" /> voltar
         </Link>
 
         {itens.length === 0 ? (
           <div className="mt-12 text-center">
-            <p className="text-carvao/70">Seu carrinho está vazio.</p>
-            <Button className="mt-4" onClick={() => router.push('/loja')}>
+            <p className="text-preto/70">Seu carrinho está vazio.</p>
+            <button
+              onClick={() => router.push('/loja')}
+              className="mt-4 h-12 px-6 rounded-md bg-vermelho text-branco font-extrabold uppercase tracking-wide"
+            >
               Ver a vitrine
-            </Button>
+            </button>
           </div>
         ) : (
           <div className="mt-4 space-y-6">
-            {/* linha 1: RETIRADA */}
             <div>
-              <div className="text-sm text-carvao/60 mb-2">Como você quer receber?</div>
+              <div className="text-sm text-preto/60 mb-2">Como você quer receber?</div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setRetirada('balcao')}
-                  className={cn(
-                    'h-14 rounded-xl border-2 font-semibold flex items-center justify-center gap-2 transition-colors',
+                  className={`h-14 rounded-xl border-2 font-semibold flex items-center justify-center gap-2 transition-colors ${
                     retirada === 'balcao'
-                      ? 'border-sangue bg-sangue/5 text-sangue'
-                      : 'border-sebo bg-azulejo text-carvao hover:border-carvao/40',
-                  )}
+                      ? 'border-vermelho bg-vermelho/5 text-vermelho'
+                      : 'border-cinza-claro bg-branco text-preto hover:border-preto'
+                  }`}
                 >
                   <Store className="w-5 h-5" />
                   <div className="text-left">
                     <div>Retirar no balcão</div>
-                    <div className="text-[10px] font-normal text-carvao/60">
+                    <div className="text-[10px] font-normal text-preto/60">
                       Sem taxa, fica pronto em min
                     </div>
                   </div>
                 </button>
                 <button
                   onClick={() => setRetirada('entrega')}
-                  className={cn(
-                    'h-14 rounded-xl border-2 font-semibold flex items-center justify-center gap-2 transition-colors',
+                  className={`h-14 rounded-xl border-2 font-semibold flex items-center justify-center gap-2 transition-colors ${
                     retirada === 'entrega'
-                      ? 'border-sangue bg-sangue/5 text-sangue'
-                      : 'border-sebo bg-azulejo text-carvao hover:border-carvao/40',
-                  )}
+                      ? 'border-vermelho bg-vermelho/5 text-vermelho'
+                      : 'border-cinza-claro bg-branco text-preto hover:border-preto'
+                  }`}
                 >
                   <Bike className="w-5 h-5" />
                   <div className="text-left">
                     <div>Entrega</div>
-                    <div className="text-[10px] font-normal text-carvao/60">
+                    <div className="text-[10px] font-normal text-preto/60">
                       R$ 8,00 · grátis acima de R$ 150
                     </div>
                   </div>
@@ -261,15 +259,14 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* linha 2: ENDEREÇO (só se entrega) */}
             {retirada === 'entrega' && (
               <div>
-                <div className="text-sm text-carvao/60 mb-2">Endereço de entrega</div>
+                <div className="text-sm text-preto/60 mb-2">Endereço de entrega</div>
                 <button
                   type="button"
                   onClick={capturarLocalizacao}
                   disabled={geoEstado === 'pedindo' || geoEstado === 'invertendo'}
-                  className="w-full h-12 rounded-lg border border-sebo bg-azulejo text-carvao/80 font-medium flex items-center justify-center gap-2 hover:border-carvao/40 disabled:opacity-60"
+                  className="w-full h-12 rounded-lg border border-cinza-claro bg-branco text-preto font-medium flex items-center justify-center gap-2 hover:border-preto disabled:opacity-60"
                 >
                   {geoEstado === 'pedindo' || geoEstado === 'invertendo' ? (
                     <>
@@ -291,24 +288,23 @@ export default function CheckoutPage() {
                   onChange={(e) => setEndereco(e.target.value)}
                   placeholder="Ou digite: Rua, número, bairro, complemento"
                   rows={2}
-                  className="mt-2 w-full rounded-lg border border-sebo px-3 py-2 text-sm focus:outline-none focus:border-sangue"
+                  className="mt-2 w-full rounded-lg border border-cinza-claro px-3 py-2 text-sm focus:outline-none focus:border-vermelho"
                 />
               </div>
             )}
 
-            {/* linha 3: CELULAR + NOME */}
             <div>
-              <div className="text-sm text-carvao/60 mb-2">Pra gente te chamar</div>
+              <div className="text-sm text-preto/60 mb-2">Pra gente te chamar</div>
               <input
                 type="tel"
                 inputMode="numeric"
                 value={formatarTelefone(telefone)}
                 onChange={(e) => setTelefone(normalizarTelefone(e.target.value))}
                 placeholder="Celular (34) 99999-9999"
-                className="w-full h-12 rounded-lg border border-sebo px-3 font-mono text-base focus:outline-none focus:border-sangue"
+                className="w-full h-12 rounded-lg border border-cinza-claro px-3 font-sans text-base focus:outline-none focus:border-vermelho"
               />
               {telefone && cliente && (
-                <div className="mt-2 text-sm text-carvao/70">
+                <div className="mt-2 text-sm text-preto/70">
                   Olá, <strong>{cliente.nome.split(' ')[0]}</strong> · você tem{' '}
                   <strong>{brl(cliente.saldoCashback)}</strong> de volta.
                 </div>
@@ -318,14 +314,13 @@ export default function CheckoutPage() {
                   value={novoNome}
                   onChange={(e) => setNovoNome(e.target.value)}
                   placeholder="Seu nome"
-                  className="mt-2 w-full h-12 rounded-lg border border-sebo px-3 text-base focus:outline-none focus:border-sangue"
+                  className="mt-2 w-full h-12 rounded-lg border border-cinza-claro px-3 text-base focus:outline-none focus:border-vermelho"
                 />
               )}
             </div>
 
-            {/* linha 4: PAGAMENTO */}
             <div>
-              <div className="text-sm text-carvao/60 mb-2">Como vai pagar?</div>
+              <div className="text-sm text-preto/60 mb-2">Como vai pagar?</div>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: 'pix' as const, label: 'Pix', icon: <Wallet className="w-5 h-5" /> },
@@ -335,12 +330,11 @@ export default function CheckoutPage() {
                   <button
                     key={p.id}
                     onClick={() => setPagamento(p.id)}
-                    className={cn(
-                      'h-14 rounded-xl border-2 font-semibold flex flex-col items-center justify-center gap-1 text-sm transition-colors',
+                    className={`h-14 rounded-xl border-2 font-semibold flex flex-col items-center justify-center gap-1 text-sm transition-colors ${
                       pagamento === p.id
-                        ? 'border-sangue bg-sangue/5 text-sangue'
-                        : 'border-sebo bg-azulejo text-carvao hover:border-carvao/40',
-                    )}
+                        ? 'border-vermelho bg-vermelho/5 text-vermelho'
+                        : 'border-cinza-claro bg-branco text-preto hover:border-preto'
+                    }`}
                   >
                     {p.icon}
                     {p.label}
@@ -353,68 +347,65 @@ export default function CheckoutPage() {
                   value={trocoPara}
                   onChange={(e) => setTrocoPara(e.target.value)}
                   placeholder="Troco para quanto? (opcional)"
-                  className="mt-2 w-full h-12 rounded-lg border border-sebo px-3 font-mono text-base focus:outline-none focus:border-sangue"
+                  className="mt-2 w-full h-12 rounded-lg border border-cinza-claro px-3 font-sans text-base focus:outline-none focus:border-vermelho"
                 />
               )}
             </div>
 
-            {/* linha 5: CASHBACK (opção) — apenas se o cliente tem */}
             {cliente && cashbackMaximo > 0 && (
-              <label className="flex items-center gap-3 rounded-xl border border-sebo bg-azulejo p-3 cursor-pointer">
+              <label className="flex items-center gap-3 rounded-xl border border-cinza-claro bg-branco p-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={querUsarCashback}
                   onChange={(e) => setQuerUsarCashback(e.target.checked)}
-                  className="w-5 h-5 accent-sangue"
+                  className="w-5 h-5 accent-vermelho"
                 />
                 <div className="flex-1">
                   <div className="font-semibold text-sm">Usar {brl(cashbackMaximo)} de cashback agora</div>
-                  <div className="text-xs text-carvao/60">
+                  <div className="text-xs text-preto/60">
                     Você tem {brl(cliente.saldoCashback)} acumulado.
                   </div>
                 </div>
               </label>
             )}
 
-            {/* linha 6: RESUMO enxuto */}
-            <div className="rounded-xl border border-sebo bg-azulejo p-4">
+            <div className="rounded-xl border border-cinza-claro bg-branco p-4">
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-carvao/70">Subtotal</span>
-                  <span className="font-mono">{brl(subtotal)}</span>
+                  <span className="text-preto/70">Subtotal</span>
+                  <span className="font-sans">{brl(subtotal)}</span>
                 </div>
                 {cotacao && cotacao.descontoOfertas > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-carvao/70">Ofertas</span>
-                    <span className="font-mono text-brasa">- {brl(cotacao.descontoOfertas)}</span>
+                    <span className="text-preto/70">Ofertas</span>
+                    <span className="font-sans text-vermelho">- {brl(cotacao.descontoOfertas)}</span>
                   </div>
                 )}
                 {cashbackUsado > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-carvao/70">Cashback</span>
-                    <span className="font-mono text-brasa">- {brl(cashbackUsado)}</span>
+                    <span className="text-preto/70">Cashback</span>
+                    <span className="font-sans text-vermelho">- {brl(cashbackUsado)}</span>
                   </div>
                 )}
                 {retirada === 'entrega' && (
                   <div className="flex justify-between">
-                    <span className="text-carvao/70">Entrega</span>
-                    <span className="font-mono">{taxaEntrega === 0 ? 'Grátis' : brl(taxaEntrega)}</span>
+                    <span className="text-preto/70">Entrega</span>
+                    <span className="font-sans">{taxaEntrega === 0 ? 'Grátis' : brl(taxaEntrega)}</span>
                   </div>
                 )}
-                <div className="flex justify-between pt-2 border-t border-sebo">
+                <div className="flex justify-between pt-2 border-t border-cinza-claro">
                   <span className="font-display font-extrabold uppercase text-base">Total</span>
-                  <span className="font-mono font-bold text-2xl">{brl(total)}</span>
+                  <span className="font-sans font-bold text-2xl">{brl(total)}</span>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-sebo flex items-center gap-2 text-xs text-carvao/70">
-                <Sparkles className="w-3.5 h-3.5 text-brasa shrink-0" />
+              <div className="mt-3 pt-3 border-t border-cinza-claro flex items-center gap-2 text-xs text-preto/70">
+                <Sparkles className="w-3.5 h-3.5 text-amarelo shrink-0" />
                 Você ganha <strong>{brl(cashbackPrevisto)}</strong> de cashback e{' '}
                 <strong>{pontosPrevistos}</strong> pontos com este pedido.
               </div>
             </div>
 
-            {/* linha 7: GARANTIAS */}
-            <div className="flex items-start gap-2 text-xs text-carvao/60">
+            <div className="flex items-start gap-2 text-xs text-preto/60">
               <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-verde-fiel" />
               <div>
                 Sem cadastro, sem senha. Só seu celular. Peso pode variar até 100 g. Troco garantido no dinheiro.
@@ -425,18 +416,18 @@ export default function CheckoutPage() {
       </main>
 
       {itens.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-azulejo border-t border-sebo px-3 py-3">
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-branco border-t border-cinza-claro px-3 py-3">
           <div className="mx-auto max-w-3xl flex items-center gap-3">
             <div className="flex-1">
-              <div className="text-[10px] uppercase font-semibold text-carvao/60 tracking-wide">
+              <div className="text-[10px] uppercase font-semibold text-preto/60 tracking-wide">
                 Total
               </div>
-              <div className="font-mono font-bold text-2xl leading-tight">{brl(total)}</div>
+              <div className="font-sans font-bold text-2xl leading-tight">{brl(total)}</div>
             </div>
             <button
               onClick={handleEnviar}
               disabled={!podeEnviar || enviando}
-              className="h-14 px-6 rounded-xl bg-sangue text-papel font-extrabold text-base flex items-center gap-2 hover:bg-brasa active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed"
+              className="h-14 px-6 rounded-xl bg-vermelho text-branco font-extrabold text-base flex items-center gap-2 hover:bg-vermelho/90 active:translate-y-px disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {enviando ? 'Enviando…' : 'Enviar pedido'}
               <ChevronRight className="w-5 h-5" />

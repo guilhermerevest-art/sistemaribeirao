@@ -5,7 +5,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useStore } from '@/lib/store';
 import { sugestoesCruzadas } from '@/lib/regras';
 import { brl } from '@/lib/formato';
@@ -55,29 +54,29 @@ export function QueTalAdicionar() {
 
   return (
     <div className="fixed inset-0 z-40 flex items-end sm:items-center sm:justify-center">
-      <div className="absolute inset-0 bg-carvao/40" onClick={fechar} />
-      <div className="relative w-full sm:max-w-lg bg-papel rounded-t-2xl sm:rounded-2xl shadow-2xl border border-sebo overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-sebo">
-          <Sparkles className="w-5 h-5 text-brasa" />
+      <div className="absolute inset-0 bg-preto/40" onClick={fechar} />
+      <div className="relative w-full sm:max-w-lg bg-branco rounded-t-2xl sm:rounded-2xl shadow-2xl border border-cinza-claro overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-cinza-claro">
+          <Sparkles className="w-5 h-5 text-amarelo" />
           <div className="font-display font-extrabold uppercase text-base flex-1">
             Que tal adicionar?
           </div>
           <button
             onClick={fechar}
-            className="w-9 h-9 grid place-items-center rounded-md text-carvao/60 hover:bg-sebo-claro"
+            className="w-9 h-9 grid place-items-center rounded-md text-preto/60 hover:bg-cinza-claro"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <ul className="divide-y divide-sebo">
+        <ul className="divide-y divide-cinza-claro">
           {sugestoes.map((p) => (
             <li key={p.id} className="flex items-center gap-3 p-3">
-              <img src={p.imagem} alt={p.nome} className="w-14 h-14 rounded-md object-cover bg-sebo-claro" />
+              <img src={p.imagem} alt={p.nome} className="w-14 h-14 rounded-md object-cover bg-cinza-claro" />
               <div className="flex-1 min-w-0">
                 <div className="font-display font-bold uppercase text-sm truncate">{p.nome}</div>
                 <div className="font-mono font-bold tabular-nums text-sm">
-                  {brl(p.precoKg)}<span className="text-xs text-carvao/60"> /kg</span>
+                  {brl(p.precoKg)}<span className="text-xs text-preto/60"> /kg</span>
                 </div>
               </div>
               <Button size="sm" onClick={() => adicionarRapido(p.slug)}>
@@ -87,7 +86,7 @@ export function QueTalAdicionar() {
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-2 px-3 py-3 bg-sebo-claro">
+        <div className="flex items-center gap-2 px-3 py-3 bg-cinza-claro">
           <Button variant="ghost" className="flex-1" onClick={fechar}>
             Continuar comprando
           </Button>
