@@ -3,8 +3,9 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
+import { lerSnapshotOffline } from '@/lib/persistencia';
 
 export function Hydrate() {
   const carregarTudo = useStore((s) => s.carregarTudo);
@@ -12,21 +13,25 @@ export function Hydrate() {
   const carregado = useStore((s) => s.carregado);
   const online = useStore((s) => s.online);
   const erro = useStore((s) => s.erro);
+  const [temSnapshot, setTemSnapshot] = useState(false);
 
   useEffect(() => {
+    setTemSnapshot(!!lerSnapshotOffline());
     if (!carregado && !carregando) {
       void carregarTudo();
     }
   }, [carregarTudo, carregado, carregando]);
 
   // Feedback discreto em modo demo offline.
-  if ((carregando || (!carregado && erro)) && !online) {
+  if (carregado && !online) {
     return (
-      <div className="fixed bottom-3 right-3 z-50 rounded-md border border-sebo bg-azulejo/95 px-3 py-2 text-xs text-carvao shadow-sm">
-        Modo demo offline · dados em memória
+      <div className="fixed bottom-3 right-3 z-50 rounded-md border border-sebo bg-azulejo/95 px-3 py-2 text-xs text-carvao shadow-sm flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-brasa" />
+        {temSnapshot ? 'Demo offline · dados salvos neste navegador' : 'Demo offline · seed em memória'}
       </div>
     );
   }
 
   return null;
 }
+

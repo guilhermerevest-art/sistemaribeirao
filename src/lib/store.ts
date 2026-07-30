@@ -35,6 +35,28 @@ import {
   nivelPorPontos as _nivelPorPontos,
   validadeCashbackISO,
 } from './regras';
+import {
+  gravarSnapshotOffline,
+  lerSnapshotOffline,
+  limparSnapshotOffline,
+  type SnapshotOffline,
+} from './persistencia';
+
+// Snapshot serializável do state. Usado em todas as mutações offline
+// para que o reload não apague o trabalho da demo.
+function snapshotFromState(s: State): SnapshotOffline {
+  return {
+    produtos: s.produtos,
+    clientes: s.clientes,
+    pedidos: s.pedidos,
+    ofertas: s.ofertas,
+    resgates: s.resgates,
+    proximoPedido: s.proximoPedido,
+    clienteAtualId: s.clienteAtualId,
+    somBancada: s.somBancada,
+    impressaoAutomatica: s.impressaoAutomatica,
+  };
+}
 
 // ============================================================
 // Mappers DB -> app
@@ -225,14 +247,20 @@ const initialState: State = {
   proximoPedido: 600,
 };
 
-const seedFallback = (): Pick<State, 'produtos' | 'clientes' | 'pedidos' | 'ofertas' | 'resgates'> => ({
+const seedFallback = (): SnapshotOffline => ({
   produtos: PRODUTOS,
   clientes: CLIENTES,
   pedidos: PEDIDOS_SEED,
   ofertas: OFERTAS,
   resgates: RESGATES,
+  proximoPedido: 600,
+  clienteAtualId: undefined,
+  somBancada: true,
+  impressaoAutomatica: true,
 });
 
+// Permanece exportado porque outros módulos podem querer ler o
+// snapshot bruto (ex.: debug) sem ter que importar o store.
 export const useStore = create<State & Actions>()((set, get) => ({
   ...initialState,
 
@@ -253,23 +281,32 @@ export const useStore = create<State & Actions>()((set, get) => ({
         sb.from('app_state').select('*').eq('id', 'singleton').maybeSingle<AppStateRow>(),
       ]);
 
-      // Se qualquer um falhou, cai pro seed local.
+      // Se qualquer um falhou, cai pro modo offline.
       const anyError = prodRes.error || cliRes.error || pedRes.error || ofRes.error || resRes.error;
       if (anyError) {
         // eslint-disable-next-line no-console
         console.warn('[supabase] falha ao carregar:', anyError.message);
-        const seed = seedFallback();
-        const st = stRes.data ?? null;
+        // Prefere o snapshot persistido (sobrevive ao reload) e só
+        // então cai no seed hard-coded. Ordem de preferência:
+        //   localStorage → seed → vazio.
+        const snap = lerSnapshotOffline();
+        const base = snap ?? seedFallback();
         set({
-          ...seed,
+          produtos: base.produtos,
+          clientes: base.clientes,
+          pedidos: base.pedidos,
+          ofertas: base.ofertas,
+          resgates: base.resgates,
           online: false,
-          erro: 'Modo demo offline — dados semeados em memória.',
+          erro: snap
+            ? 'Modo demo offline — usando dados salvos neste navegador.'
+            : 'Modo demo offline — dados semeados em memória.',
           carregado: true,
           carregando: false,
-          clienteAtualId: st?.cliente_atual_id ?? undefined,
-          somBancada: st?.som_bancada ?? true,
-          impressaoAutomatica: st?.impressao_automatica ?? true,
-          proximoPedido: st?.proximo_pedido ?? 600,
+          clienteAtualId: base.clienteAtualId,
+          somBancada: base.somBancada,
+          impressaoAutomatica: base.impressaoAutomatica,
+          proximoPedido: base.proximoPedido,
         });
         return;
       }
@@ -296,13 +333,22 @@ export const useStore = create<State & Actions>()((set, get) => ({
         proximoPedido: st?.proximo_pedido ?? 600,
       });
     } catch (e) {
-      const seed = seedFallback();
+      const snap = lerSnapshotOffline();
+      const base = snap ?? seedFallback();
       set({
-        ...seed,
+        produtos: base.produtos,
+        clientes: base.clientes,
+        pedidos: base.pedidos,
+        ofertas: base.ofertas,
+        resgates: base.resgates,
         online: false,
         erro: e instanceof Error ? e.message : 'Erro ao carregar dados.',
         carregado: true,
         carregando: false,
+        clienteAtualId: base.clienteAtualId,
+        somBancada: base.somBancada,
+        impressaoAutomatica: base.impressaoAutomatica,
+        proximoPedido: base.proximoPedido,
       });
     }
   },
@@ -332,6 +378,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
     set({ clienteAtualId: id });
     if (get().online) {
       await supabase().from('app_state').update({ cliente_atual_id: id ?? null }).eq('id', 'singleton');
+    } else {
+      gravarSnapshotOffline(snapshotFromState(get()));
     }
   },
 
@@ -395,6 +443,10 @@ export const useStore = create<State & Actions>()((set, get) => ({
           carrinho: { itens: [] },
         };
       });
+      if (!s.online) {
+        const novo = get();
+        gravarSnapshotOffline(snapshotFromState(novo));
+      }
       return novoPedido;
     }
 
@@ -445,6 +497,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
       set((s) => ({
         pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, status } : p)),
       }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const { error } = await supabase().from('pedidos').update({ status }).eq('id', id);
@@ -457,6 +510,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
       set((s) => ({
         pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)),
       }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const dbPatch: Record<string, unknown> = {};
@@ -483,6 +537,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
           clientes: novosClientes,
         };
       });
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const sb = supabase();
@@ -503,6 +558,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
           p.id === id ? { ...p, impressoEm: new Date().toISOString() } : p,
         ),
       }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     await supabase().from('pedidos').update({ impresso_em: new Date().toISOString() }).eq('id', id);
@@ -546,6 +602,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
   criarOferta: async (o) => {
     if (!get().online) {
       set((s) => ({ ofertas: [...s.ofertas, o] }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const { error } = await supabase().from('ofertas').insert({
@@ -569,6 +626,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
   atualizarOferta: async (o) => {
     if (!get().online) {
       set((s) => ({ ofertas: s.ofertas.map((x) => (x.id === o.id ? o : x)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const { error } = await supabase().from('ofertas').update({
@@ -591,6 +649,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
   desativarOferta: async (id) => {
     if (!get().online) {
       set((s) => ({ ofertas: s.ofertas.map((o) => (o.id === id ? { ...o, ativa: false } : o)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     await supabase().from('ofertas').update({ ativa: false }).eq('id', id);
@@ -629,6 +688,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
   atualizarCliente: async (c) => {
     if (!get().online) {
       set((s) => ({ clientes: s.clientes.map((x) => (x.id === c.id ? c : x)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const { error } = await supabase().from('clientes').update({
@@ -648,6 +708,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
   removerCliente: async (id) => {
     if (!get().online) {
       set((s) => ({ clientes: s.clientes.filter((c) => c.id !== id) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     await supabase().from('clientes').delete().eq('id', id);
@@ -661,6 +722,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
       set((s) => ({
         clientes: s.clientes.map((c) => c.id === clienteId ? { ...c, saldoCashback: c.saldoCashback + valor } : c),
       }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     await supabase().from('clientes').update({ saldo_cashback: cli.saldoCashback + valor }).eq('id', clienteId);
@@ -673,6 +735,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
   atualizarProduto: async (p) => {
     if (!get().online) {
       set((s) => ({ produtos: s.produtos.map((x) => (x.id === p.id ? p : x)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return;
     }
     const { error } = await supabase().from('produtos').update({
@@ -723,6 +786,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
     set({ somBancada: v });
     if (get().online) {
       await supabase().from('app_state').update<Partial<AppStateRow>>({ som_bancada: v }).eq('id', 'singleton');
+    } else {
+      gravarSnapshotOffline(snapshotFromState(get()));
     }
   },
 
@@ -730,6 +795,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
     set({ impressaoAutomatica: v });
     if (get().online) {
       await supabase().from('app_state').update<Partial<AppStateRow>>({ impressao_automatica: v }).eq('id', 'singleton');
+    } else {
+      gravarSnapshotOffline(snapshotFromState(get()));
     }
   },
 
@@ -742,7 +809,9 @@ export const useStore = create<State & Actions>()((set, get) => ({
       await get().carregarTudo();
       return;
     }
+    limparSnapshotOffline();
     set({ ...initialState, ...seedFallback(), carregado: true });
+    gravarSnapshotOffline(snapshotFromState(get()));
   },
 
   // ============================================================
