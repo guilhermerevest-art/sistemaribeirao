@@ -24,6 +24,7 @@ export interface Produto {
   percentualCashback: number;
   preparosDisponiveis: string[];
   destaque: boolean;
+  novidade?: boolean;
   disponivel: boolean;
 }
 

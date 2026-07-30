@@ -28,6 +28,7 @@ export const PRODUTOS: Produto[] = [
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em bifes', 'Cortar para churrasco', 'Peça inteira', 'Tirar a gordura'],
     destaque: true,
+    novidade: true,
     disponivel: true,
   },
   {

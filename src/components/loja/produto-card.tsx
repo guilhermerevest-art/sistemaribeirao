@@ -10,8 +10,13 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
   return (
     <Link
       href={`/loja/produto/${produto.slug}`}
-      className="etiqueta block rounded-md overflow-hidden hover:shadow-md transition-shadow"
+      className="etiqueta relative block rounded-md overflow-hidden hover:shadow-md transition-shadow"
     >
+      {produto.novidade && (
+        <div className="absolute top-2 left-2 z-10 bg-[color:var(--amarelo-novo)] text-papel text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-sm shadow-sm">
+          Novidade
+        </div>
+      )}
       <div className="aspect-square bg-sebo-claro overflow-hidden">
         <img
           src={produto.imagem}

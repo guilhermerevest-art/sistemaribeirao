@@ -167,3 +167,38 @@ export function validadeCashbackISO(ultimaCompraISO: string, dias = 60): string 
   d.setDate(d.getDate() + dias);
   return d.toISOString();
 }
+
+// Sugestões cruzadas: "se tem bovino, sugere carvao, sal grosso, linguica".
+// Devolve até 3 produtos de categorias complementares.
+const REGRA_SUGESTOES: Partial<Record<Categoria, Categoria[]>> = {
+  bovino: ['churrasco', 'embutidos', 'preparados'],
+  suino: ['churrasco', 'embutidos', 'preparados'],
+  aves: ['preparados', 'churrasco', 'embutidos'],
+  embutidos: ['churrasco', 'preparados', 'aves'],
+  preparados: ['churrasco', 'aves', 'embutidos'],
+  churrasco: ['bovino', 'suino', 'embutidos'],
+};
+
+export function sugestoesCruzadas(
+  todos: Produto[],
+  categoriasNoCarrinho: Categoria[],
+  limite = 3,
+): Produto[] {
+  const jaTem = new Set(
+    todos.filter((p) => categoriasNoCarrinho.includes(p.categoria)).map((p) => p.id),
+  );
+  const sugeridas = new Set<Categoria>();
+  for (const c of categoriasNoCarrinho) {
+    for (const sug of REGRA_SUGESTOES[c] ?? []) {
+      if (!categoriasNoCarrinho.includes(sug)) sugeridas.add(sug);
+    }
+  }
+  const out: Produto[] = [];
+  for (const sug of sugeridas) {
+    const p = todos.find((p) => p.categoria === sug && !jaTem.has(p.id) && p.disponivel);
+    if (p) out.push(p);
+    if (out.length >= limite) break;
+  }
+  return out;
+}
+
