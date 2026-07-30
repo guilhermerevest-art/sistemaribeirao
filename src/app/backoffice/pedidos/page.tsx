@@ -147,16 +147,16 @@ export default function BackofficePedidosPage() {
           clientes={clientes}
           produtos={produtos}
           onClose={() => setDetalhe(null)}
-          onMudarStatus={(s) => { atualizarStatus(detalhe.id, s); setDetalhe({ ...detalhe, status: s }); toast.success('Status atualizado'); }}
+          onMudarStatus={(s) => { void atualizarStatus(detalhe.id, s); setDetalhe({ ...detalhe, status: s }); toast.success('Status atualizado'); }}
           onCancelar={() => {
             if (confirm('Cancelar este pedido? O cashback usado será devolvido.')) {
-              cancelarPedido(detalhe.id);
+              void cancelarPedido(detalhe.id);
               setDetalhe({ ...detalhe, status: 'cancelado' });
               toast.success('Pedido cancelado');
             }
           }}
           onImprimir={() => window.open(`/bancada/cupom/${detalhe.id}`, '_blank')}
-          onEditar={(patch) => { atualizarPedido(detalhe.id, patch); setDetalhe({ ...detalhe, ...patch }); toast.success('Pedido atualizado'); }}
+          onEditar={(patch) => { void atualizarPedido(detalhe.id, patch); setDetalhe({ ...detalhe, ...patch }); toast.success('Pedido atualizado'); }}
         />
       )}
     </div>

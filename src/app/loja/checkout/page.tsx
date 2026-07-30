@@ -29,6 +29,7 @@ export default function CheckoutPage() {
   const [pagamento, setPagamento] = useState<'pix' | 'cartao_entrega' | 'dinheiro'>('pix');
   const [trocoPara, setTrocoPara] = useState('');
   const [observacaoGeral, setObservacaoGeral] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
   const cliente = useMemo(
     () => clientes.find((c) => c.telefone === normalizarTelefone(telefone)),
@@ -60,7 +61,8 @@ export default function CheckoutPage() {
   const cashbackUsado = querUsarCashback ? cashbackMaximo : 0;
   const total = (cotacao ? cotacao.valorPago : 0) + taxaEntrega;
 
-  const handleEnviar = () => {
+  const handleEnviar = async () => {
+    if (enviando) return;
     if (!cliente) {
       toast.error('Coloque um celular para identificar');
       return;
@@ -77,18 +79,24 @@ export default function CheckoutPage() {
       toast.error('O troco precisa ser maior que o total');
       return;
     }
-    setClienteAtual(cliente.id);
-    const pedido = criarPedido({
-      clienteId: cliente.id,
-      retirada,
-      endereco: retirada === 'entrega' ? endereco : undefined,
-      pagamento,
-      trocoPara: pagamento === 'dinheiro' && trocoPara ? Number(trocoPara) : undefined,
-      cashbackUsado,
-      taxaEntrega,
-      observacaoGeral: observacaoGeral.trim() || undefined,
-    });
-    router.push(`/loja/pedido/${pedido.id}`);
+    setEnviando(true);
+    try {
+      await setClienteAtual(cliente.id);
+      const pedido = await criarPedido({
+        clienteId: cliente.id,
+        retirada,
+        endereco: retirada === 'entrega' ? endereco : undefined,
+        pagamento,
+        trocoPara: pagamento === 'dinheiro' && trocoPara ? Number(trocoPara) : undefined,
+        cashbackUsado,
+        taxaEntrega,
+        observacaoGeral: observacaoGeral.trim() || undefined,
+      });
+      router.push(`/loja/pedido/${pedido.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao enviar pedido');
+      setEnviando(false);
+    }
   };
 
   return (

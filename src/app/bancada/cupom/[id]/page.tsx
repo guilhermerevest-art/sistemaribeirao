@@ -29,7 +29,7 @@ export default function CupomPage() {
     const auto = new URLSearchParams(window.location.search).get('auto') === '1';
     if (!auto || jaImpresso.current) return;
     jaImpresso.current = true;
-    marcarImpresso(pedido.id);
+    void marcarImpresso(pedido.id);
     const avisarPai = () => {
       window.parent?.postMessage({ tipo: 'ribeirao-cupom-impresso', pedidoId: pedido.id }, '*');
     };
@@ -62,7 +62,7 @@ export default function CupomPage() {
   const handlePrint = () => {
     if (jaImpresso.current) return;
     jaImpresso.current = true;
-    marcarImpresso(pedido.id);
+    void marcarImpresso(pedido.id);
     window.print();
   };
 

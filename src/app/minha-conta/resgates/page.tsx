@@ -28,12 +28,13 @@ export default function ResgatesPage() {
     );
   }
 
-  const resgatar = (id: string, nome: string, custo: number) => {
+  const resgatar = async (id: string, nome: string, custo: number) => {
     if (cliente.pontos < custo) {
       toast.error(`Faltam ${custo - cliente.pontos} pontos`);
       return;
     }
-    if (debitar(cliente.id, id)) {
+    const ok = await debitar(cliente.id, id);
+    if (ok) {
       toast.success(`${nome} resgatado! Vá até o balcão.`);
     }
   };

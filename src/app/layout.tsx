@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Inter_Tight, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
+import { Hydrate } from '@/components/ui/hydrate';
 
 const display = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${display.variable} ${texto.variable} ${mono.variable}`}>
       <body className="min-h-screen flex flex-col font-sans antialiased">
         {children}
+        <Hydrate />
         <Toaster richColors position="top-center" />
       </body>
     </html>

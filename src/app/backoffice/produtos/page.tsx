@@ -28,7 +28,7 @@ export default function BackofficeProdutosPage() {
 
   const salvar = () => {
     if (!draft) return;
-    atualizar(draft);
+    void atualizar(draft);
     toast.success('Produto atualizado');
     setDraft(null);
   };
@@ -76,7 +76,7 @@ export default function BackofficeProdutosPage() {
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => atualizar({ ...p, disponivel: !p.disponivel })}
+                  onClick={() => void atualizar({ ...p, disponivel: !p.disponivel })}
                   className={`h-11 rounded-md text-xs font-semibold flex items-center justify-center gap-1 ${
                     p.disponivel ? 'bg-verde-fiel text-papel' : 'bg-vermelho-risco text-papel'
                   }`}

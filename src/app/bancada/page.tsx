@@ -48,7 +48,7 @@ export default function BancadaPage() {
         </Link>
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar [&>*]:shrink-0 max-w-[62vw] sm:max-w-none -mr-1 pr-1 py-1">
           <button
-            onClick={() => setImpressaoAutomatica(!impressaoAutomatica)}
+            onClick={() => void setImpressaoAutomatica(!impressaoAutomatica)}
             className={`w-10 h-10 grid place-items-center rounded-md ${impressaoAutomatica ? 'text-verde-fiel' : 'text-papel/50'} hover:bg-papel/10`}
             title={impressaoAutomatica ? 'Impressão automática ligada — clique para desligar' : 'Impressão automática desligada — clique para ligar'}
             aria-label="Impressão automática"
@@ -56,7 +56,7 @@ export default function BancadaPage() {
             {impressaoAutomatica ? <PrinterCheck className="w-5 h-5" /> : <Printer className="w-5 h-5" />}
           </button>
           <button
-            onClick={() => setSomBancada(!somBancada)}
+            onClick={() => void setSomBancada(!somBancada)}
             className="w-10 h-10 grid place-items-center rounded-md text-papel/80 hover:bg-papel/10"
             title={somBancada ? 'Mudo' : 'Som ligado'}
             aria-label="Som"
@@ -66,7 +66,7 @@ export default function BancadaPage() {
           <Link href="/painel">
             <Button variant="secondary" size="sm">Painel</Button>
           </Link>
-          <Button onClick={gerarPedidoTeste} size="sm">
+          <Button onClick={() => void gerarPedidoTeste()} size="sm">
             <Plus className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">Gerar pedido de teste</span>
             <span className="sm:hidden">Teste</span>
@@ -91,17 +91,17 @@ export default function BancadaPage() {
 function handleAcao(
   p: Pedido,
   ac: 'imprimir' | 'iniciar' | 'pronto' | 'entregue',
-  atualizar: (id: string, s: StatusPedido) => void,
-  marcarImpresso: (id: string) => void,
+  atualizar: (id: string, s: StatusPedido) => Promise<void>,
+  marcarImpresso: (id: string) => Promise<void>,
 ) {
   if (ac === 'imprimir') {
     window.open(`/bancada/cupom/${p.id}`, '_blank');
-    marcarImpresso(p.id);
+    void marcarImpresso(p.id);
     return;
   }
-  if (ac === 'iniciar') atualizar(p.id, 'preparando');
-  if (ac === 'pronto') atualizar(p.id, 'pronto');
-  if (ac === 'entregue') atualizar(p.id, 'entregue');
+  if (ac === 'iniciar') void atualizar(p.id, 'preparando');
+  if (ac === 'pronto') void atualizar(p.id, 'pronto');
+  if (ac === 'entregue') void atualizar(p.id, 'entregue');
 }
 
 function Coluna({

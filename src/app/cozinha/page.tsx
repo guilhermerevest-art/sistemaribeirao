@@ -131,7 +131,7 @@ export default function CozinhaPage() {
                   <div className="mt-3 flex items-center gap-2">
                     {p.status === 'novo' && (
                       <button
-                        onClick={() => atualizarStatus(p.id, 'preparando')}
+                        onClick={() => void atualizarStatus(p.id, 'preparando')}
                         className="flex-1 h-14 rounded-md bg-brasa text-papel font-semibold"
                       >
                         Iniciar preparo
@@ -139,7 +139,7 @@ export default function CozinhaPage() {
                     )}
                     {p.status === 'preparando' && (
                       <button
-                        onClick={() => atualizarStatus(p.id, 'pronto')}
+                        onClick={() => void atualizarStatus(p.id, 'pronto')}
                         className="flex-1 h-14 rounded-md bg-verde-fiel text-papel font-bold text-lg flex items-center justify-center gap-2"
                       >
                         <Check className="w-5 h-5" /> Marcar como pronto

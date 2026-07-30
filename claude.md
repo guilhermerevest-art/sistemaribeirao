@@ -5,6 +5,14 @@
 
 ---
 
+## Credenciais SUPABASE
+- https://louyuljshpjrmjhaivyl.supabase.co
+- sb_publishable_3zfUmcVaPG4RKJJdyEEn2Q_7VvH38ma
+- eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvdXl1bGpzaHBqcm1qaGFpdnlsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTQzOTI1MCwiZXhwIjoyMTAxMDE1MjUwfQ.k1lHffTJE8bpOHacEEd7Us_us09HqAEa9LohktEfGcw
+
+
+
+
 ## 1. Contexto e objetivo
 
 O **Açougue Ribeirão** é um comércio de bairro. Hoje o pedido chega por WhatsApp, é anotado à mão e o atendente perde tempo interpretando mensagem. Não existe nenhum registro de quem compra, com que frequência, nem qualquer mecanismo de retorno.

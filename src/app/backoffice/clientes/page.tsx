@@ -104,7 +104,7 @@ export default function BackofficeClientesPage() {
                   )}
                   <button
                     onClick={() => {
-                      if (confirm(`Remover ${c.nome}?`)) remover(c.id);
+                      if (confirm(`Remover ${c.nome}?`)) void remover(c.id);
                     }}
                     className="h-11 rounded-md bg-vermelho-risco text-papel text-xs font-semibold flex flex-col items-center justify-center gap-0.5"
                     title="Remover"
@@ -130,7 +130,7 @@ export default function BackofficeClientesPage() {
               toast.error('Nome e telefone são obrigatórios');
               return;
             }
-            criar({ ...dados, telefone: normalizarTelefone(dados.telefone) });
+            void criar({ ...dados, telefone: normalizarTelefone(dados.telefone) });
             toast.success('Cliente cadastrado');
             setModal({ tipo: null });
           }}
@@ -142,7 +142,7 @@ export default function BackofficeClientesPage() {
           cliente={modal.cliente}
           onClose={() => setModal({ tipo: null })}
           onSalvar={(dados) => {
-            atualizar({ ...modal.cliente!, ...dados, telefone: normalizarTelefone(dados.telefone) });
+            void atualizar({ ...modal.cliente!, ...dados, telefone: normalizarTelefone(dados.telefone) });
             toast.success('Cliente atualizado');
             setModal({ tipo: null });
           }}
@@ -154,7 +154,7 @@ export default function BackofficeClientesPage() {
           cliente={modal.cliente}
           onClose={() => setModal({ tipo: null })}
           onCreditar={(valor) => {
-            creditarCashback(modal.cliente!.id, valor);
+            void creditarCashback(modal.cliente!.id, valor);
             toast.success(`${brl(valor)} creditado a ${modal.cliente!.nome.split(' ')[0]}`);
             setModal({ tipo: null });
           }}

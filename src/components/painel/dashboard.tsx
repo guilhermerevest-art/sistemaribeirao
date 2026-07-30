@@ -125,7 +125,7 @@ export default function PainelPage() {
             <Link href="/painel/campanhas"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Campanhas</Button></Link>
             <button
               onClick={() => {
-                if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) reiniciar();
+                if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) void reiniciar();
               }}
               className="w-10 h-10 grid place-items-center rounded-md text-papel/70 hover:text-papel hover:bg-papel/10"
               title="Reiniciar demonstração"
@@ -201,7 +201,7 @@ export default function PainelPage() {
       <footer className="mx-auto max-w-6xl px-4 pb-4 text-center text-xs text-carvao/50">
         <button
           onClick={() => {
-            if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) reiniciar();
+            if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) void reiniciar();
           }}
           className="underline hover:text-carvao py-2 px-2 -mx-2"
         >

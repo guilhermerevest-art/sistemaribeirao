@@ -33,7 +33,7 @@ export default function BackofficePage() {
         voltarPara="/"
         acoes={
           <button
-            onClick={() => { if (confirm('Reiniciar a demonstração?')) reiniciar(); }}
+            onClick={() => { if (confirm('Reiniciar a demonstração?')) void reiniciar(); }}
             className="w-10 h-10 grid place-items-center rounded-md text-papel/80 hover:text-papel hover:bg-papel/10"
             title="Reiniciar demonstração"
             aria-label="Reiniciar demonstração"

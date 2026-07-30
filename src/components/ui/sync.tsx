@@ -3,28 +3,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 
-// Sincronia entre abas: polling de 2s + storage event.
+// Sincronia entre abas: polling de 2s comparando o último pedido novo.
+// Pedidos novos que aparecem no state (vindos de outra aba ou outro
+// dispositivo) disparam recarregarPedidos() pra puxar a lista nova.
 export function useSyncEntreAbas() {
   const carregado = useRef(false);
+  const ultimoId = useRef<string | null>(null);
+
   useEffect(() => {
     function checar() {
-      try {
-        const raw = localStorage.getItem('ribeirao-mock-v1');
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        const novoSeq = data?.state?.proximoPedido ?? 0;
-        const seqAtual = useStore.getState().proximoPedido;
-        if (novoSeq !== seqAtual) {
-          // Rehidrata o store.
-          useStore.persist.rehydrate();
-        }
-      } catch {
-        // silencioso
+      const s = useStore.getState();
+      const novo = s.pedidos[0]?.id ?? null;
+      if (carregado.current && novo !== ultimoId.current) {
+        // Outro lugar inseriu pedido; recarrega pra ter dados frescos.
+        void s.recarregarPedidos();
       }
+      ultimoId.current = novo;
+      carregado.current = true;
     }
     const i = setInterval(checar, 2000);
     window.addEventListener('storage', checar);
-    carregado.current = true;
     return () => {
       clearInterval(i);
       window.removeEventListener('storage', checar);
@@ -38,19 +36,15 @@ export function useAutoAvanco() {
     const t = setInterval(() => {
       const s = useStore.getState();
       const agora = Date.now();
-      const atualizados = s.pedidos.map((p) => {
+      const atualizar = s.atualizarStatusPedido;
+      for (const p of s.pedidos) {
         if (p.status === 'novo') {
           const idade = agora - new Date(p.criadoEm).getTime();
-          if (idade >= 90_000) return { ...p, status: 'preparando' as const };
+          if (idade >= 90_000) void atualizar(p.id, 'preparando');
         } else if (p.status === 'preparando') {
           const idade = agora - new Date(p.criadoEm).getTime();
-          if (idade >= 180_000) return { ...p, status: 'pronto' as const };
+          if (idade >= 180_000) void atualizar(p.id, 'pronto');
         }
-        return p;
-      });
-      const mudou = atualizados.some((p, i) => p.status !== s.pedidos[i]?.status);
-      if (mudou) {
-        useStore.setState({ pedidos: atualizados });
       }
     }, 5000);
     return () => clearInterval(t);

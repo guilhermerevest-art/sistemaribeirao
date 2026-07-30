@@ -98,7 +98,7 @@ export default function BackofficePromocoesPage() {
                   <button
                     onClick={() => {
                       if (!o.ativa) return;
-                      desativar(o.id);
+                      void desativar(o.id);
                       toast.success('Promoção desativada');
                     }}
                     disabled={!o.ativa}
@@ -122,7 +122,7 @@ export default function BackofficePromocoesPage() {
           onClose={() => setModal(null)}
           onSalvar={(dados) => {
             if (modal.tipo === 'criar') {
-              criar({
+              void criar({
                 id: `o-${Date.now()}`,
                 ...dados,
                 quantidadeVendidaKg: 0,
@@ -130,7 +130,7 @@ export default function BackofficePromocoesPage() {
               } as Oferta);
               toast.success('Promoção criada');
             } else if (modal.oferta) {
-              atualizar({ ...modal.oferta, ...dados });
+              void atualizar({ ...modal.oferta, ...dados });
               toast.success('Promoção atualizada');
             }
             setModal(null);
