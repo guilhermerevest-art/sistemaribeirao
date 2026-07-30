@@ -1,20 +1,39 @@
 @import "tailwindcss";
 
-/* Ribeirão — tokens visuais. Açougue de bairro bem cuidado. */
+/* Ribeirão — tokens visuais. Paleta cliente: branco + vermelho + amarelo. */
 :root {
-  --sangue: #7B1113;
-  --brasa: #C8461F;
-  --papel: #F7F4EE;
-  --azulejo: #FFFFFF;
-  --carvao: #1C1A19;
-  --sebo: #E8DFCC;
-  --sebo-claro: #F1ECDC;
-  --verde-fiel: #2F5D3A;
-  --amarelo-novo: #B68A2E;
-  --vermelho-risco: #9B2C2C;
+  /* Cores principais (aliases novos e antigos convivem). */
+  --vermelho: #D7263D;
+  --amarelo: #F5C518;
+  --branco: #FFFFFF;
+  --preto: #0F0F0F;
+  --cinza-claro: #F2F2F2;
+  --cinza-medio: #E5E5E5;
+  --verde-fiel: #1B8A5A;
+  --vermelho-risco: #D7263D;
+
+  /* Aliases antigos — reapontam pra paleta nova, mantém código legado compilando. */
+  --sangue: var(--vermelho);
+  --brasa: var(--amarelo);
+  --papel: var(--branco);
+  --azulejo: var(--branco);
+  --carvao: var(--preto);
+  --sebo: var(--cinza-claro);
+  --sebo-claro: var(--cinza-medio);
+  --amarelo-novo: var(--amarelo);
 }
 
 @theme inline {
+  --color-vermelho: var(--vermelho);
+  --color-amarelo: var(--amarelo);
+  --color-branco: var(--branco);
+  --color-preto: var(--preto);
+  --color-cinza-claro: var(--cinza-claro);
+  --color-cinza-medio: var(--cinza-medio);
+  --color-verde-fiel: var(--verde-fiel);
+  --color-vermelho-risco: var(--vermelho-risco);
+
+  /* Aliases antigos — Tailwind classes (bg-sangue etc.) seguem funcionando. */
   --color-sangue: var(--sangue);
   --color-brasa: var(--brasa);
   --color-papel: var(--papel);
@@ -22,12 +41,10 @@
   --color-carvao: var(--carvao);
   --color-sebo: var(--sebo);
   --color-sebo-claro: var(--sebo-claro);
-  --color-verde-fiel: var(--verde-fiel);
   --color-amarelo-novo: var(--amarelo-novo);
-  --color-vermelho-risco: var(--vermelho-risco);
 
-  --color-background: var(--papel);
-  --color-foreground: var(--carvao);
+  --color-background: var(--branco);
+  --color-foreground: var(--preto);
 
   --font-display: var(--font-bricolage);
   --font-sans: var(--font-inter);
@@ -35,65 +52,17 @@
 }
 
 html, body {
-  background: var(--papel);
-  color: var(--carvao);
+  background: var(--branco);
+  color: var(--preto);
 }
 
-/* Foco visível forte — público-alvo no balcão. */
 *:focus-visible {
-  outline: 2px solid var(--sangue);
+  outline: 2px solid var(--vermelho);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* Cartão-etiqueta serrilhado. */
-.etiqueta {
-  background: var(--azulejo);
-  position: relative;
-  isolation: isolate;
-}
-.etiqueta::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 10px;
-  background-image: radial-gradient(circle at 5px 0, var(--papel) 5px, transparent 6px);
-  background-size: 10px 10px;
-  background-repeat: repeat-x;
-  background-position: bottom;
-  z-index: 1;
-}
-.etiqueta::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 1px;
-  background: var(--sebo);
-}
-
-.barcode {
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--carvao) 0 1px,
-    transparent 1px 2px,
-    var(--carvao) 2px 4px,
-    transparent 4px 6px,
-    var(--carvao) 6px 7px,
-    transparent 7px 9px,
-    var(--carvao) 9px 12px,
-    transparent 12px 13px,
-    var(--carvao) 13px 14px,
-    transparent 14px 16px
-  );
-  height: 28px;
-  opacity: 0.5;
-}
-
-/* Cupom 80mm — só ativo em /bancada/cupom/[id] */
+/* Cupom 80mm — só ativo em /bancada/cupom/[id]. Mantém preto/branco/mono. */
 @media print {
   @page {
     size: 80mm auto;
@@ -130,12 +99,10 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--azulejo);
-  border-bottom: 1px solid var(--sebo);
+  background: var(--branco);
+  border-bottom: 1px solid var(--cinza-claro);
 }
 
-/* Some a barra de rolagem mas mantém o scroll — usado em navegações
-   horizontais de header que não podem quebrar linha em telas pequenas. */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -146,8 +113,8 @@ html, body {
 
 /* Tarja do painel da bancada. */
 .bancada-bg {
-  background: var(--carvao);
-  color: var(--papel);
+  background: var(--preto);
+  color: var(--branco);
 }
 
 @media (min-width: 768px) {
