@@ -24,6 +24,8 @@ import {
   Sparkles,
   Gift,
   Shield,
+  Navigation,
+  Loader2,
 } from 'lucide-react';
 import { calcularMaximoUsoCashback, cotarPedido, nivelPorPontos } from '@/lib/regras';
 import { toast } from 'sonner';
@@ -43,6 +45,7 @@ export default function CheckoutPage() {
   const clienteAtualId = useStore((s) => s.clienteAtualId);
   const setClienteAtual = useStore((s) => s.setClienteAtual);
   const criarPedido = useStore((s) => s.criarPedido);
+  const criarCliente = useStore((s) => s.criarCliente);
 
   const [telefone, setTelefone] = useState('');
   const [novoNome, setNovoNome] = useState('');
@@ -59,6 +62,11 @@ export default function CheckoutPage() {
   const [aceitar, setAceitar] = useState(false);
   const [accordion, setAccordion] = useState<Accordion>(null);
   const [enviando, setEnviando] = useState(false);
+  const [geoEstado, setGeoEstado] = useState<
+    'ocioso' | 'pedindo' | 'invertendo' | 'pronto' | 'erro'
+  >('ocioso');
+  const [geoErro, setGeoErro] = useState<string | null>(null);
+  const [enderecoConfirmado, setEnderecoConfirmado] = useState(true);
 
   const cliente = useMemo(
     () => clientes.find((c) => c.telefone === normalizarTelefone(telefone)),
@@ -98,17 +106,30 @@ export default function CheckoutPage() {
 
   const handleEnviar = async () => {
     if (enviando) return;
-    if (!cliente) {
+    const fone = normalizarTelefone(telefone);
+    if (fone.length < 10) {
       toast.error('Coloque um celular para identificar');
+      return;
+    }
+    // Se o telefone não bate com nenhum cliente e o nome não foi
+    // preenchido, bloqueia. Sem nome não dá pra criar o cadastro.
+    if (!cliente && !novoNome.trim()) {
+      toast.error('Coloque o nome pra gente te chamar');
       return;
     }
     if (itens.length === 0) {
       toast.error('Seu carrinho está vazio');
       return;
     }
-    if (retirada === 'entrega' && !endereco.trim()) {
-      toast.error('Coloque o endereço de entrega');
-      return;
+    if (retirada === 'entrega') {
+      if (!endereco.trim()) {
+        toast.error('Coloque o endereço de entrega');
+        return;
+      }
+      if (!enderecoConfirmado) {
+        toast.error('Confirme o endereço de entrega');
+        return;
+      }
     }
     if (janela === 'agendada' && (!dataAgendada || !horaAgendada)) {
       toast.error('Escolha data e hora da retirada');
@@ -124,14 +145,23 @@ export default function CheckoutPage() {
     }
     setEnviando(true);
     try {
-      await setClienteAtual(cliente.id);
+      let clienteId = cliente?.id;
+      if (!clienteId) {
+        const novo = await criarCliente({
+          nome: novoNome.trim(),
+          telefone: fone,
+          aceitaWhatsapp: true,
+        });
+        clienteId = novo.id;
+      }
+      await setClienteAtual(clienteId);
       const obsParts: string[] = [];
       if (observacaoGeral.trim()) obsParts.push(observacaoGeral.trim());
       if (janela === 'agendada') {
         obsParts.push(`Agendado: ${dataAgendada} às ${horaAgendada}`);
       }
       const pedido = await criarPedido({
-        clienteId: cliente.id,
+        clienteId: clienteId!,
         retirada,
         endereco: retirada === 'entrega' ? endereco : undefined,
         pagamento,
@@ -146,6 +176,58 @@ export default function CheckoutPage() {
       setEnviando(false);
     }
   };
+
+  const capturarLocalizacao = () => {
+    setGeoErro(null);
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGeoErro('Seu navegador não tem geolocalização. Digite o endereço à mão.');
+      setGeoEstado('erro');
+      return;
+    }
+    setGeoEstado('pedindo');
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setGeoEstado('invertendo');
+        try {
+          // Nominatim (OpenStreetMap) — sem API key, 1 req/seg.
+          const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+          const res = await fetch(url, {
+            headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' },
+          });
+          if (!res.ok) throw new Error('Falha ao buscar endereço');
+          const data = await res.json();
+          const enderecoAchado = (data.display_name as string | undefined) ?? '';
+          if (!enderecoAchado) throw new Error('Endereço vazio');
+          setEndereco(enderecoAchado);
+          setEnderecoConfirmado(false);
+          setAccordion('endereco');
+          setGeoEstado('pronto');
+        } catch (e) {
+          setGeoErro(
+            e instanceof Error
+              ? e.message
+              : 'Não consegui identificar o endereço. Digite à mão.',
+          );
+          setGeoEstado('erro');
+        }
+      },
+      (err) => {
+        setGeoErro(
+          err.code === err.PERMISSION_DENIED
+            ? 'Você bloqueou a localização. Pode digitar o endereço à mão.'
+            : 'Não consegui pegar sua localização. Tente de novo ou digite à mão.',
+        );
+        setGeoEstado('erro');
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  // Quando o usuário edita o endereço manualmente, exige nova confirmação.
+  useEffect(() => {
+    setEnderecoConfirmado(false);
+  }, [endereco]);
 
   return (
     <>
@@ -257,15 +339,77 @@ export default function CheckoutPage() {
                   onToggle={() => setAccordion(accordion === 'endereco' ? null : 'endereco')}
                   icon={<MapPin className="w-4 h-4" />}
                   label="Endereço de entrega"
+                  valor={
+                    endereco
+                      ? `${endereco.slice(0, 32)}${endereco.length > 32 ? '…' : ''} ${
+                          enderecoConfirmado ? '✓' : '· confirmar'
+                        }`
+                      : 'Onde você está?'
+                  }
                   children={
-                    <div>
-                      <input
-                        value={endereco}
-                        onChange={(e) => setEndereco(e.target.value)}
-                        placeholder="Rua, número, bairro"
-                        className="w-full h-11 rounded-md border border-sebo px-3"
-                      />
-                      <p className="text-xs text-carvao/60 mt-1">
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={capturarLocalizacao}
+                        disabled={geoEstado === 'pedindo' || geoEstado === 'invertendo'}
+                        className="w-full h-11 rounded-md border-2 border-brasa bg-brasa/10 text-brasa font-semibold flex items-center justify-center gap-2 hover:bg-brasa/20 disabled:opacity-60"
+                      >
+                        {geoEstado === 'pedindo' || geoEstado === 'invertendo' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            {geoEstado === 'pedindo' ? 'Pedindo permissão…' : 'Achar endereço…'}
+                          </>
+                        ) : (
+                          <>
+                            <Navigation className="w-4 h-4" />
+                            Usar minha localização
+                          </>
+                        )}
+                      </button>
+                      {geoErro && (
+                        <div className="text-xs text-vermelho-risco bg-vermelho-risco/10 border border-vermelho-risco/30 rounded-md px-2 py-1.5">
+                          {geoErro}
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs text-carvao/60">Endereço</label>
+                        <textarea
+                          value={endereco}
+                          onChange={(e) => setEndereco(e.target.value)}
+                          placeholder="Rua, número, bairro, complemento"
+                          rows={2}
+                          className="mt-1 w-full rounded-md border border-sebo px-3 py-2 text-sm"
+                        />
+                      </div>
+                      {endereco.trim() && (
+                        <div className="rounded-md bg-sebo-claro border border-sebo p-3">
+                          <div className="text-xs text-carvao/60 uppercase font-semibold mb-1">
+                            Confirme o endereço
+                          </div>
+                          <div className="text-sm">{endereco}</div>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEnderecoConfirmado(true)}
+                              className={
+                                enderecoConfirmado
+                                  ? 'flex-1 h-9 rounded-md bg-verde-fiel text-papel font-semibold text-sm flex items-center justify-center gap-1'
+                                  : 'flex-1 h-9 rounded-md bg-sangue text-papel font-semibold text-sm hover:bg-brasa'
+                              }
+                            >
+                              {enderecoConfirmado ? '✓ Confirmado' : 'Confirmar'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEnderecoConfirmado(false)}
+                              className="h-9 px-3 rounded-md border border-sebo text-carvao text-sm hover:bg-sebo-claro"
+                            >
+                              Editar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-xs text-carvao/60">
                         Taxa R$ 8,00 · grátis acima de R$ 150,00.
                       </p>
                     </div>
