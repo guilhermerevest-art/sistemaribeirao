@@ -443,10 +443,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
           carrinho: { itens: [] },
         };
       });
-      if (!s.online) {
-        const novo = get();
-        gravarSnapshotOffline(snapshotFromState(novo));
-      }
+      gravarSnapshotOffline(snapshotFromState(get()));
       return novoPedido;
     }
 
@@ -670,6 +667,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
     };
     if (!get().online) {
       set((s) => ({ clientes: [...s.clientes, novo] }));
+      gravarSnapshotOffline(snapshotFromState(get()));
       return novo;
     }
     const { error } = await supabase().from('clientes').insert({
