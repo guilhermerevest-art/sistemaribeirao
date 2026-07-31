@@ -4,11 +4,12 @@ import { useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
-import { brl, formatarData, formatarTelefone } from '@/lib/formato';
+import { brl, cashbackExpiraEmBreve, formatarTelefone, linkWhatsAppReativacao } from '@/lib/formato';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, ChevronLeft } from 'lucide-react';
-import type { Cliente, Frequencia, Pedido } from '@/lib/types';
+import { MessageCircle, ChevronLeft, AlertTriangle } from 'lucide-react';
+import type { Cliente, Frequencia } from '@/lib/types';
+import { infoFrequencia } from '@/lib/frequencia';
 
 const GRUPO_LABEL: Record<Frequencia, string> = {
   novo: 'Novo',
@@ -24,24 +25,6 @@ const GRUPO_TONE: Record<Frequencia, 'amarelo' | 'verde' | 'sebo' | 'brasa' | 's
   em_risco: 'brasa',
   inativo: 'sangue',
 };
-
-function info(c: Cliente, pedidos: Pedido[]) {
-  const ped = pedidos.filter((p) => p.clienteId === c.id);
-  ped.sort((a, b) => (a.criadoEm < b.criadoEm ? 1 : -1));
-  const ultimo = ped[0]?.criadoEm;
-  const dias = ultimo ? Math.floor((Date.now() - new Date(ultimo).getTime()) / 86400000) : 9999;
-  const noventaAtras = new Date();
-  noventaAtras.setDate(noventaAtras.getDate() - 90);
-  const ped90 = ped.filter((p) => new Date(p.criadoEm) >= noventaAtras).length;
-  const diasCadastro = Math.floor((Date.now() - new Date(c.criadoEm).getTime()) / 86400000);
-  let g: Frequencia = 'ocasional';
-  if (dias >= 60) g = 'inativo';
-  else if (dias >= 31) g = 'em_risco';
-  else if (ped90 >= 6 && dias <= 15) g = 'fiel';
-  else if (ped90 <= 1 && diasCadastro <= 30) g = 'novo';
-  const ticket = ped.length ? ped.reduce((s, p) => s + p.total, 0) / ped.length : 0;
-  return { dias, ped90, g, ticket };
-}
 
 export default function ClientesPage() {
   return (
@@ -59,18 +42,20 @@ function ClientesInner() {
 
   const rows = useMemo(() => {
     return clientes
-      .map((c) => ({ c, info: info(c, pedidos) }))
-      .filter((r) => !grupoFiltro || r.info.g === grupoFiltro)
-      .sort((a, b) => b.info.dias - a.info.dias);
+      .map((c) => ({ c, info: infoFrequencia(c, pedidos) }))
+      .filter((r) => !grupoFiltro || r.info.grupo === grupoFiltro)
+      .sort((a, b) => b.info.diasSemCompra - a.info.diasSemCompra);
   }, [clientes, pedidos, grupoFiltro]);
 
-  const whatsapp = (c: Cliente, dias: number, cb: number) => {
-    const msg = encodeURIComponent(
-      `Oi ${c.nome.split(' ')[0]}, aqui é do Empório Ribeirão. Faz ${dias} dias que você não aparece e você tem ${brl(cb)} de cashback pra usar até ${formatarData(c.cashbackExpiraEm ?? new Date().toISOString())}. Essa semana a fraldinha tá R$ 44,90 o quilo. Quer que eu separe?`,
-    );
-    const tel = c.telefone.replace(/\D/g, '');
-    return `https://wa.me/55${tel}?text=${msg}`;
-  };
+  const whatsapp = (c: Cliente, dias: number, cb: number) =>
+    linkWhatsAppReativacao({
+      nome: c.nome,
+      telefone: c.telefone,
+      diasSemCompra: dias,
+      saldo: cb,
+      validadeISO: c.cashbackExpiraEm,
+      produto: 'a fraldinha tá R$ 44,90 o quilo',
+    });
 
   return (
     <div className="min-h-screen bg-papel">
@@ -94,15 +79,21 @@ function ClientesInner() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link href={`/painel/clientes/${c.id}`} className="font-display font-bold uppercase">{c.nome}</Link>
-                  <Badge tone={GRUPO_TONE[i.g]}>{GRUPO_LABEL[i.g]}</Badge>
+                  <Badge tone={GRUPO_TONE[i.grupo]}>{GRUPO_LABEL[i.grupo]}</Badge>
                 </div>
                 <div className="text-xs text-carvao/70 font-mono">{formatarTelefone(c.telefone)}</div>
                 <div className="text-xs text-carvao/60 mt-1">
-                  {i.dias === 9999 ? 'Sem compras' : `${i.dias} dias sem comprar`} · ticket {brl(i.ticket)} · cashback {brl(c.saldoCashback)}
+                  {i.diasSemCompra === 9999 ? 'Sem compras' : `${i.diasSemCompra} dias sem comprar`} · ticket {brl(i.ticketMedio)} · cashback {brl(c.saldoCashback)}
                 </div>
+                {cashbackExpiraEmBreve(c.cashbackExpiraEm) && c.saldoCashback > 0 && (
+                  <div className="mt-1 text-[11px] text-vermelho-risco font-semibold inline-flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Vence em {c.cashbackExpiraEm ? new Date(c.cashbackExpiraEm).toLocaleDateString('pt-BR') : 'breve'}
+                  </div>
+                )}
               </div>
               {c.aceitaWhatsapp && (
-                <a href={whatsapp(c, i.dias, c.saldoCashback)} target="_blank" rel="noreferrer" className="shrink-0">
+                <a href={whatsapp(c, i.diasSemCompra, c.saldoCashback)} target="_blank" rel="noreferrer" className="shrink-0">
                   <Button size="lg" className="w-full sm:w-auto"><MessageCircle className="w-4 h-4 mr-1" /> Chamar no WhatsApp</Button>
                 </a>
               )}

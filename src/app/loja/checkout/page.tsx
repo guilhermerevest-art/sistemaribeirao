@@ -39,6 +39,8 @@ export default function CheckoutPage() {
   const setClienteAtual = useStore((s) => s.setClienteAtual);
   const criarPedido = useStore((s) => s.criarPedido);
   const criarCliente = useStore((s) => s.criarCliente);
+  const lojaAberta = useStore((s) => s.lojaAberta);
+  const estabelecimento = useStore((s) => s.estabelecimento);
 
   const [telefone, setTelefone] = useState('');
   const [novoNome, setNovoNome] = useState('');
@@ -98,6 +100,7 @@ export default function CheckoutPage() {
 
   const fone = normalizarTelefone(telefone);
   const podeEnviar =
+    lojaAberta &&
     fone.length >= 10 && (cliente || novoNome.trim().length > 0) && itens.length > 0 &&
     (retirada !== 'entrega' || endereco.trim().length > 0) &&
     (pagamento !== 'dinheiro' || !trocoPara || Number(trocoPara) >= total);
@@ -192,22 +195,28 @@ export default function CheckoutPage() {
     <>
       <HeaderLoja />
 
+      {!lojaAberta && (
+        <div className="bg-vermelho-risco text-branco text-center text-sm font-semibold py-2">
+          Estamos fechados no momento. Seu pedido vai ficar pronto quando reabrirmos.
+        </div>
+      )}
+
       {/* Faixa do açougue — sinaliza "é açougue real". */}
       <div className="bg-preto text-branco">
         <div className="mx-auto max-w-3xl px-4 py-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-vermelho grid place-items-center font-display font-extrabold text-branco shrink-0">
-            ER
+            {estabelecimento.nomeFantasia.slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-display font-extrabold uppercase text-sm leading-tight">
-              Empório Ribeirão
+              {estabelecimento.nomeFantasia}
             </div>
             <div className="text-[11px] text-branco/60 leading-tight">
-              Rua das Flores, 123 · Centro · Ribeirão
+              {estabelecimento.endereco}
             </div>
           </div>
           <a
-            href="https://wa.me/553490000000"
+            href={`https://wa.me/55${(estabelecimento.telefone.replace(/\D/g, '') || '3490000000')}`}
             target="_blank"
             rel="noreferrer"
             className="w-9 h-9 grid place-items-center rounded-md bg-branco/10 hover:bg-branco/20"

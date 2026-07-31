@@ -38,10 +38,17 @@ export function OfertaRelampago() {
   const produto = produtos.find((p) => p.id === oferta.produtoId);
   if (!produto) return null;
   const restante = useContagemRegressiva(oferta.fimEm);
-  const acabou = oferta.quantidadeTotalKg !== undefined && oferta.quantidadeVendidaKg >= oferta.quantidadeTotalKg;
-  const pct = oferta.quantidadeTotalKg ? Math.min(100, (oferta.quantidadeVendidaKg / oferta.quantidadeTotalKg) * 100) : 0;
+  const acabou =
+    oferta.quantidadeTotalKg !== undefined &&
+    oferta.quantidadeVendidaKg >= oferta.quantidadeTotalKg;
+  const total = oferta.quantidadeTotalKg ?? 0;
+  const pct = total ? Math.min(100, (oferta.quantidadeVendidaKg / total) * 100) : 0;
+  // Quando acaba, o preço "de" reaparece e o "por" some — combina com
+  // o que `cotarPedido` faz no carrinho (cai pro preço cheio).
   return (
-    <section className="rounded-xl bg-amarelo text-preto p-4 my-4">
+    <section
+      className={`rounded-xl p-4 my-4 ${acabou ? 'bg-sebo text-preto' : 'bg-amarelo text-preto'}`}
+    >
       <div className="flex items-center gap-2">
         <Zap className="w-5 h-5" />
         <div className="font-display font-extrabold uppercase text-lg">Oferta relâmpago</div>
@@ -59,17 +66,24 @@ export function OfertaRelampago() {
           </div>
           <div className="text-right">
             <div className="font-mono line-through text-preto/60 text-sm">{brl(oferta.precoDe)}</div>
-            <div className="font-mono font-extrabold text-2xl">{brl(oferta.precoPor)}</div>
+            <div className="font-mono font-extrabold text-2xl">
+              {acabou ? brl(produto.precoKg) : brl(oferta.precoPor)}
+            </div>
           </div>
         </div>
       </Link>
-      {oferta.quantidadeTotalKg && (
+      {total > 0 && (
         <div className="mt-3">
           <div className="h-2 rounded-full bg-preto/20 overflow-hidden">
-            <div className="h-full bg-preto" style={{ width: `${pct}%` }} />
+            <div
+              className={acabou ? 'h-full bg-carvao' : 'h-full bg-preto'}
+              style={{ width: `${pct}%` }}
+            />
           </div>
           <div className="text-xs mt-1 font-mono">
-            já saíram {oferta.quantidadeVendidaKg.toFixed(0)} kg dos {oferta.quantidadeTotalKg} kg
+            {acabou
+              ? `Esgotado · ${oferta.quantidadeVendidaKg.toFixed(0)} kg vendidos`
+              : `já saíram ${oferta.quantidadeVendidaKg.toFixed(0)} kg dos ${total} kg`}
           </div>
         </div>
       )}

@@ -30,6 +30,7 @@ export default function CozinhaPage() {
   const combos = useStore((s) => s.combos);
   const clientes = useStore((s) => s.clientes);
   const atualizarStatus = useStore((s) => s.atualizarStatusPedido);
+  const lojaAberta = useStore((s) => s.lojaAberta);
 
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -43,6 +44,11 @@ export default function CozinhaPage() {
   return (
     <div className="min-h-screen bg-papel">
       <header className="bg-carvao text-papel p-3 sm:p-4 sticky top-0 z-30">
+        {!lojaAberta && (
+          <span className="absolute top-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-vermelho-risco text-papel text-[10px] font-bold uppercase tracking-wider">
+            Loja fechada
+          </span>
+        )}
         <div className="mx-auto max-w-6xl flex items-center gap-2 sm:gap-3">
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <Home className="w-5 h-5 shrink-0" />
@@ -122,7 +128,7 @@ export default function CozinhaPage() {
                           {it.preparos.length > 0 && (
                             <ul className="mt-1">
                               {it.preparos.map((pr) => (
-                                <li key={pr} className="text-xs font-bold text-carvao">» {pr.toUpperCase()}</li>
+                                <li key={pr} className="text-xs font-bold text-carvao">&gt;&gt; {pr.toUpperCase()}</li>
                               ))}
                             </ul>
                           )}

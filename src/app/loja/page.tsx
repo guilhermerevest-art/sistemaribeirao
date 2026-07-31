@@ -17,6 +17,7 @@ export default function LojaPage() {
   const produtos = useStore((s) => s.produtos);
   const combos = useStore((s) => s.combos);
   const carregado = useStore((s) => s.carregado);
+  const lojaAberta = useStore((s) => s.lojaAberta);
   const [categoriaAtiva, setCategoriaAtiva] = useState<Categoria | 'todas'>('todas');
   const [busca, setBusca] = useState('');
 
@@ -49,6 +50,11 @@ export default function LojaPage() {
       <QueTalAdicionar />
 
       <main className="mx-auto max-w-6xl px-3 sm:px-4 pb-24">
+        {!lojaAberta && (
+          <div className="mt-3 rounded-md bg-vermelho-risco text-branco px-3 py-2 text-sm font-semibold">
+            Estamos fechados no momento. Voltamos em breve.
+          </div>
+        )}
         {/* atalhos super discretos no topo */}
         <nav className="pt-3 flex gap-3 text-xs">
           <Link href="/bancada" className="text-preto/60 hover:text-preto underline">Bancada</Link>
@@ -163,8 +169,23 @@ export default function LojaPage() {
             ))
           )}
           {porCategoria.every((s) => s.produtos.length === 0) && carregado && (
-            <div className="text-center py-16 text-preto/60 text-sm">
-              Nada encontrado. Limpe a busca ou troque a categoria.
+            <div className="text-center py-16">
+              {produtos.length === 0 ? (
+                <>
+                  <div className="text-5xl mb-2">🥩</div>
+                  <p className="text-preto/70">Vitrine vazia.</p>
+                  <p className="text-xs text-preto/50 mt-1">
+                    Use o botão <strong>Reiniciar demonstração</strong> no painel pra restaurar o seed.
+                  </p>
+                  <Link href="/painel" className="mt-3 inline-block text-vermelho font-semibold text-sm hover:underline">
+                    Ir pro painel →
+                  </Link>
+                </>
+              ) : (
+                <p className="text-preto/60 text-sm">
+                  Nada encontrado. Limpe a busca ou troque a categoria.
+                </p>
+              )}
             </div>
           )}
         </section>

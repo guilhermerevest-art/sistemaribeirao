@@ -26,6 +26,7 @@ export default function BancadaPage() {
   const impressaoAutomatica = useStore((s) => s.impressaoAutomatica);
   const setImpressaoAutomatica = useStore((s) => s.setImpressaoAutomatica);
   const gerarPedidoTeste = useStore((s) => s.gerarPedidoTeste);
+  const lojaAberta = useStore((s) => s.lojaAberta);
   const produtos = useStore((s) => s.produtos);
   const combos = useStore((s) => s.combos);
 
@@ -43,6 +44,11 @@ export default function BancadaPage() {
   return (
     <div className="min-h-screen bancada-bg">
       <header className="bg-carvao border-b border-papel/20 px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 sticky top-0 z-30">
+        {!lojaAberta && (
+          <span className="px-2 py-0.5 rounded-full bg-vermelho-risco text-papel text-[10px] font-bold uppercase tracking-wider mr-1">
+            Loja fechada
+          </span>
+        )}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-papel">R</div>
           <div className="font-display font-extrabold text-lg sm:text-2xl text-papel uppercase">Bancada</div>
@@ -67,7 +73,7 @@ export default function BancadaPage() {
           <Link href="/painel">
             <Button variant="secondary" size="sm">Painel</Button>
           </Link>
-          <Button onClick={() => void gerarPedidoTeste()} size="sm">
+          <Button onClick={() => void gerarPedidoTeste()} size="sm" disabled={!lojaAberta} title={lojaAberta ? 'Gerar pedido de teste' : 'Loja fechada'}>
             <Plus className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">Gerar pedido de teste</span>
             <span className="sm:hidden">Teste</span>

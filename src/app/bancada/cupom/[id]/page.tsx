@@ -17,6 +17,7 @@ export default function CupomPage() {
   const combos = useStore((s) => s.combos);
   const ofertas = useStore((s) => s.ofertas);
   const marcarImpresso = useStore((s) => s.marcarImpresso);
+  const estabelecimento = useStore((s) => s.estabelecimento);
   const jaImpresso = useRef(false);
 
   useEffect(() => {
@@ -47,27 +48,37 @@ export default function CupomPage() {
   const labelNivel = { bronze: 'BRONZE', prata: 'PRATA', ouro: 'OURO' }[nivel];
 
   const linhas: { texto: string; bold?: boolean }[] = [];
+  // Reservas fixas pra que produto e combo alinhem pelo mesmo grid:
+  // 10 chars pra "X,XXX kg " (ou "Nx       "), espaço, nome, e o valor
+  // cai na coluna 24 com 8 chars de largura.
+  const RESERVA_QTD = 10;
+  const COL_VALOR = 24;
+  const LARGURA_VALOR = 8;
   for (const it of pedido.itens) {
     if (it.comboId) {
       const c = combos.find((x) => x.id === it.comboId);
       if (!c) continue;
-      const qtd = `${it.pesoKg}x`;
-      const nomeCombo = `COMBO ${c.nome}`.toUpperCase().slice(0, 28);
-      linhas.push({ texto: `${qtd.padEnd(8, ' ')} ${nomeCombo}`, bold: true });
-      linhas.push({ texto: `${''.padEnd(20, ' ')}${brl(it.subtotal).padStart(12, ' ')}` });
+      const qtd = `${it.pesoKg.toFixed(0)}x`;
+      const nomeCombo = `COMBO ${c.nome}`.toUpperCase().slice(0, 32);
+      linhas.push({ texto: `${qtd.padEnd(RESERVA_QTD, ' ')} ${nomeCombo}`, bold: true });
+      linhas.push({
+        texto: `${''.padEnd(COL_VALOR, ' ')}${brl(it.subtotal).padStart(LARGURA_VALOR, ' ')}`,
+      });
       continue;
     }
     const p = produtos.find((x) => x.id === it.produtoId);
     if (!p) continue;
     const peso = `${it.pesoKg.toFixed(3).replace('.', ',')} kg`;
-    linhas.push({ texto: `${peso.padEnd(8, ' ')} ${p.nome.toUpperCase()}`, bold: true });
+    linhas.push({ texto: `${peso.padEnd(RESERVA_QTD, ' ')} ${p.nome.toUpperCase()}`, bold: true });
     for (const prep of it.preparos) {
       linhas.push({ texto: `          >> ${prep.toUpperCase()}`, bold: true });
     }
     if (it.observacao) {
       linhas.push({ texto: `          obs: ${it.observacao}` });
     }
-    linhas.push({ texto: `${''.padEnd(20, ' ')}${brl(it.subtotal).padStart(12, ' ')}` });
+    linhas.push({
+      texto: `${''.padEnd(COL_VALOR, ' ')}${brl(it.subtotal).padStart(LARGURA_VALOR, ' ')}`,
+    });
     if (it.ofertaId) {
       const oferta = ofertas.find((o) => o.id === it.ofertaId);
       if (oferta?.brindeProdutoId) {
@@ -99,9 +110,10 @@ export default function CupomPage() {
 
       <div className="cupom shadow-xl print:shadow-none">
         <div className="text-center font-bold">
-          <div className="text-base">EMPÓRIO RIBEIRÃO</div>
-          <div>Rua .............., 000</div>
-          <div>(34) 3333-0000</div>
+          <div className="text-base">{estabelecimento.nomeFantasia.toUpperCase()}</div>
+          <div>{estabelecimento.endereco}</div>
+          <div>{estabelecimento.telefone}</div>
+          {estabelecimento.cnpj && <div className="text-[10px]">CNPJ: {estabelecimento.cnpj}</div>}
         </div>
         <div className="my-2 border-t border-dashed border-black" />
         <div className="flex justify-between">
@@ -140,7 +152,7 @@ export default function CupomPage() {
         <div className="flex justify-between"><span>SALDO ATUAL:</span><span>{brl(cliente.saldoCashback).padStart(10, ' ')}</span></div>
         <div className="flex justify-between"><span>NIVEL:</span><span>{labelNivel.padStart(10, ' ')}</span></div>
         <div className="my-2 border-t border-dashed border-black" />
-        <div className="text-center">Obrigado pela preferencia</div>
+        <div className="text-center">{estabelecimento.mensagemRodape || 'Obrigado pela preferencia'}</div>
       </div>
     </div>
   );

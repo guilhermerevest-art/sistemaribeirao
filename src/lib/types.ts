@@ -24,7 +24,6 @@ export interface Produto {
   percentualCashback: number;
   preparosDisponiveis: string[];
   destaque: boolean;
-  novidade?: boolean;
   disponivel: boolean;
 }
 
@@ -115,6 +114,14 @@ export interface Resgate {
   custoPontos: number;
   imagem: string;
   ativo: boolean;
+}
+
+export interface Estabelecimento {
+  nomeFantasia: string;
+  endereco: string;
+  telefone: string;
+  cnpj?: string;
+  mensagemRodape: string;
 }
 
 export interface ItemCombo {

@@ -1,30 +1,39 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { brl, formatarData, formatarHora } from '@/lib/formato';
 import Link from 'next/link';
-import { Gift, History, Sparkles, Loader2 } from 'lucide-react';
+import { Gift, History, Sparkles, Loader2, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { nivelPorPontos } from '@/lib/regras';
+import { toast } from 'sonner';
 
 export default function MinhaContaPage() {
+  const router = useRouter();
   const clienteAtualId = useStore((s) => s.clienteAtualId);
   const cliente = useStore((s) => s.clientes.find((c) => c.id === clienteAtualId));
   const pedidos = useStore((s) => s.pedidos.filter((p) => p.clienteId === clienteAtualId));
   const produtos = useStore((s) => s.produtos);
+  const clonarItens = useStore((s) => s.clonarItensParaCarrinho);
   const carregado = useStore((s) => s.carregado);
   const online = useStore((s) => s.online);
   const recarregarClientes = useStore((s) => s.recarregarClientes);
 
   // Se clienteAtualId está setado mas o cliente sumiu do state
-  // (timing após criar pedido online), tenta recarregar uma vez.
+  // (timing após criar pedido online), tenta recarregar uma vez. A
+  // guarda `jaTentou` evita re-fire se o cliente continuar sumindo por
+  // algum motivo (ex.: RLS bloqueando).
+  const jaTentouRef = useRef(false);
   useEffect(() => {
-    if (clienteAtualId && !cliente && carregado && online) {
+    if (clienteAtualId && !cliente && carregado && online && !jaTentouRef.current) {
+      jaTentouRef.current = true;
       void recarregarClientes();
     }
+    if (cliente) jaTentouRef.current = false;
   }, [clienteAtualId, cliente, carregado, online, recarregarClientes]);
 
   if (!clienteAtualId) {
@@ -123,15 +132,27 @@ export default function MinhaContaPage() {
           ) : (
             <ul className="space-y-2">
               {pedidos.map((p) => (
-                <li key={p.id} className="bg-branco border border-cinza-claro rounded-xl p-3 flex items-center gap-3">
-                  <div className="font-mono font-bold text-lg tabular-nums">{p.id}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm">{formatarData(p.criadoEm)} · {formatarHora(p.criadoEm)}</div>
-                    <div className="text-xs text-preto/60">
-                      {p.itens.length} {p.itens.length === 1 ? 'item' : 'itens'} · +{brl(p.cashbackGerado)} cb
+                <li key={p.id} className="bg-branco border border-cinza-claro rounded-xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="font-mono font-bold text-lg tabular-nums">{p.id}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm">{formatarData(p.criadoEm)} · {formatarHora(p.criadoEm)}</div>
+                      <div className="text-xs text-preto/60">
+                        {p.itens.length} {p.itens.length === 1 ? 'item' : 'itens'} · +{brl(p.cashbackGerado)} cb
+                      </div>
                     </div>
+                    <div className="font-mono font-bold">{brl(p.total)}</div>
                   </div>
-                  <div className="font-mono font-bold">{brl(p.total)}</div>
+                  <button
+                    onClick={() => {
+                      clonarItens(p.itens);
+                      toast.success('Itens copiados pro carrinho');
+                      router.push('/loja/carrinho');
+                    }}
+                    className="mt-2 h-9 px-3 rounded-md bg-vermelho text-branco text-xs font-bold uppercase inline-flex items-center gap-1"
+                  >
+                    <Repeat className="w-3.5 h-3.5" /> Pedir de novo
+                  </button>
                 </li>
               ))}
             </ul>

@@ -120,6 +120,8 @@ export type AppStateRow = {
   impressao_automatica: boolean;
   proximo_pedido: number;
   pts_para_reais_json: string;
+  estabelecimento_json: string | null;
+  loja_aberta: boolean | null;
   updated_at: string;
 };
 

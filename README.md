@@ -1,17 +1,30 @@
 # Empório Ribeirão — Sistema de Pedidos e Fidelidade
 
-Mock navegável para uma reunião de demonstração. Tudo no navegador, sem backend. Estado persistido em `localStorage`.
+Mock navegável para uma reunião de demonstração. Tudo no navegador, sem backend. Estado persistido em `localStorage` ou Supabase (se houver env vars).
 
-## Stack
+## Roteiro da demonstração (4 minutos)
 
-Next.js 16 (App Router) + TypeScript, Tailwind CSS v4, Zustand, shadcn/Radix, lucide-react, recharts, date-fns.
+A ordem importa — é a narrativa que vende o projeto.
+
+1. **Abra `/bancada` num notebook e deixe na mesa.** É o balcão. Tem fila de pedidos em movimento, timer e botão de impressão.
+2. **Pegue o celular e faça um pedido** como se fosse o cliente Maria: 2 kg de picanha, cortar em bifes, mais linguiça e carvão. Use o cashback no checkout — o desconto acontece ao vivo. *O pedido chega na bancada com som.*
+3. **Aponte para o notebook.** Clique em **Imprimir** e mostre o cupom com o `>> CORTAR EM BIFES` em destaque. **Esse é o momento em que o dono entende o valor.**
+4. **Abra `/painel`.** Mostre o faturamento do dia. Em seguida, abra **Em risco**: 4 clientes que não voltam há mais de um mês. Clique em **Chamar no WhatsApp** e mostre a mensagem pronta.
+
+Se sobrar tempo, mostre:
+
+- `/minha-conta` com saldo de cashback e barra de progresso do nível.
+- `/painel/relatorios` com o gráfico de 30 dias e a exportação CSV de "em risco".
+- `/backoffice/configuracoes` pra editar nome do estabelecimento, endereço e flag "Loja aberta".
+
+> *"O cupom resolve o dia de hoje. Essa lista aqui é o faturamento do mês que vem."*
 
 ## Como rodar
 
 ```bash
 npm install
 npm run dev
-# http://localhost:3000  →  índice com todas as áreas
+# http://localhost:3000 → índice com todas as áreas
 ```
 
 Build de produção:
@@ -21,15 +34,6 @@ npm run build
 npm start
 ```
 
-## Roteiro da demonstração (4 minutos)
-
-1. **Abra `/bancada` num notebook e deixe na mesa.** É o balcão.
-2. **Pegue o celular e faça um pedido** como se fosse a dona Maria: 2 kg de picanha, cortar em bifes, mais linguiça e carvão. Use o cashback no checkout — o desconto acontece.
-3. **Aponte para o notebook.** O pedido chegou com som. Clique em **Imprimir** e mostre o cupom com o `>> CORTAR EM BIFES` em destaque. Esse é o momento em que o dono entende o valor.
-4. **Abra `/painel`.** Mostre o faturamento, e então abra **Em risco**: 4 clientes, com nome e telefone, que não voltam há mais de um mês. Clique em **Chamar no WhatsApp** e mostre a mensagem pronta.
-
-> *"O cupom resolve o dia de hoje. Essa lista aqui é o faturamento do mês que vem."*
-
 ## Páginas
 
 - `/` — índice com acesso a todas as áreas.
@@ -37,84 +41,56 @@ npm start
 - `/loja/produto/[slug]` — detalhe, seletor de peso, preparos, observações.
 - `/loja/carrinho` — itens, sugestões cruzadas, projeção de cashback.
 - `/loja/checkout` — identificação, retirada/entrega, cashback, pagamento.
-- `/loja/pedido/[id]` — confirmação e linha do tempo.
+- `/loja/pedido/[id]` — confirmação, linha do tempo e "Pedir de novo".
 - `/minha-conta` — saldo, pontos, nível, histórico.
 - `/minha-conta/resgates` — catálogo de resgate.
+- `/minha-conta/clube` — escada de níveis Bronze/Prata/Ouro.
 - `/cozinha` — pedidos recebidos/em preparo, timer, "marcar como pronto".
-- `/bancada` — KDS de pedidos com 3 colunas, som, timer, impressão automática.
-- `/bancada/cupom/[id]` — cupom 80mm imprimível (`Ctrl+P`, ou `?auto=1` para impressão silenciosa).
+- `/bancada` — KDS com 3 colunas, som, impressão automática.
+- `/bancada/cupom/[id]` — cupom 80mm imprimível (`Ctrl+P`, ou `?auto=1`).
 - `/painel` — KPIs do dia, gráfico 30d, frequência, top 10.
-- `/painel/clientes` e `/painel/clientes/[id]` — carteira, WhatsApp em lote.
-- `/painel/ofertas` — gestão de ofertas da semana e relâmpago.
-- `/painel/campanhas` — listas de mensagens por grupo.
+- `/painel/clientes` e `/painel/clientes/[id]` — carteira e "Pedir de novo".
+- `/painel/ofertas` — redireciona para `/backoffice/promocoes`.
+- `/painel/campanhas` — listas de WhatsApp por grupo.
+- `/painel/relatorios` — gráficos e exportação CSV.
 - `/backoffice` — cadastros e gestão administrativa.
 - `/backoffice/clientes` — cadastrar, editar, remover, creditar cashback.
-- `/backoffice/pedidos` — todos os pedidos, filtros, mudar status, cancelar.
-- `/backoffice/promocoes` — criar, editar, desativar ofertas.
+- `/backoffice/pedidos` — todos os pedidos, mudar status, cancelar.
+- `/backoffice/promocoes` — criar/editar/desativar ofertas.
+- `/backoffice/combos` — combos de produtos.
 - `/backoffice/produtos` — editar preço, cashback, disponibilidade.
+- `/backoffice/resgates` — catálogo de pontos.
+- `/backoffice/configuracoes` — pontos por real + dados do estabelecimento + flag "Loja aberta".
+
+## Stack
+
+Next.js 16 (App Router) + TypeScript, Tailwind CSS v4, Zustand, shadcn/Radix, lucide-react, recharts, date-fns, sonner.
 
 ## Reiniciar demonstração
 
-Botão **Reiniciar demonstração** no rodapé do `/painel` (e no header). Limpa o `localStorage` e reaplica o seed.
+Botão **Reiniciar demonstração** no rodapé do `/painel`, no header do `/backoffice` e na home. Limpa o `localStorage` e reaplica o seed (ou chama a RPC `reset_demo` no Supabase).
 
-## Deploy na Vercel
+## Modo demo offline
 
-1. Suba o repositório para o GitHub.
-2. Importe em [vercel.com/new](https://vercel.com/new).
-3. Sem variável de ambiente. `npm run build` resolve.
+Quando o app roda sem env vars do Supabase, ele cai automaticamente pro `localStorage` e mostra um badge "Offline" no canto superior direito. Tudo funciona: criar pedido, ver cashback, gerar cupom — só não sincroniza entre dispositivos.
 
 ## Impressão automática na Epson TM-T20X (USB)
 
-Quando um pedido novo chega na `/bancada`, o sistema abre o cupom desse pedido
-num iframe invisível com `?auto=1` e chama `window.print()` sozinho — sem
-precisar clicar em nada. Pra isso realmente sair direto na impressora térmica,
-sem diálogo de impressão, é preciso configurar a máquina da bancada uma vez:
+Quando um pedido novo chega na `/bancada`, o sistema abre o cupom num iframe invisível com `?auto=1` e chama `window.print()`. Pra sair direto na impressora térmica (sem diálogo do navegador):
 
-### 1. Deixe a TM-T20X como impressora padrão do Windows
+1. **Deixe a TM-T20X como impressora padrão do Windows.**
+   `Configurações → Bluetooth e dispositivos → Impressoras e scanners` → clique na EPSON TM-T20X → **Definir como padrão**.
 
-`Configurações → Bluetooth e dispositivos → Impressoras e scanners` → clique
-na EPSON TM-T20X → **Definir como padrão**.
+2. **Abra o Chrome (ou Edge) com a flag `--kiosk-printing`.**
+   Crie um atalho na área de trabalho:
 
-### 2. Abra o Chrome (ou Edge) com a flag `--kiosk-printing`
+   ```bat
+   "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing "https://SEU-DOMINIO.vercel.app/bancada"
+   ```
 
-Essa flag faz o navegador imprimir direto na impressora padrão, sem mostrar
-diálogo nem pré-visualização. Crie um atalho específico para a bancada:
+3. **Use sempre esse atalho pra abrir a bancada** — a flag só vale pra janela aberta com ela.
 
-- Botão direito na área de trabalho → **Novo → Atalho**.
-- Local do item, exemplo para Chrome:
-
-  ```text
-  "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing "https://SEU-DOMINIO.vercel.app/bancada"
-  ```
-
-- Nomeie o atalho como **"Bancada Ribeirão"** e use sempre ele para abrir a
-  tela da bancada — nunca um Chrome aberto manualmente, porque a flag só
-  vale para a janela aberta com ela.
-
-### 3. Teste
-
-Clique no ícone da impressora no cabeçalho da `/bancada` — verde
-(`PrinterCheck`) significa impressão automática ligada. Gere um pedido de
-teste ou faça um pedido pelo celular: o cupom deve sair sozinho na TM-T20X
-em poucos segundos, sem nenhum diálogo aparecer na tela.
-
-### Se algo não sair certo
-
-- Sem a flag `--kiosk-printing`, o Chrome mostra o diálogo de impressão
-  normalmente — só que dentro do iframe invisível, então parece que nada
-  aconteceu. Confirme que abriu pelo atalho certo.
-- O botão da impressora no header da bancada liga/desliga esse recurso a
-  qualquer momento (fica salvo no navegador). Desligue se quiser voltar a
-  imprimir manualmente pelo botão **Imprimir** de cada card.
-- Ainda dá pra imprimir manualmente a qualquer momento: botão **Imprimir**
-  no card do pedido (bancada) ou em `/backoffice/pedidos`.
-
-**Por que não um app nativo falando USB direto com a impressora?** Um
-navegador não tem permissão de baixo nível pra escrever bytes numa porta USB
-sem ajuda do sistema operacional. A alternativa (WebUSB) exigiria trocar o
-driver da Epson por um genérico no Windows — e aí ela para de funcionar como
-impressora normal fora do navegador. O caminho do `--kiosk-printing` evita
-essa cirurgia e usa a instalação padrão da impressora.
+O botão da impressora no header da bancada liga/desliga a impressão automática (fica salvo no navegador). Sem a flag, o Chrome mostra o diálogo de impressão — só que dentro do iframe invisível, então parece que nada aconteceu.
 
 ## Notas
 

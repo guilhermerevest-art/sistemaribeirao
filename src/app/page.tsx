@@ -50,18 +50,18 @@ export default function HomePage() {
             tom="carvao"
           />
           <CartaoAcesso
-            href="/backoffice"
-            icon={<LayoutDashboard />}
-            titulo="Backoffice"
-            descricao="Cadastros, gestão de pedidos e promoções."
-            tom="sangue"
-          />
-          <CartaoAcesso
             href="/minha-conta"
             icon={<Users />}
             titulo="Minha Conta"
             descricao="Espaço do cliente identificado."
             tom="carvao"
+          />
+          <CartaoAcesso
+            href="/backoffice"
+            icon={<LayoutDashboard />}
+            titulo="Backoffice"
+            descricao="Cadastros, gestão de pedidos e promoções. Para uso interno."
+            tom="sangue"
           />
         </div>
       </section>

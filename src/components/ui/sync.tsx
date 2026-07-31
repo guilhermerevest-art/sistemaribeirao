@@ -2,10 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
+import { lerCriadoLocalmente } from '@/lib/sync-flags';
+import { tocarBipNovoPedido } from '@/lib/som';
 
 // Sincronia entre abas: polling de 2s comparando o último pedido novo.
 // Pedidos novos que aparecem no state (vindos de outra aba ou outro
 // dispositivo) disparam recarregarPedidos() pra puxar a lista nova.
+//
+// Criações feitas por *esta* aba são registradas via
+// `marcarCriadoLocalmente` numa flag de window — assim o polling não
+// dispara um recarregamento em loop logo depois do criarPedido
+// atualizar o state local.
 export function useSyncEntreAbas() {
   const carregado = useRef(false);
   const ultimoId = useRef<string | null>(null);
@@ -14,6 +21,14 @@ export function useSyncEntreAbas() {
     function checar() {
       const s = useStore.getState();
       const novo = s.pedidos[0]?.id ?? null;
+      const criadoLocal = lerCriadoLocalmente();
+      // Se o pedido no topo é um dos que esta aba acabou de criar,
+      // sincroniza o últimoId mas não dispara recarregamento.
+      if (novo && criadoLocal && novo === criadoLocal.id) {
+        ultimoId.current = novo;
+        carregado.current = true;
+        return;
+      }
       if (carregado.current && novo !== ultimoId.current) {
         // Outro lugar inseriu pedido; recarrega pra ter dados frescos.
         void s.recarregarPedidos();
@@ -31,8 +46,20 @@ export function useSyncEntreAbas() {
 }
 
 // Avanço automático de status (mock para a demo).
+//
+// Tem que ser seguro com várias abas abertas ao mesmo tempo: se
+// `/bancada` e `/cozinha` rodam em paralelo, qualquer uma delas pode
+// observar o pedido como "novo" há mais de 90s e tentar promover. Sem
+// coordenação, cada aba dispara a própria atualização e elas se
+// atropelam. A regra é: cada aba sorteia um "dono" do pedido por
+// compra de tempo e ignora pedidos que não são seus.
 export function useAutoAvanco() {
   useEffect(() => {
+    // Set persistente nesta aba (não em localStorage: outras abas
+    // podem ter outro sortimento e tudo bem — o estado autoritativo é
+    // o que está em s.pedidos, que é o que a checagem de status usa).
+    const donosLocal = new Set<string>();
+
     const t = setInterval(() => {
       const s = useStore.getState();
       const agora = Date.now();
@@ -40,10 +67,18 @@ export function useAutoAvanco() {
       for (const p of s.pedidos) {
         if (p.status === 'novo') {
           const idade = agora - new Date(p.criadoEm).getTime();
-          if (idade >= 90_000) void atualizar(p.id, 'preparando');
+          if (idade >= 90_000 && !donosLocal.has(p.id)) {
+            donosLocal.add(p.id);
+            void atualizar(p.id, 'preparando');
+          }
         } else if (p.status === 'preparando') {
           const idade = agora - new Date(p.criadoEm).getTime();
-          if (idade >= 180_000) void atualizar(p.id, 'pronto');
+          if (idade >= 180_000 && !donosLocal.has(p.id)) {
+            donosLocal.add(p.id);
+            void atualizar(p.id, 'pronto');
+          }
+        } else if (p.status === 'pronto' || p.status === 'entregue' || p.status === 'cancelado') {
+          donosLocal.delete(p.id);
         }
       }
     }, 5000);
@@ -57,6 +92,7 @@ export function useAutoAvanco() {
 function useFilaImpressaoAutomatica(): { fila: string[]; concluir: (id: string) => void } {
   const pedidos = useStore((s) => s.pedidos);
   const impressaoAutomatica = useStore((s) => s.impressaoAutomatica);
+  const somBancada = useStore((s) => s.somBancada);
   const conhecidos = useRef<Set<string> | null>(null);
   const [fila, setFila] = useState<string[]>([]);
 
@@ -68,10 +104,12 @@ function useFilaImpressaoAutomatica(): { fila: string[]; concluir: (id: string) 
     }
     const novos = pedidos.filter((p) => p.status === 'novo' && !conhecidos.current!.has(p.id));
     for (const p of pedidos) conhecidos.current.add(p.id);
-    if (novos.length > 0 && impressaoAutomatica) {
+    if (novos.length === 0) return;
+    if (somBancada) tocarBipNovoPedido();
+    if (impressaoAutomatica) {
       setFila((f) => [...f, ...novos.map((p) => p.id)]);
     }
-  }, [pedidos, impressaoAutomatica]);
+  }, [pedidos, impressaoAutomatica, somBancada]);
 
   const concluir = (id: string) => setFila((f) => f.filter((x) => x !== id));
 

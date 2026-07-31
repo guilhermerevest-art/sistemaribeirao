@@ -7,7 +7,8 @@ import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { Button } from '@/components/ui/button';
 import { brl, formatarData, formatarHora, formatarPeso } from '@/lib/formato';
-import { CheckCircle2, MessageCircle, Truck, Store } from 'lucide-react';
+import { CheckCircle2, MessageCircle, Truck, Store, Repeat } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ConfirmacaoPage() {
   const params = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function ConfirmacaoPage() {
   const cliente = useStore((s) => s.clientes.find((c) => c.id === pedido?.clienteId));
   const produtos = useStore((s) => s.produtos);
   const combos = useStore((s) => s.combos);
+  const clonarItens = useStore((s) => s.clonarItensParaCarrinho);
 
   useEffect(() => {
     if (!pedido) router.push('/loja');
@@ -118,6 +120,17 @@ export default function ConfirmacaoPage() {
             </Button>
           </Link>
         </div>
+
+        <button
+          onClick={() => {
+            clonarItens(pedido.itens);
+            toast.success('Itens copiados pro carrinho');
+            router.push('/loja/carrinho');
+          }}
+          className="mt-3 w-full h-12 rounded-xl bg-vermelho text-branco font-extrabold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-vermelho/90"
+        >
+          <Repeat className="w-4 h-4" /> Pedir de novo
+        </button>
 
         <div className="mt-4 text-sm text-preto/60 flex items-center gap-2">
           {pedido.retirada === 'entrega' ? <Truck className="w-4 h-4" /> : <Store className="w-4 h-4" />}

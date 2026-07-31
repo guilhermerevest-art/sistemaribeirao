@@ -103,6 +103,47 @@ html, body {
   border-bottom: 1px solid var(--cinza-claro);
 }
 
+/* Card-etiqueta de balança: serrilhado na base via mask-image. O
+   gradiente radial cria os "dentes" de ~6 px que imitam o picote de
+   etiquetas térmicas. */
+.etiqueta-serrilhada {
+  -webkit-mask-image: radial-gradient(circle at 3px 100%, transparent 3px, #000 4px) repeat-x,
+    linear-gradient(#000, #000);
+  -webkit-mask-size: 6px 6px, 100% 100%;
+  -webkit-mask-position: 0 100%, 0 0;
+  mask-image: radial-gradient(circle at 3px 100%, transparent 3px, #000 4px) repeat-x,
+    linear-gradient(#000, #000);
+  mask-size: 6px 6px, 100% 100%;
+  mask-position: 0 100%, 0 0;
+}
+
+/* Tarja de "barcode" decorativa no rodapé do card de produto. */
+.tarja-barcode {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--preto) 0,
+    var(--preto) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  height: 14px;
+}
+
+@keyframes entrada-bancada {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-entrada {
+  animation: entrada-bancada 220ms ease-out both;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

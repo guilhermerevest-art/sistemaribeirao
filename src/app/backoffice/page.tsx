@@ -6,6 +6,8 @@ import { useStore } from '@/lib/store';
 import { brl } from '@/lib/formato';
 import { Users, ShoppingBag, Tag, Package, ChevronRight, BarChart3, RotateCcw, Layers, Gift, Settings } from 'lucide-react';
 import { AdminHeader } from '@/components/ui/admin-header';
+import { toast } from 'sonner';
+import { confirmar } from '@/lib/confirmar';
 
 export default function BackofficePage() {
   const pedidos = useStore((s) => s.pedidos);
@@ -35,7 +37,16 @@ export default function BackofficePage() {
         voltarPara="/"
         acoes={
           <button
-            onClick={() => { if (confirm('Reiniciar a demonstração?')) void reiniciar(); }}
+            onClick={async () => {
+              if (await confirmar('Reiniciar a demonstração?')) {
+                try {
+                  await reiniciar();
+                  toast.success('Demonstração reiniciada');
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Não consegui reiniciar');
+                }
+              }
+            }}
             className="w-10 h-10 grid place-items-center rounded-md text-papel/80 hover:text-papel hover:bg-papel/10"
             title="Reiniciar demonstração"
             aria-label="Reiniciar demonstração"

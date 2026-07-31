@@ -48,7 +48,14 @@ export function cotarPedido(args: {
 } {
   const { itens, produtos, ofertas, combos = [], nivel, cashbackUsado, descontoPontosReais = 0 } = args;
   const produtoMap = new Map(produtos.map((p) => [p.id, p]));
-  const ofertaMap = new Map(ofertas.filter((o) => o.ativa).map((o) => [o.id, o]));
+  // Mapa de oferta já com a quantidade "reservada" do carrinho atual
+  // descontada — assim dois itens do mesmo relâmpago no carrinho não
+  // conseguem juntos ultrapassar o estoque disponível.
+  const ofertaMap = new Map(
+    ofertas
+      .filter((o) => o.ativa)
+      .map((o) => [o.id, { ...o, restante: ofertaRestante(o, itens) }]),
+  );
   const comboMap = new Map(combos.map((c) => [c.id, c]));
 
   const cotados: ItemCotado[] = [];
@@ -82,7 +89,11 @@ export function cotarPedido(args: {
     if (!p) continue;
     const precoBase = p.precoKg;
     let precoAplicado = item.precoUnitarioAplicado || precoBase;
-    const oferta = item.ofertaId ? ofertaMap.get(item.ofertaId) : undefined;
+    const ofertaOriginal = item.ofertaId ? ofertaMap.get(item.ofertaId) : undefined;
+    // Oferta só vale enquanto ainda tem estoque; quando esgota, cai
+    // automaticamente pro preço cheio — exatamente o comportamento que a
+    // vitrine promete ("Acabou" e o produto volta ao preço normal).
+    const oferta = ofertaElegivel(ofertaOriginal, item.pesoKg) ? ofertaOriginal : undefined;
     if (oferta) {
       precoAplicado = oferta.precoPor;
     }
@@ -208,6 +219,32 @@ export function ofertaAtivaPara(
     if (agora.getTime() >= inicio + 24 * 3600 * 1000) return semana;
   }
   return undefined;
+}
+
+// Quanto da oferta já está efetivamente reservado pelos itens do
+// carrinho atual. Serve pra não deixar dois itens do mesmo relâmpago
+// consumirem, juntos, mais do que o estoque disponível.
+function ofertaRestante(oferta: Oferta, itens: ItemCarrinho[]): number | undefined {
+  if (oferta.quantidadeTotalKg == null) return undefined;
+  const reservado = itens
+    .filter((i) => !i.comboId && i.ofertaId === oferta.id)
+    .reduce((s, i) => s + i.pesoKg, 0);
+  return Math.max(0, oferta.quantidadeTotalKg - oferta.quantidadeVendidaKg - reservado);
+}
+
+// Verifica se a oferta ainda consegue absorver o peso deste item.
+function ofertaElegivel(
+  oferta: Oferta | undefined,
+  pesoKg: number,
+): oferta is Oferta {
+  if (!oferta) return false;
+  if (oferta.quantidadeTotalKg == null) return true;
+  // `oferta.restante` é injetado pelo map acima em cotarPedido; se a
+  // oferta vier de fora, recalcula na hora.
+  const restante =
+    (oferta as Oferta & { restante?: number }).restante ??
+    Math.max(0, oferta.quantidadeTotalKg - oferta.quantidadeVendidaKg);
+  return pesoKg <= restante;
 }
 
 export function round2(n: number): number {

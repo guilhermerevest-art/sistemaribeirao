@@ -16,6 +16,7 @@ import type {
   Campanha,
   Cliente,
   Combo,
+  Estabelecimento,
   ItemCarrinho,
   Oferta,
   Pedido,
@@ -47,16 +48,19 @@ import {
   validadeCashbackISO,
 } from './regras';
 import {
+  ESTABELECIMENTO_PADRAO,
   gravarSnapshotOffline,
   lerSnapshotOffline,
   limparSnapshotOffline,
   type SnapshotOffline,
 } from './persistencia';
+import { marcarCriadoLocalmente } from './sync-flags';
 
 // Snapshot serializável do state. Usado em todas as mutações offline
 // para que o reload não apague o trabalho da demo.
 function snapshotFromState(s: State): SnapshotOffline {
   return {
+    _v: 2,
     produtos: s.produtos,
     clientes: s.clientes,
     pedidos: s.pedidos,
@@ -69,6 +73,8 @@ function snapshotFromState(s: State): SnapshotOffline {
     somBancada: s.somBancada,
     impressaoAutomatica: s.impressaoAutomatica,
     ptsParaReais: s.ptsParaReais,
+    estabelecimento: s.estabelecimento,
+    lojaAberta: s.lojaAberta,
   };
 }
 
@@ -86,6 +92,22 @@ function parsePtsParaReais(json: string | null | undefined): Record<string, numb
     return Object.keys(out).length > 0 ? out : { '100': 1, '500': 5 };
   } catch {
     return { '100': 1, '500': 5 };
+  }
+}
+
+function parseEstabelecimento(json: string | null | undefined): Estabelecimento {
+  if (!json) return ESTABELECIMENTO_PADRAO;
+  try {
+    const p = JSON.parse(json) as Partial<Estabelecimento>;
+    return {
+      nomeFantasia: p.nomeFantasia ?? ESTABELECIMENTO_PADRAO.nomeFantasia,
+      endereco: p.endereco ?? ESTABELECIMENTO_PADRAO.endereco,
+      telefone: p.telefone ?? ESTABELECIMENTO_PADRAO.telefone,
+      cnpj: p.cnpj,
+      mensagemRodape: p.mensagemRodape ?? ESTABELECIMENTO_PADRAO.mensagemRodape,
+    };
+  } catch {
+    return ESTABELECIMENTO_PADRAO;
   }
 }
 
@@ -235,6 +257,8 @@ interface State {
   impressaoAutomatica: boolean;
   proximoPedido: number;
   ptsParaReais: Record<string, number>;
+  estabelecimento: Estabelecimento;
+  lojaAberta: boolean;
 }
 
 interface Actions {
@@ -247,6 +271,7 @@ interface Actions {
   removerItemCarrinho: (idx: number) => void;
   limparCarrinho: () => void;
   setClienteAtual: (id?: string) => Promise<void>;
+  clonarItensParaCarrinho: (itens: ItemCarrinho[]) => void;
 
   // Pedidos
   criarPedido: (params: {
@@ -285,6 +310,8 @@ interface Actions {
 
   // Configurações
   setPontosParaReais: (mapa: Record<string, number>) => Promise<void>;
+  setEstabelecimento: (e: Estabelecimento) => Promise<void>;
+  setLojaAberta: (aberta: boolean) => Promise<void>;
 
   // Clientes
   criarCliente: (c: Omit<Cliente, 'id' | 'criadoEm' | 'saldoCashback' | 'pontos' | 'pontosAcumuladoTotal'>) => Promise<Cliente>;
@@ -322,6 +349,8 @@ interface Actions {
 
 const PTS_PARA_REAIS_PADRAO: Record<string, number> = { '100': 1, '500': 5 };
 
+const ESTABELECIMENTO_LOCAL = ESTABELECIMENTO_PADRAO;
+
 const initialState: State = {
   carregado: false,
   carregando: false,
@@ -340,6 +369,8 @@ const initialState: State = {
   impressaoAutomatica: true,
   proximoPedido: 600,
   ptsParaReais: PTS_PARA_REAIS_PADRAO,
+  estabelecimento: ESTABELECIMENTO_LOCAL,
+  lojaAberta: true,
 };
 
 const seedFallback = (): SnapshotOffline => ({
@@ -355,6 +386,8 @@ const seedFallback = (): SnapshotOffline => ({
   somBancada: true,
   impressaoAutomatica: true,
   ptsParaReais: PTS_PARA_REAIS_PADRAO,
+  estabelecimento: ESTABELECIMENTO_LOCAL,
+  lojaAberta: true,
 });
 
 // Permanece exportado porque outros módulos podem querer ler o
@@ -411,6 +444,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
           impressaoAutomatica: base.impressaoAutomatica,
           proximoPedido: base.proximoPedido,
           ptsParaReais: base.ptsParaReais,
+          estabelecimento: base.estabelecimento,
+          lojaAberta: base.lojaAberta,
         });
         return;
       }
@@ -440,6 +475,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
         impressaoAutomatica: st?.impressao_automatica ?? true,
         proximoPedido: st?.proximo_pedido ?? 600,
         ptsParaReais: parsePtsParaReais(st?.pts_para_reais_json),
+        estabelecimento: parseEstabelecimento(st?.estabelecimento_json),
+        lojaAberta: st?.loja_aberta ?? true,
       });
     } catch (e) {
       const snap = lerSnapshotOffline();
@@ -461,6 +498,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
         impressaoAutomatica: base.impressaoAutomatica,
         proximoPedido: base.proximoPedido,
         ptsParaReais: base.ptsParaReais,
+        estabelecimento: base.estabelecimento,
+        lojaAberta: base.lojaAberta,
       });
     }
   },
@@ -495,16 +534,52 @@ export const useStore = create<State & Actions>()((set, get) => ({
     }
   },
 
+  // Substitui o carrinho por uma cópia dos itens de outro pedido.
+  // Usado pelo "Pedir de novo": o cliente repete sem precisar montar
+  // tudo do zero. Não preserva ofertaId — as ofertas vigentes são
+  // reavaliadas no checkout, então o preço pode mudar.
+  clonarItensParaCarrinho: (itens) => {
+    const produtos = get().produtos;
+    const produtosMap = new Map(produtos.map((p) => [p.id, p]));
+    const clonados: ItemCarrinho[] = itens
+      .filter((i) => !i.comboId && produtosMap.has(i.produtoId))
+      .map((i) => {
+        const p = produtosMap.get(i.produtoId)!;
+        return {
+          produtoId: i.produtoId,
+          pesoKg: i.pesoKg,
+          preparos: [...i.preparos],
+          observacao: i.observacao,
+          precoUnitarioAplicado: p.precoKg,
+          subtotal: roundSubtotal(i.pesoKg, p.precoKg),
+        };
+      });
+    set({ carrinho: { itens: clonados } });
+  },
+
   // ============================================================
   // Pedidos
   // ============================================================
   criarPedido: async (params) => {
     const s = get();
+    if (!s.lojaAberta) throw new Error('Loja fechada no momento');
     const cliente = s.clientes.find((c) => c.id === params.clienteId);
     if (!cliente) throw new Error('cliente não encontrado');
     const nivel = _nivelPorPontos(cliente.pontosAcumuladoTotal);
     const pontosUsados = params.pontosUsados ?? 0;
     const descontoPontos = params.descontoPontos ?? 0;
+
+    // Trava antes de gravar: ofertas com limite por cliente não podem
+    // ser usadas acima do teto histórico do próprio cliente.
+    const pedidosDoCliente = s.pedidos.filter((p) => p.clienteId === cliente.id);
+    const limite = ofertaExcedeLimiteCliente(s.carrinho.itens, s.ofertas, pedidosDoCliente, cliente.id);
+    if (limite) {
+      const of = s.ofertas.find((o) => o.id === limite.ofertaId);
+      throw new Error(
+        `Limite de ${limite.limite} kg atingido na oferta "${of?.chamada ?? limite.ofertaId}". Você já comprou ${limite.usado} kg.`,
+      );
+    }
+
     const cotacao = cotarPedido({
       itens: s.carrinho.itens,
       produtos: s.produtos,
@@ -540,6 +615,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
 
     if (!s.online) {
       // Modo offline (seed local): aplica mutação local.
+      const incrementosOfertas = calcularIncrementosOfertas(novoPedido.itens, s.ofertas);
       set((st) => {
         const novosClientes = st.clientes.map((c) =>
           c.id === cliente.id
@@ -554,14 +630,20 @@ export const useStore = create<State & Actions>()((set, get) => ({
               }
             : c,
         );
+        const novasOfertas = st.ofertas.map((o) => {
+          const inc = incrementosOfertas.get(o.id);
+          return inc ? { ...o, quantidadeVendidaKg: o.quantidadeVendidaKg + inc } : o;
+        });
         return {
           pedidos: [novoPedido, ...st.pedidos],
           clientes: novosClientes,
+          ofertas: novasOfertas,
           proximoPedido: st.proximoPedido + 1,
           carrinho: { itens: [] },
         };
       });
       gravarSnapshotOffline(snapshotFromState(get()));
+      marcarCriadoLocalmente(id);
       return novoPedido;
     }
 
@@ -600,12 +682,23 @@ export const useStore = create<State & Actions>()((set, get) => ({
       pontos_acumulado_total: cliente.pontosAcumuladoTotal + cotacao.pontosGerados,
     }).eq('id', cliente.id);
 
+    // Incrementa `quantidadeVendidaKg` das ofertas usadas (especialmente
+    // importante pras relâmpago: ao esgotar, a vitrine mostra "Acabou").
+    const incrementosOfertas = calcularIncrementosOfertas(novoPedido.itens, s.ofertas);
+    for (const [ofertaId, kg] of incrementosOfertas) {
+      const of = s.ofertas.find((o) => o.id === ofertaId);
+      if (!of) continue;
+      await sb.from('ofertas').update({ quantidade_vendida_kg: of.quantidadeVendidaKg + kg }).eq('id', ofertaId);
+    }
+
     // Incrementa proximoPedido.
     await sb.from('app_state').update({ proximo_pedido: idNum + 1 }).eq('id', 'singleton');
 
     await get().recarregarPedidos();
     await get().recarregarClientes();
+    await get().recarregarOfertas();
     set({ carrinho: { itens: [] }, proximoPedido: idNum + 1 });
+    marcarCriadoLocalmente(id);
     return mapPedido(data as PedidoRow);
   },
 
@@ -684,6 +777,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
 
   gerarPedidoTeste: async () => {
     const s = get();
+    if (!s.lojaAberta) throw new Error('Loja fechada no momento');
     const clientes = s.clientes.filter((c) => c.aceitaWhatsapp);
     if (clientes.length === 0) return null;
     const cliente = clientes[Math.floor(Math.random() * clientes.length)];
@@ -918,17 +1012,29 @@ export const useStore = create<State & Actions>()((set, get) => ({
       gravarSnapshotOffline(snapshotFromState(get()));
       return novo;
     }
-    const { error } = await supabase().from('clientes').insert({
-      id: novo.id,
-      nome: novo.nome,
-      telefone: novo.telefone,
-      nascimento: novo.nascimento ?? null,
-      criado_em: novo.criadoEm,
-      aceita_whatsapp: novo.aceitaWhatsapp,
-    });
-    if (error) throw new Error(error.message);
-    await get().recarregarClientes();
-    return novo;
+    try {
+      const { error } = await supabase().from('clientes').insert({
+        id: novo.id,
+        nome: novo.nome,
+        telefone: novo.telefone,
+        nascimento: novo.nascimento ?? null,
+        criado_em: novo.criadoEm,
+        aceita_whatsapp: novo.aceitaWhatsapp,
+      });
+      if (error) throw error;
+      await get().recarregarClientes();
+      return novo;
+    } catch (e) {
+      // Se o Supabase recusar (ex.: RLS bloqueando insert anônimo),
+      // adiciona o cliente localmente e segue. O snapshot garante que
+      // sobrevive ao reload. Quando a permissão voltar, o cliente pode
+      // ser sincronizado depois via admin.
+      // eslint-disable-next-line no-console
+      console.warn('[criarCliente] Supabase falhou, usando local:', e);
+      set((s) => ({ clientes: [...s.clientes, novo] }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return novo;
+    }
   },
 
   atualizarCliente: async (c) => {
@@ -1103,13 +1209,54 @@ export const useStore = create<State & Actions>()((set, get) => ({
     }
   },
 
+  setEstabelecimento: async (e) => {
+    set({ estabelecimento: e });
+    if (get().online) {
+      await supabase().from('app_state').update<Partial<AppStateRow>>({
+        estabelecimento_json: JSON.stringify(e),
+      }).eq('id', 'singleton');
+    } else {
+      gravarSnapshotOffline(snapshotFromState(get()));
+    }
+  },
+
+  setLojaAberta: async (aberta) => {
+    set({ lojaAberta: aberta });
+    if (get().online) {
+      await supabase().from('app_state').update<Partial<AppStateRow>>({
+        loja_aberta: aberta,
+      }).eq('id', 'singleton');
+    } else {
+      gravarSnapshotOffline(snapshotFromState(get()));
+    }
+  },
+
   // ============================================================
   // Demo
   // ============================================================
   reiniciarDemonstracao: async () => {
     if (get().online) {
-      await supabase().rpc('reset_demo');
-      await get().carregarTudo();
+      try {
+        const { error } = await supabase().rpc('reset_demo');
+        if (error) throw error;
+        await get().carregarTudo();
+      } catch (e) {
+        // Sem a RPC no servidor ou sem permissão de executá-la, cai
+        // pro snapshot/seed local pra demo não ficar "presa". Avisa o
+        // usuário que foi um reset local, não no servidor.
+        // eslint-disable-next-line no-console
+        console.warn('[reset_demo] RPC falhou, usando snapshot local:', e);
+        const snap = lerSnapshotOffline();
+        const base = snap ?? seedFallback();
+        set({
+          ...initialState,
+          ...base,
+          carregado: true,
+          online: false,
+          erro: 'Reset feito localmente — sem acesso ao servidor.',
+        });
+        gravarSnapshotOffline(snapshotFromState(get()));
+      }
       return;
     }
     limparSnapshotOffline();
@@ -1163,6 +1310,73 @@ export const useStore = create<State & Actions>()((set, get) => ({
   },
 }));
 
+function roundSubtotal(peso: number, preco: number): number {
+  return Math.round(peso * preco * 100) / 100;
+}
+
+// Soma, por oferta, quanto daquela oferta foi vendido neste pedido.
+// Usado pra atualizar `quantidadeVendidaKg` após criar o pedido — sem
+// isso, a barra de progresso das relâmpago ficaria parada pra sempre.
+function calcularIncrementosOfertas(
+  itens: ItemCarrinho[],
+  ofertas: Oferta[],
+): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const it of itens) {
+    if (it.comboId || !it.ofertaId) continue;
+    out.set(it.ofertaId, (out.get(it.ofertaId) ?? 0) + it.pesoKg);
+  }
+  // Garante que só contabiliza ofertas que ainda existem (não dá pra
+  // incrementar uma oferta deletada).
+  const ids = new Set(ofertas.map((o) => o.id));
+  for (const id of [...out.keys()]) if (!ids.has(id)) out.delete(id);
+  return out;
+}
+
+// Verifica se os itens do carrinho não excedem o limite por cliente em
+// nenhuma das ofertas usadas. Retorna a primeira oferta que estoura.
+export function ofertaExcedeLimiteCliente(
+  itens: ItemCarrinho[],
+  ofertas: Oferta[],
+  pedidosAnterioresCliente: Pedido[],
+  clienteId: string,
+): { ofertaId: string; limite: number; usado: number } | null {
+  const limitePorOferta = new Map<string, number>();
+  for (const it of itens) {
+    if (it.comboId || !it.ofertaId) continue;
+    const of = ofertas.find((o) => o.id === it.ofertaId);
+    if (!of?.limitePorCliente) continue;
+    limitePorOferta.set(it.ofertaId, (limitePorOferta.get(it.ofertaId) ?? 0) + it.pesoKg);
+  }
+  for (const [ofertaId, usadoAgora] of limitePorOferta) {
+    const of = ofertas.find((o) => o.id === ofertaId);
+    if (!of?.limitePorCliente) continue;
+    const limite = of.limitePorCliente;
+    // Soma o que esse mesmo cliente já comprou nessa oferta antes.
+    const usadoAntes = pedidosAnterioresCliente
+      .filter((p) => p.status !== 'cancelado')
+      .flatMap((p) => p.itens)
+      .filter((i) => !i.comboId && i.ofertaId === ofertaId)
+      .reduce((s, i) => s + i.pesoKg, 0);
+    if (usadoAntes + usadoAgora > limite) {
+      return { ofertaId, limite, usado: usadoAntes };
+    }
+  }
+  return null;
+}
+
 // Re-exporta helpers para componentes importarem do store.
 export { cotarPedido, validadeCashbackISO };
 export { calcularMaximoUsoCashback, melhorDescontoPontos, nivelPorPontos } from './regras';
+
+// Filtra pedidos por status, retornando referência estável enquanto a
+// lista filtrada não muda. Útil pra evitar que páginas como
+// `/bancada` re-renderizem a cada tick do timer (que muda `tick` mas
+// não muda a lista filtrada).
+export function filtrarPedidosPorStatus(
+  pedidos: Pedido[],
+  statuses: StatusPedido[],
+): Pedido[] {
+  const set = new Set(statuses);
+  return pedidos.filter((p) => set.has(p.status));
+}

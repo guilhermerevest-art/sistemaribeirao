@@ -1,18 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
-import { brl, formatarData, formatarHora, formatarTelefone } from '@/lib/formato';
+import { brl, cashbackExpiraEmBreve, formatarData, formatarHora, formatarTelefone, linkWhatsAppReativacao } from '@/lib/formato';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, MessageCircle } from 'lucide-react';
+import { ChevronLeft, MessageCircle, AlertTriangle, Repeat } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ClienteDetalhePage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const cliente = useStore((s) => s.clientes.find((c) => c.id === params.id));
   const pedidos = useStore((s) => s.pedidos.filter((p) => p.clienteId === params.id));
   const produtos = useStore((s) => s.produtos);
   const combos = useStore((s) => s.combos);
+  const clonarItens = useStore((s) => s.clonarItensParaCarrinho);
+  const setClienteAtual = useStore((s) => s.setClienteAtual);
 
   if (!cliente) {
     return (
@@ -23,7 +27,15 @@ export default function ClienteDetalhePage() {
     );
   }
 
-  const whatsapp = `https://wa.me/55${cliente.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi ${cliente.nome.split(' ')[0]}, aqui é do Empório Ribeirão.`)}`;
+  const whatsapp = linkWhatsAppReativacao({
+    nome: cliente.nome,
+    telefone: cliente.telefone,
+    diasSemCompra: pedidos.length
+      ? Math.floor((Date.now() - new Date(pedidos[0].criadoEm).getTime()) / 86400000)
+      : 0,
+    saldo: cliente.saldoCashback,
+    validadeISO: cliente.cashbackExpiraEm,
+  });
 
   return (
     <div className="min-h-screen bg-papel pb-8">
@@ -44,6 +56,12 @@ export default function ClienteDetalhePage() {
             <Campo label="Pontos" valor={String(cliente.pontos)} />
             <Campo label="Acumulado" valor={String(cliente.pontosAcumuladoTotal)} />
           </div>
+          {cashbackExpiraEmBreve(cliente.cashbackExpiraEm) && cliente.saldoCashback > 0 && (
+            <div className="mt-3 rounded-md bg-vermelho-risco/10 border border-vermelho-risco px-3 py-2 text-xs flex items-center gap-2 text-vermelho-risco font-semibold">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              Cashback vence em {cliente.cashbackExpiraEm ? formatarData(cliente.cashbackExpiraEm) : 'breve'} — chame antes que vire prejuízo.
+            </div>
+          )}
           {cliente.aceitaWhatsapp && (
             <a href={whatsapp} target="_blank" rel="noreferrer" className="block mt-4">
               <Button size="lg" className="w-full sm:w-auto"><MessageCircle className="w-4 h-4 mr-1" /> Chamar no WhatsApp</Button>
@@ -83,6 +101,17 @@ export default function ClienteDetalhePage() {
                     })}
                   </ul>
                   <div className="text-xs text-brasa mt-2">+ {brl(p.cashbackGerado)} de cashback · {p.pontosGerados} pontos</div>
+                  <button
+                    onClick={async () => {
+                      clonarItens(p.itens);
+                      await setClienteAtual(cliente.id);
+                      toast.success('Pedido copiado pro carrinho');
+                      router.push('/loja/carrinho');
+                    }}
+                    className="mt-3 h-10 px-3 rounded-md bg-sangue text-papel text-xs font-semibold inline-flex items-center gap-1.5"
+                  >
+                    <Repeat className="w-3.5 h-3.5" /> Pedir de novo
+                  </button>
                 </li>
               ))}
             </ul>
