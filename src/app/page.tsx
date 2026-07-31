@@ -10,7 +10,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl flex items-center gap-3">
           <div className="w-12 h-12 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-2xl">R</div>
           <div>
-            <div className="font-display font-extrabold text-2xl uppercase">Açougue Ribeirão</div>
+            <div className="font-display font-extrabold text-2xl uppercase">Empório Ribeirão</div>
             <div className="text-papel/60 text-sm">Sistema de pedidos e fidelidade</div>
           </div>
         </div>

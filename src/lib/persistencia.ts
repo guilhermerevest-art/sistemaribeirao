@@ -9,7 +9,7 @@
 // Manter separado do store.ts evita que o resto do código se preocupe
 // com o detalhe.
 
-import type { Cliente, Oferta, Pedido, Produto, Resgate } from './types';
+import type { Campanha, Cliente, Combo, Oferta, Pedido, Produto, Resgate } from './types';
 
 const CHAVE = 'ribeirao-mock-v1';
 
@@ -19,10 +19,13 @@ export interface SnapshotOffline {
   pedidos: Pedido[];
   ofertas: Oferta[];
   resgates: Resgate[];
+  combos: Combo[];
+  campanhas: Campanha[];
   proximoPedido: number;
   clienteAtualId?: string;
   somBancada: boolean;
   impressaoAutomatica: boolean;
+  ptsParaReais: Record<string, number>;
 }
 
 export function lerSnapshotOffline(): SnapshotOffline | null {
@@ -38,10 +41,13 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
       pedidos: parsed.pedidos ?? [],
       ofertas: parsed.ofertas ?? [],
       resgates: parsed.resgates ?? [],
+      combos: parsed.combos ?? [],
+      campanhas: parsed.campanhas ?? [],
       proximoPedido: parsed.proximoPedido ?? 600,
       clienteAtualId: parsed.clienteAtualId,
       somBancada: parsed.somBancada ?? true,
       impressaoAutomatica: parsed.impressaoAutomatica ?? true,
+      ptsParaReais: parsed.ptsParaReais ?? { '100': 1, '500': 5 },
     };
   } catch {
     return null;

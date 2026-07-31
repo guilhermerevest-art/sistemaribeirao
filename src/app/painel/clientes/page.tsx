@@ -66,7 +66,7 @@ function ClientesInner() {
 
   const whatsapp = (c: Cliente, dias: number, cb: number) => {
     const msg = encodeURIComponent(
-      `Oi ${c.nome.split(' ')[0]}, aqui é do Açougue Ribeirão. Faz ${dias} dias que você não aparece e você tem ${brl(cb)} de cashback pra usar até ${formatarData(c.cashbackExpiraEm ?? new Date().toISOString())}. Essa semana a fraldinha tá R$ 44,90 o quilo. Quer que eu separe?`,
+      `Oi ${c.nome.split(' ')[0]}, aqui é do Empório Ribeirão. Faz ${dias} dias que você não aparece e você tem ${brl(cb)} de cashback pra usar até ${formatarData(c.cashbackExpiraEm ?? new Date().toISOString())}. Essa semana a fraldinha tá R$ 44,90 o quilo. Quer que eu separe?`,
     );
     const tel = c.telefone.replace(/\D/g, '');
     return `https://wa.me/55${tel}?text=${msg}`;

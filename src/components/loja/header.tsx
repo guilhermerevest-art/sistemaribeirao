@@ -1,10 +1,30 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, Phone, Sparkles } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { brl, formatarTelefone } from '@/lib/formato';
 import { Badge } from '@/components/ui/badge';
+
+function LogoAcougue() {
+  const [erro, setErro] = useState(false);
+  if (erro) {
+    return (
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-vermelho text-branco grid place-items-center font-display font-extrabold text-base sm:text-lg shrink-0">
+        R
+      </div>
+    );
+  }
+  return (
+    <img
+      src="/logo.png"
+      alt="Empório Ribeirão"
+      className="w-9 h-9 sm:w-10 sm:h-10 rounded-md object-cover shrink-0"
+      onError={() => setErro(true)}
+    />
+  );
+}
 
 export function HeaderLoja() {
   const clienteAtualId = useStore((s) => s.clienteAtualId);
@@ -15,11 +35,9 @@ export function HeaderLoja() {
     <header className="header-fixo">
       <div className="mx-auto max-w-6xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
         <Link href="/loja" className="flex items-center gap-2 min-w-0 shrink">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-vermelho text-branco grid place-items-center font-display font-extrabold text-base sm:text-lg shrink-0">
-            R
-          </div>
+          <LogoAcougue />
           <div className="leading-tight min-w-0">
-            <div className="font-display font-extrabold text-preto text-sm sm:text-lg truncate">Açougue Ribeirão</div>
+            <div className="font-display font-extrabold text-preto text-sm sm:text-lg truncate">Empório Ribeirão</div>
             <div className="hidden sm:block text-[11px] uppercase tracking-wider text-preto/60 -mt-0.5">desde 1998</div>
           </div>
         </Link>

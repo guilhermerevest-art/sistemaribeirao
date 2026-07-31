@@ -15,6 +15,7 @@ export default function ConfirmacaoPage() {
   const pedido = useStore((s) => s.pedidos.find((p) => p.id === params.id));
   const cliente = useStore((s) => s.clientes.find((c) => c.id === pedido?.clienteId));
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
 
   useEffect(() => {
     if (!pedido) router.push('/loja');
@@ -26,7 +27,7 @@ export default function ConfirmacaoPage() {
   const idxAtual = order.indexOf(pedido.status);
 
   const whatsAppLink = `https://wa.me/553490000000?text=${encodeURIComponent(
-    `Oi Açougue Ribeirão, fiz o pedido ${pedido.id}. Tô aguardando!`,
+    `Oi Empório Ribeirão, fiz o pedido ${pedido.id}. Tô aguardando!`,
   )}`;
 
   return (
@@ -75,6 +76,16 @@ export default function ConfirmacaoPage() {
           <div className="font-display font-bold uppercase text-sm mb-2">Resumo</div>
           <ul className="text-sm space-y-1">
             {pedido.itens.map((it, i) => {
+              if (it.comboId) {
+                const c = combos.find((x) => x.id === it.comboId);
+                if (!c) return null;
+                return (
+                  <li key={i} className="flex justify-between">
+                    <span>{it.pesoKg}x · Combo {c.nome}</span>
+                    <span className="font-mono">{brl(it.subtotal)}</span>
+                  </li>
+                );
+              }
               const p = produtos.find((x) => x.id === it.produtoId);
               if (!p) return null;
               return (

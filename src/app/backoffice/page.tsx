@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { brl } from '@/lib/formato';
-import { Users, ShoppingBag, Tag, Package, ChevronRight, BarChart3, RotateCcw } from 'lucide-react';
+import { Users, ShoppingBag, Tag, Package, ChevronRight, BarChart3, RotateCcw, Layers, Gift, Settings } from 'lucide-react';
 import { AdminHeader } from '@/components/ui/admin-header';
 
 export default function BackofficePage() {
@@ -12,6 +12,8 @@ export default function BackofficePage() {
   const clientes = useStore((s) => s.clientes);
   const ofertas = useStore((s) => s.ofertas);
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
+  const resgates = useStore((s) => s.resgates);
   const reiniciar = useStore((s) => s.reiniciarDemonstracao);
 
   const hoje = useMemo(() => {
@@ -79,6 +81,27 @@ export default function BackofficePage() {
             titulo="Produtos"
             subtitulo={`${produtos.length} no cardápio`}
             descricao="Editar preço, disponibilidade e percentual de cashback."
+          />
+          <Modulo
+            href="/backoffice/combos"
+            icon={<Layers />}
+            titulo="Combos"
+            subtitulo={`${combos.filter((c) => c.ativo).length} ativos`}
+            descricao="Montar pacotes de produtos com preço fechado."
+          />
+          <Modulo
+            href="/backoffice/resgates"
+            icon={<Gift />}
+            titulo="Resgates"
+            subtitulo={`${resgates.filter((r) => r.ativo).length} no catálogo`}
+            descricao="Editar o catálogo de troca de pontos."
+          />
+          <Modulo
+            href="/backoffice/configuracoes"
+            icon={<Settings />}
+            titulo="Configurações"
+            subtitulo="Pontos por real"
+            descricao="Definir quanto os pontos valem em desconto."
           />
           <Modulo
             href="/painel"

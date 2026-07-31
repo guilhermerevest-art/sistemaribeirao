@@ -7,7 +7,7 @@ import { brl, formatarData, formatarTelefone } from '@/lib/formato';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
-import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight } from 'lucide-react';
+import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight, BarChart3, Sparkles, Wallet } from 'lucide-react';
 import type { Cliente, Frequencia, Pedido } from '@/lib/types';
 
 function classificar(
@@ -112,6 +112,22 @@ export default function PainelPage() {
 
   const maxFat = Math.max(1, ...fat30d.map((d) => d.valor));
 
+  const circulacao = useMemo(() => {
+    const saldoCashback = clientes.reduce((s, c) => s + c.saldoCashback, 0);
+    const pontos = clientes.reduce((s, c) => s + c.pontos, 0);
+    const inicioMes = new Date();
+    inicioMes.setDate(1);
+    inicioMes.setHours(0, 0, 0, 0);
+    const concedidoMes = pedidos
+      .filter((p) => new Date(p.criadoEm) >= inicioMes && p.status !== 'cancelado')
+      .reduce((s, p) => s + p.cashbackGerado, 0);
+    const agora = new Date();
+    const saldoVencido = clientes
+      .filter((c) => c.cashbackExpiraEm && new Date(c.cashbackExpiraEm) < agora)
+      .reduce((s, c) => s + c.saldoCashback, 0);
+    return { saldoCashback, pontos, concedidoMes, saldoVencido };
+  }, [clientes, pedidos]);
+
   return (
     <div className="min-h-screen bg-papel pb-8">
       <AdminHeader
@@ -123,6 +139,7 @@ export default function PainelPage() {
             <Link href="/painel/clientes"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Clientes</Button></Link>
             <Link href="/backoffice/promocoes"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Ofertas</Button></Link>
             <Link href="/painel/campanhas"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Campanhas</Button></Link>
+            <Link href="/painel/relatorios"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Relatórios</Button></Link>
             <button
               onClick={() => {
                 if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) void reiniciar();
@@ -144,6 +161,22 @@ export default function PainelPage() {
           <KPI label="Pedidos do dia" valor={String(stats.pedHoje)} icon={<ShoppingBag />} />
           <KPI label="Ticket médio" valor={brl(stats.ticket)} icon={<Award />} />
           <KPI label="Clientes que voltaram no mês" valor={String(stats.voltaram)} icon={<Users />} />
+        </section>
+
+        {/* Circulação de cashback e pontos */}
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-display font-bold uppercase text-sm text-carvao/70">Cashback e pontos em circulação</div>
+            <Link href="/painel/relatorios" className="text-xs text-sangue font-semibold hover:underline flex items-center gap-1">
+              Ver relatórios <BarChart3 className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KPI label="Cashback em circulação" valor={brl(circulacao.saldoCashback)} icon={<Wallet />} />
+            <KPI label="Pontos em circulação" valor={circulacao.pontos.toLocaleString('pt-BR')} icon={<Sparkles />} />
+            <KPI label="Cashback concedido no mês" valor={brl(circulacao.concedidoMes)} icon={<DollarSign />} />
+            <KPI label="Saldo vencido" valor={brl(circulacao.saldoVencido)} icon={<Award />} />
+          </div>
         </section>
 
         {/* Faturamento 30d */}

@@ -21,7 +21,7 @@ import {
   Store,
   Sparkles,
 } from 'lucide-react';
-import { calcularMaximoUsoCashback, cotarPedido, nivelPorPontos } from '@/lib/regras';
+import { calcularMaximoUsoCashback, cotarPedido, melhorDescontoPontos, nivelPorPontos } from '@/lib/regras';
 import { toast } from 'sonner';
 
 type Retirada = 'balcao' | 'entrega';
@@ -32,6 +32,8 @@ export default function CheckoutPage() {
   const itens = useStore((s) => s.carrinho.itens);
   const produtos = useStore((s) => s.produtos);
   const ofertas = useStore((s) => s.ofertas);
+  const combos = useStore((s) => s.combos);
+  const ptsParaReais = useStore((s) => s.ptsParaReais);
   const clientes = useStore((s) => s.clientes);
   const clienteAtualId = useStore((s) => s.clienteAtualId);
   const setClienteAtual = useStore((s) => s.setClienteAtual);
@@ -43,6 +45,7 @@ export default function CheckoutPage() {
   const [retirada, setRetirada] = useState<Retirada>('balcao');
   const [endereco, setEndereco] = useState('');
   const [querUsarCashback, setQuerUsarCashback] = useState(false);
+  const [querUsarPontos, setQuerUsarPontos] = useState(false);
   const [pagamento, setPagamento] = useState<Pagamento>('pix');
   const [trocoPara, setTrocoPara] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -62,21 +65,33 @@ export default function CheckoutPage() {
   }, [clienteAtualId, clientes]);
 
   const nivel = cliente ? nivelPorPontos(cliente.pontosAcumuladoTotal) : 'bronze';
-  const cotacao = useMemo(() => {
-    if (itens.length === 0) return null;
-    return cotarPedido({
-      itens,
-      produtos,
-      ofertas,
-      nivel,
-      cashbackUsado: 0,
-    });
-  }, [itens, produtos, ofertas, nivel]);
 
-  const subtotal = cotacao?.subtotal ?? 0;
+  // Cotação "base" (sem descontos) só pra extrair o subtotal — o subtotal
+  // bruto não muda com cashback/pontos, então não precisa recalcular tudo.
+  const cotacaoBase = useMemo(() => {
+    if (itens.length === 0) return null;
+    return cotarPedido({ itens, produtos, ofertas, combos, nivel, cashbackUsado: 0 });
+  }, [itens, produtos, ofertas, combos, nivel]);
+
+  const subtotal = cotacaoBase?.subtotal ?? 0;
   const taxaEntrega = retirada === 'entrega' ? (subtotal >= 150 ? 0 : 8) : 0;
   const cashbackMaximo = cliente ? calcularMaximoUsoCashback(subtotal, cliente.saldoCashback) : 0;
   const cashbackUsado = querUsarCashback ? cashbackMaximo : 0;
+
+  // Pontos e cashback dividem o mesmo teto de 30% do subtotal — o que
+  // sobrar depois do cashback é o que os pontos podem cobrir.
+  const limiteRestanteParaPontos = Math.max(0, subtotal * 0.3 - cashbackUsado);
+  const melhorPontos = cliente ? melhorDescontoPontos(cliente.pontos, limiteRestanteParaPontos, ptsParaReais) : null;
+  const descontoPontos = querUsarPontos && melhorPontos ? melhorPontos.valorDesconto : 0;
+  const pontosUsados = querUsarPontos && melhorPontos ? melhorPontos.pontosUsados : 0;
+
+  // Cotação final, agora com os descontos reais aplicados — é o que vira
+  // total exibido e o que é persistido no pedido.
+  const cotacao = useMemo(() => {
+    if (itens.length === 0) return null;
+    return cotarPedido({ itens, produtos, ofertas, combos, nivel, cashbackUsado, descontoPontosReais: descontoPontos });
+  }, [itens, produtos, ofertas, combos, nivel, cashbackUsado, descontoPontos]);
+
   const total = (cotacao ? cotacao.valorPago : 0) + taxaEntrega;
   const cashbackPrevisto = cotacao?.cashbackGerado ?? 0;
   const pontosPrevistos = cotacao?.pontosGerados ?? 0;
@@ -124,6 +139,8 @@ export default function CheckoutPage() {
         pagamento,
         trocoPara: pagamento === 'dinheiro' && trocoPara ? Number(trocoPara) : undefined,
         cashbackUsado,
+        pontosUsados,
+        descontoPontos,
         taxaEntrega,
       });
       router.push(`/loja/pedido/${pedido.id}`);
@@ -179,11 +196,11 @@ export default function CheckoutPage() {
       <div className="bg-preto text-branco">
         <div className="mx-auto max-w-3xl px-4 py-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-vermelho grid place-items-center font-display font-extrabold text-branco shrink-0">
-            AR
+            ER
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-display font-extrabold uppercase text-sm leading-tight">
-              Açougue Ribeirão
+              Empório Ribeirão
             </div>
             <div className="text-[11px] text-branco/60 leading-tight">
               Rua das Flores, 123 · Centro · Ribeirão
@@ -369,6 +386,23 @@ export default function CheckoutPage() {
               </label>
             )}
 
+            {cliente && melhorPontos && (
+              <label className="flex items-center gap-3 rounded-xl border border-cinza-claro bg-branco p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={querUsarPontos}
+                  onChange={(e) => setQuerUsarPontos(e.target.checked)}
+                  className="w-5 h-5 accent-vermelho"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-sm">Trocar {melhorPontos.pontosUsados} pontos por {brl(melhorPontos.valorDesconto)}</div>
+                  <div className="text-xs text-preto/60">
+                    Você tem {cliente.pontos} pontos.
+                  </div>
+                </div>
+              </label>
+            )}
+
             <div className="rounded-xl border border-cinza-claro bg-branco p-4">
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between">
@@ -385,6 +419,12 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <span className="text-preto/70">Cashback</span>
                     <span className="font-sans text-vermelho">- {brl(cashbackUsado)}</span>
+                  </div>
+                )}
+                {descontoPontos > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-preto/70">Pontos ({pontosUsados})</span>
+                    <span className="font-sans text-vermelho">- {brl(descontoPontos)}</span>
                   </div>
                 )}
                 {retirada === 'entrega' && (

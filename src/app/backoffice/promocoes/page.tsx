@@ -65,6 +65,12 @@ export default function BackofficePromocoesPage() {
                         {o.tipo === 'relampago' ? 'RELÂMPAGO' : 'SEMANA'}
                       </span>
                       <span className={`inline-block w-2.5 h-2.5 rounded-full ${o.ativa ? 'bg-verde-fiel' : 'bg-sebo'}`} title={o.ativa ? 'Ativa' : 'Inativa'} />
+                      {o.comboId && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amarelo text-carvao">COMBO</span>
+                      )}
+                      {o.brindeProdutoId && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-verde-fiel text-papel">BRINDE</span>
+                      )}
                     </div>
                     <div className="font-display font-bold uppercase truncate mt-1">{p?.nome}</div>
                     <div className="text-xs text-carvao/60 truncate">{o.chamada}</div>
@@ -151,6 +157,7 @@ function ModalPromocao({
   onSalvar: (dados: Omit<Oferta, 'id' | 'quantidadeVendidaKg' | 'ativa'>) => void;
 }) {
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
   const [tipo, setTipo] = useState<'semana' | 'relampago'>(oferta?.tipo ?? 'semana');
   const [produtoId, setProdutoId] = useState(oferta?.produtoId ?? '');
   const [precoDe, setPrecoDe] = useState(oferta?.precoDe ?? 0);
@@ -160,6 +167,8 @@ function ModalPromocao({
   const [limitePorCliente, setLimitePorCliente] = useState(oferta?.limitePorCliente ?? 2);
   const [quantidadeTotalKg, setQuantidadeTotalKg] = useState(oferta?.quantidadeTotalKg ?? 20);
   const [chamada, setChamada] = useState(oferta?.chamada ?? '');
+  const [comboId, setComboId] = useState(oferta?.comboId ?? '');
+  const [brindeProdutoId, setBrindeProdutoId] = useState(oferta?.brindeProdutoId ?? '');
 
   const produto = produtos.find((p) => p.id === produtoId);
 
@@ -231,6 +240,24 @@ function ModalPromocao({
               <span className="text-xs text-carvao/70">Chamada</span>
               <input value={chamada} onChange={(e) => setChamada(e.target.value)} placeholder="Ex: Só hoje até acabar" className="mt-1 w-full h-12 rounded-md border border-sebo px-3" />
             </label>
+            <label className="block">
+              <span className="text-xs text-carvao/70">Combo relacionado (opcional)</span>
+              <select value={comboId} onChange={(e) => setComboId(e.target.value)} className="mt-1 w-full h-12 rounded-md border border-sebo px-3">
+                <option value="">Nenhum</option>
+                {combos.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nome}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs text-carvao/70">Brinde — produto grátis (opcional)</span>
+              <select value={brindeProdutoId} onChange={(e) => setBrindeProdutoId(e.target.value)} className="mt-1 w-full h-12 rounded-md border border-sebo px-3">
+                <option value="">Nenhum</option>
+                {produtos.map((p) => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {produto && precoPor > 0 && (
@@ -267,6 +294,8 @@ function ModalPromocao({
                 limitePorCliente: tipo === 'semana' ? limitePorCliente : undefined,
                 quantidadeTotalKg: tipo === 'relampago' ? quantidadeTotalKg : undefined,
                 chamada: chamada || (tipo === 'relampago' ? 'Só hoje até acabar' : 'Oferta da semana'),
+                comboId: comboId || undefined,
+                brindeProdutoId: brindeProdutoId || undefined,
               });
             }}
           >

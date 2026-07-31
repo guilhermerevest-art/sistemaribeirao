@@ -27,6 +27,7 @@ export default function BancadaPage() {
   const setImpressaoAutomatica = useStore((s) => s.setImpressaoAutomatica);
   const gerarPedidoTeste = useStore((s) => s.gerarPedidoTeste);
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
 
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -80,9 +81,9 @@ export default function BancadaPage() {
       <ImpressaoAutomatica />
 
       <main className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3" key={tick}>
-        <Coluna titulo="Novos" pedidos={novos} tone="sangue" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} />
-        <Coluna titulo="Preparando" pedidos={preparando} tone="brasa" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} />
-        <Coluna titulo="Prontos" pedidos={prontos} tone="verde" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} />
+        <Coluna titulo="Novos" pedidos={novos} tone="sangue" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} combos={combos} />
+        <Coluna titulo="Preparando" pedidos={preparando} tone="brasa" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} combos={combos} />
+        <Coluna titulo="Prontos" pedidos={prontos} tone="verde" onAcao={(p, ac) => handleAcao(p, ac, atualizarStatus, marcarImpresso)} clientes={clientes} produtos={produtos} combos={combos} />
       </main>
     </div>
   );
@@ -111,6 +112,7 @@ function Coluna({
   onAcao,
   clientes,
   produtos,
+  combos,
 }: {
   titulo: string;
   pedidos: Pedido[];
@@ -118,6 +120,7 @@ function Coluna({
   onAcao: (p: Pedido, ac: 'imprimir' | 'iniciar' | 'pronto' | 'entregue') => void;
   clientes: { id: string; nome: string; telefone: string }[];
   produtos: { id: string; nome: string }[];
+  combos: { id: string; nome: string }[];
 }) {
   const toneClass: Record<typeof tone, string> = {
     sangue: 'bg-sangue',
@@ -163,6 +166,14 @@ function Coluna({
               </div>
               <ul className="mt-2 text-xs text-carvao/80 max-h-24 overflow-auto">
                 {p.itens.map((it, i) => {
+                  if (it.comboId) {
+                    const combo = combos.find((c) => c.id === it.comboId);
+                    return (
+                      <li key={i}>
+                        <span className="font-mono">{it.pesoKg}x</span> COMBO {combo?.nome}
+                      </li>
+                    );
+                  }
                   const prod = produtos.find((pr) => pr.id === it.produtoId);
                   return (
                     <li key={i}>

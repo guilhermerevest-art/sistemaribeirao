@@ -8,6 +8,7 @@ import { brl, formatarPeso } from '@/lib/formato';
 import { ChevronLeft, Sparkles } from 'lucide-react';
 import { nivelPorPontos, ofertaAtivaPara } from '@/lib/regras';
 import { toast } from 'sonner';
+import { ImagemProduto } from '@/components/ui/imagem-produto';
 
 const PESOS_RAPIDOS = [0.5, 1, 1.5, 2];
 
@@ -74,7 +75,7 @@ export default function ProdutoPage() {
 
       {/* Hero do produto — foto grande */}
       <div className="relative h-[40vh] sm:h-[60vh] min-h-[280px] sm:min-h-[420px] bg-cinza-claro">
-        <img src={produto.imagem} alt={produto.nome} className="w-full h-full object-cover" />
+        <ImagemProduto src={produto.imagem} alt={produto.nome} className="w-full h-full object-cover" />
         <button
           onClick={() => router.back()}
           className="absolute top-3 left-3 inline-flex items-center gap-1 text-sm text-preto bg-branco/90 backdrop-blur px-3 h-9 rounded-full"

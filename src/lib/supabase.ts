@@ -1,4 +1,4 @@
-// Cliente Supabase singleton para o Açougue Ribeirão.
+// Cliente Supabase singleton para o Empório Ribeirão.
 // Variáveis públicas (precisam estar no .env.local e na Vercel como
 // NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY).
 //

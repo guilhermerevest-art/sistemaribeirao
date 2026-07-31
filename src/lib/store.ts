@@ -1,4 +1,4 @@
-// Store global do Açougue Ribeirão — agora lê e escreve no Supabase.
+// Store global do Empório Ribeirão — agora lê e escreve no Supabase.
 //
 // Mudanças em relação à versão anterior:
 //   - State inicial vazio (era populado com seed local).
@@ -13,7 +13,9 @@
 
 import { create } from 'zustand';
 import type {
+  Campanha,
   Cliente,
+  Combo,
   ItemCarrinho,
   Oferta,
   Pedido,
@@ -22,7 +24,16 @@ import type {
   StatusPedido,
 } from './types';
 import { supabase } from './supabase';
-import type { ClienteRow, OfertaRow, PedidoRow, ProdutoRow, ResgateRow, AppStateRow } from './database.types';
+import type {
+  CampanhaRow,
+  ClienteRow,
+  ComboRow,
+  OfertaRow,
+  PedidoRow,
+  ProdutoRow,
+  ResgateRow,
+  AppStateRow,
+} from './database.types';
 import {
   CLIENTES,
   OFERTAS,
@@ -51,11 +62,31 @@ function snapshotFromState(s: State): SnapshotOffline {
     pedidos: s.pedidos,
     ofertas: s.ofertas,
     resgates: s.resgates,
+    combos: s.combos,
+    campanhas: s.campanhas,
     proximoPedido: s.proximoPedido,
     clienteAtualId: s.clienteAtualId,
     somBancada: s.somBancada,
     impressaoAutomatica: s.impressaoAutomatica,
+    ptsParaReais: s.ptsParaReais,
   };
+}
+
+// Tabela pts->R$ vem como texto JSON no app_state. Fallback silencioso
+// pra não derrubar a hidratação se alguém salvar um JSON malformado.
+function parsePtsParaReais(json: string | null | undefined): Record<string, number> {
+  if (!json) return { '100': 1, '500': 5 };
+  try {
+    const parsed = JSON.parse(json) as Record<string, unknown>;
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const n = Number(v);
+      if (Number.isFinite(n) && n > 0) out[k] = n;
+    }
+    return Object.keys(out).length > 0 ? out : { '100': 1, '500': 5 };
+  } catch {
+    return { '100': 1, '500': 5 };
+  }
 }
 
 // ============================================================
@@ -110,6 +141,8 @@ function mapOferta(r: OfertaRow): Oferta {
     quantidadeVendidaKg: Number(r.quantidade_vendida_kg),
     chamada: r.chamada,
     ativa: r.ativa,
+    comboId: r.combo_id ?? undefined,
+    brindeProdutoId: r.brinde_produto_id ?? undefined,
   };
 }
 
@@ -121,6 +154,8 @@ function mapPedido(r: PedidoRow): Pedido {
     subtotal: Number(r.subtotal),
     descontoOfertas: Number(r.desconto_ofertas),
     cashbackUsado: Number(r.cashback_usado),
+    pontosUsados: r.pontos_usados ?? 0,
+    descontoPontos: r.desconto_pontos != null ? Number(r.desconto_pontos) : 0,
     taxaEntrega: Number(r.taxa_entrega),
     total: Number(r.total),
     cashbackGerado: Number(r.cashback_gerado),
@@ -146,6 +181,34 @@ function mapResgate(r: ResgateRow): Resgate {
   };
 }
 
+function mapCombo(r: ComboRow): Combo {
+  return {
+    id: r.id,
+    slug: r.slug,
+    nome: r.nome,
+    descricao: r.descricao,
+    imagem: r.imagem,
+    precoCombo: Number(r.preco_combo),
+    percentualCashback: Number(r.percentual_cashback),
+    itens: Array.isArray(r.itens) ? r.itens : [],
+    ativo: r.ativo,
+  };
+}
+
+function mapCampanha(r: CampanhaRow): Campanha {
+  return {
+    id: r.id,
+    titulo: r.titulo,
+    mensagemTemplate: r.mensagem_template,
+    publicoAlvo: r.publico_alvo,
+    clientesIds: r.clientes_ids ?? undefined,
+    dataCriacao: r.data_criacao,
+    dataEnvio: r.data_envio ?? undefined,
+    totalDestinatarios: r.total_destinatarios,
+    ativo: r.ativo,
+  };
+}
+
 // ============================================================
 // Store
 // ============================================================
@@ -164,11 +227,14 @@ interface State {
   pedidos: Pedido[];
   ofertas: Oferta[];
   resgates: Resgate[];
+  combos: Combo[];
+  campanhas: Campanha[];
   carrinho: CarrinhoState;
   clienteAtualId?: string;
   somBancada: boolean;
   impressaoAutomatica: boolean;
   proximoPedido: number;
+  ptsParaReais: Record<string, number>;
 }
 
 interface Actions {
@@ -190,6 +256,8 @@ interface Actions {
     pagamento: 'pix' | 'cartao_entrega' | 'dinheiro';
     trocoPara?: number;
     cashbackUsado: number;
+    pontosUsados?: number;
+    descontoPontos?: number;
     taxaEntrega: number;
     observacaoGeral?: string;
   }) => Promise<Pedido>;
@@ -204,6 +272,20 @@ interface Actions {
   atualizarOferta: (o: Oferta) => Promise<void>;
   desativarOferta: (id: string) => Promise<void>;
 
+  // Combos
+  criarCombo: (c: Combo) => Promise<void>;
+  atualizarCombo: (c: Combo) => Promise<void>;
+  desativarCombo: (id: string) => Promise<void>;
+
+  // Campanhas
+  criarCampanha: (c: Campanha) => Promise<void>;
+  atualizarCampanha: (c: Campanha) => Promise<void>;
+  desativarCampanha: (id: string) => Promise<void>;
+  marcarCampanhaEnviada: (id: string, totalDestinatarios: number) => Promise<void>;
+
+  // Configurações
+  setPontosParaReais: (mapa: Record<string, number>) => Promise<void>;
+
   // Clientes
   criarCliente: (c: Omit<Cliente, 'id' | 'criadoEm' | 'saldoCashback' | 'pontos' | 'pontosAcumuladoTotal'>) => Promise<Cliente>;
   atualizarCliente: (c: Cliente) => Promise<void>;
@@ -215,6 +297,11 @@ interface Actions {
 
   // Pontos
   debitarPontos: (clienteId: string, resgateId: string) => Promise<boolean>;
+
+  // Resgates (catálogo de pontos)
+  criarResgate: (r: Resgate) => Promise<void>;
+  atualizarResgate: (r: Resgate) => Promise<void>;
+  desativarResgate: (id: string) => Promise<void>;
 
   // Preferências
   setSomBancada: (v: boolean) => Promise<void>;
@@ -228,7 +315,12 @@ interface Actions {
   recarregarClientes: () => Promise<void>;
   recarregarOfertas: () => Promise<void>;
   recarregarProdutos: () => Promise<void>;
+  recarregarCombos: () => Promise<void>;
+  recarregarCampanhas: () => Promise<void>;
+  recarregarResgates: () => Promise<void>;
 }
+
+const PTS_PARA_REAIS_PADRAO: Record<string, number> = { '100': 1, '500': 5 };
 
 const initialState: State = {
   carregado: false,
@@ -240,11 +332,14 @@ const initialState: State = {
   pedidos: [],
   ofertas: [],
   resgates: [],
+  combos: [],
+  campanhas: [],
   carrinho: { itens: [] },
   clienteAtualId: undefined,
   somBancada: true,
   impressaoAutomatica: true,
   proximoPedido: 600,
+  ptsParaReais: PTS_PARA_REAIS_PADRAO,
 };
 
 const seedFallback = (): SnapshotOffline => ({
@@ -253,10 +348,13 @@ const seedFallback = (): SnapshotOffline => ({
   pedidos: PEDIDOS_SEED,
   ofertas: OFERTAS,
   resgates: RESGATES,
+  combos: [],
+  campanhas: [],
   proximoPedido: 600,
   clienteAtualId: undefined,
   somBancada: true,
   impressaoAutomatica: true,
+  ptsParaReais: PTS_PARA_REAIS_PADRAO,
 });
 
 // Permanece exportado porque outros módulos podem querer ler o
@@ -272,17 +370,20 @@ export const useStore = create<State & Actions>()((set, get) => ({
     set({ carregando: true, erro: null });
     try {
       const sb = supabase();
-      const [prodRes, cliRes, pedRes, ofRes, resRes, stRes] = await Promise.all([
+      const [prodRes, cliRes, pedRes, ofRes, resRes, comboRes, campRes, stRes] = await Promise.all([
         sb.from('produtos').select('*').order('nome'),
         sb.from('clientes').select('*').order('nome'),
         sb.from('pedidos').select('*').order('criado_em', { ascending: false }),
         sb.from('ofertas').select('*').order('created_at', { ascending: false }),
         sb.from('resgates').select('*').order('custo_pontos'),
+        sb.from('combos').select('*').order('nome'),
+        sb.from('campanhas').select('*').order('data_criacao', { ascending: false }),
         sb.from('app_state').select('*').eq('id', 'singleton').maybeSingle<AppStateRow>(),
       ]);
 
       // Se qualquer um falhou, cai pro modo offline.
-      const anyError = prodRes.error || cliRes.error || pedRes.error || ofRes.error || resRes.error;
+      const anyError =
+        prodRes.error || cliRes.error || pedRes.error || ofRes.error || resRes.error || comboRes.error || campRes.error;
       if (anyError) {
         // eslint-disable-next-line no-console
         console.warn('[supabase] falha ao carregar:', anyError.message);
@@ -297,6 +398,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
           pedidos: base.pedidos,
           ofertas: base.ofertas,
           resgates: base.resgates,
+          combos: base.combos,
+          campanhas: base.campanhas,
           online: false,
           erro: snap
             ? 'Modo demo offline — usando dados salvos neste navegador.'
@@ -307,6 +410,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
           somBancada: base.somBancada,
           impressaoAutomatica: base.impressaoAutomatica,
           proximoPedido: base.proximoPedido,
+          ptsParaReais: base.ptsParaReais,
         });
         return;
       }
@@ -316,6 +420,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
       const pedidos = (pedRes.data ?? []).map(mapPedido);
       const ofertas = (ofRes.data ?? []).map(mapOferta);
       const resgates = (resRes.data ?? []).map(mapResgate);
+      const combos = (comboRes.data ?? []).map(mapCombo);
+      const campanhas = (campRes.data ?? []).map(mapCampanha);
       const st = stRes.data;
 
       set({
@@ -324,6 +430,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
         pedidos,
         ofertas,
         resgates,
+        combos,
+        campanhas,
         online: true,
         carregado: true,
         carregando: false,
@@ -331,6 +439,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
         somBancada: st?.som_bancada ?? true,
         impressaoAutomatica: st?.impressao_automatica ?? true,
         proximoPedido: st?.proximo_pedido ?? 600,
+        ptsParaReais: parsePtsParaReais(st?.pts_para_reais_json),
       });
     } catch (e) {
       const snap = lerSnapshotOffline();
@@ -341,6 +450,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
         pedidos: base.pedidos,
         ofertas: base.ofertas,
         resgates: base.resgates,
+        combos: base.combos,
+        campanhas: base.campanhas,
         online: false,
         erro: e instanceof Error ? e.message : 'Erro ao carregar dados.',
         carregado: true,
@@ -349,6 +460,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
         somBancada: base.somBancada,
         impressaoAutomatica: base.impressaoAutomatica,
         proximoPedido: base.proximoPedido,
+        ptsParaReais: base.ptsParaReais,
       });
     }
   },
@@ -391,12 +503,16 @@ export const useStore = create<State & Actions>()((set, get) => ({
     const cliente = s.clientes.find((c) => c.id === params.clienteId);
     if (!cliente) throw new Error('cliente não encontrado');
     const nivel = _nivelPorPontos(cliente.pontosAcumuladoTotal);
+    const pontosUsados = params.pontosUsados ?? 0;
+    const descontoPontos = params.descontoPontos ?? 0;
     const cotacao = cotarPedido({
       itens: s.carrinho.itens,
       produtos: s.produtos,
       ofertas: s.ofertas,
+      combos: s.combos,
       nivel,
       cashbackUsado: params.cashbackUsado,
+      descontoPontosReais: descontoPontos,
     });
     const idNum = s.proximoPedido;
     const id = String(idNum).padStart(4, '0');
@@ -407,6 +523,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
       subtotal: cotacao.subtotal,
       descontoOfertas: cotacao.descontoOfertas,
       cashbackUsado: params.cashbackUsado,
+      pontosUsados,
+      descontoPontos,
       taxaEntrega: params.taxaEntrega,
       total: cotacao.valorPago + params.taxaEntrega,
       cashbackGerado: cotacao.cashbackGerado,
@@ -431,7 +549,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
                   Math.max(0, c.saldoCashback - params.cashbackUsado) +
                   cotacao.cashbackGerado,
                 cashbackExpiraEm: validadeCashbackISO(novoPedido.criadoEm),
-                pontos: c.pontos + cotacao.pontosGerados,
+                pontos: Math.max(0, c.pontos - pontosUsados) + cotacao.pontosGerados,
                 pontosAcumuladoTotal: c.pontosAcumuladoTotal + cotacao.pontosGerados,
               }
             : c,
@@ -456,6 +574,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
       subtotal: novoPedido.subtotal,
       desconto_ofertas: novoPedido.descontoOfertas,
       cashback_usado: novoPedido.cashbackUsado,
+      pontos_usados: pontosUsados,
+      desconto_pontos: descontoPontos,
       taxa_entrega: novoPedido.taxaEntrega,
       total: novoPedido.total,
       cashback_gerado: novoPedido.cashbackGerado,
@@ -476,7 +596,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
     await sb.from('clientes').update({
       saldo_cashback: novoSaldo,
       cashback_expira_em: validadeCashbackISO(novoPedido.criadoEm),
-      pontos: cliente.pontos + cotacao.pontosGerados,
+      pontos: Math.max(0, cliente.pontos - pontosUsados) + cotacao.pontosGerados,
       pontos_acumulado_total: cliente.pontosAcumuladoTotal + cotacao.pontosGerados,
     }).eq('id', cliente.id);
 
@@ -615,6 +735,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
       quantidade_vendida_kg: o.quantidadeVendidaKg,
       chamada: o.chamada,
       ativa: o.ativa,
+      combo_id: o.comboId ?? null,
+      brinde_produto_id: o.brindeProdutoId ?? null,
     });
     if (error) throw new Error(error.message);
     await get().recarregarOfertas();
@@ -638,6 +760,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
       quantidade_vendida_kg: o.quantidadeVendidaKg,
       chamada: o.chamada,
       ativa: o.ativa,
+      combo_id: o.comboId ?? null,
+      brinde_produto_id: o.brindeProdutoId ?? null,
     }).eq('id', o.id);
     if (error) throw new Error(error.message);
     await get().recarregarOfertas();
@@ -651,6 +775,130 @@ export const useStore = create<State & Actions>()((set, get) => ({
     }
     await supabase().from('ofertas').update({ ativa: false }).eq('id', id);
     await get().recarregarOfertas();
+  },
+
+  // ============================================================
+  // Combos
+  // ============================================================
+  criarCombo: async (c) => {
+    if (!get().online) {
+      set((s) => ({ combos: [...s.combos, c] }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('combos').insert({
+      id: c.id,
+      slug: c.slug,
+      nome: c.nome,
+      descricao: c.descricao,
+      imagem: c.imagem,
+      preco_combo: c.precoCombo,
+      percentual_cashback: c.percentualCashback,
+      itens: c.itens,
+      ativo: c.ativo,
+    });
+    if (error) throw new Error(error.message);
+    await get().recarregarCombos();
+  },
+
+  atualizarCombo: async (c) => {
+    if (!get().online) {
+      set((s) => ({ combos: s.combos.map((x) => (x.id === c.id ? c : x)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('combos').update({
+      slug: c.slug,
+      nome: c.nome,
+      descricao: c.descricao,
+      imagem: c.imagem,
+      preco_combo: c.precoCombo,
+      percentual_cashback: c.percentualCashback,
+      itens: c.itens,
+      ativo: c.ativo,
+    }).eq('id', c.id);
+    if (error) throw new Error(error.message);
+    await get().recarregarCombos();
+  },
+
+  desativarCombo: async (id) => {
+    if (!get().online) {
+      set((s) => ({ combos: s.combos.map((c) => (c.id === id ? { ...c, ativo: false } : c)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    await supabase().from('combos').update({ ativo: false }).eq('id', id);
+    await get().recarregarCombos();
+  },
+
+  // ============================================================
+  // Campanhas
+  // ============================================================
+  criarCampanha: async (c) => {
+    if (!get().online) {
+      set((s) => ({ campanhas: [c, ...s.campanhas] }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('campanhas').insert({
+      id: c.id,
+      titulo: c.titulo,
+      mensagem_template: c.mensagemTemplate,
+      publico_alvo: c.publicoAlvo,
+      clientes_ids: c.clientesIds ?? null,
+      data_criacao: c.dataCriacao,
+      data_envio: c.dataEnvio ?? null,
+      total_destinatarios: c.totalDestinatarios,
+      ativo: c.ativo,
+    });
+    if (error) throw new Error(error.message);
+    await get().recarregarCampanhas();
+  },
+
+  atualizarCampanha: async (c) => {
+    if (!get().online) {
+      set((s) => ({ campanhas: s.campanhas.map((x) => (x.id === c.id ? c : x)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('campanhas').update({
+      titulo: c.titulo,
+      mensagem_template: c.mensagemTemplate,
+      publico_alvo: c.publicoAlvo,
+      clientes_ids: c.clientesIds ?? null,
+      total_destinatarios: c.totalDestinatarios,
+      ativo: c.ativo,
+    }).eq('id', c.id);
+    if (error) throw new Error(error.message);
+    await get().recarregarCampanhas();
+  },
+
+  desativarCampanha: async (id) => {
+    if (!get().online) {
+      set((s) => ({ campanhas: s.campanhas.map((c) => (c.id === id ? { ...c, ativo: false } : c)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    await supabase().from('campanhas').update({ ativo: false }).eq('id', id);
+    await get().recarregarCampanhas();
+  },
+
+  marcarCampanhaEnviada: async (id, totalDestinatarios) => {
+    const agora = new Date().toISOString();
+    if (!get().online) {
+      set((s) => ({
+        campanhas: s.campanhas.map((c) =>
+          c.id === id ? { ...c, dataEnvio: agora, totalDestinatarios } : c,
+        ),
+      }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    await supabase().from('campanhas').update({
+      data_envio: agora,
+      total_destinatarios: totalDestinatarios,
+    }).eq('id', id);
+    await get().recarregarCampanhas();
   },
 
   // ============================================================
@@ -778,6 +1026,52 @@ export const useStore = create<State & Actions>()((set, get) => ({
   },
 
   // ============================================================
+  // Resgates (catálogo de pontos)
+  // ============================================================
+  criarResgate: async (r) => {
+    if (!get().online) {
+      set((s) => ({ resgates: [...s.resgates, r] }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('resgates').insert({
+      id: r.id,
+      nome: r.nome,
+      custo_pontos: r.custoPontos,
+      imagem: r.imagem,
+      ativo: r.ativo,
+    });
+    if (error) throw new Error(error.message);
+    await get().recarregarResgates();
+  },
+
+  atualizarResgate: async (r) => {
+    if (!get().online) {
+      set((s) => ({ resgates: s.resgates.map((x) => (x.id === r.id ? r : x)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('resgates').update({
+      nome: r.nome,
+      custo_pontos: r.custoPontos,
+      imagem: r.imagem,
+      ativo: r.ativo,
+    }).eq('id', r.id);
+    if (error) throw new Error(error.message);
+    await get().recarregarResgates();
+  },
+
+  desativarResgate: async (id) => {
+    if (!get().online) {
+      set((s) => ({ resgates: s.resgates.map((r) => (r.id === id ? { ...r, ativo: false } : r)) }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    await supabase().from('resgates').update({ ativo: false }).eq('id', id);
+    await get().recarregarResgates();
+  },
+
+  // ============================================================
   // Preferências
   // ============================================================
   setSomBancada: async (v) => {
@@ -793,6 +1087,17 @@ export const useStore = create<State & Actions>()((set, get) => ({
     set({ impressaoAutomatica: v });
     if (get().online) {
       await supabase().from('app_state').update<Partial<AppStateRow>>({ impressao_automatica: v }).eq('id', 'singleton');
+    } else {
+      gravarSnapshotOffline(snapshotFromState(get()));
+    }
+  },
+
+  setPontosParaReais: async (mapa) => {
+    set({ ptsParaReais: mapa });
+    if (get().online) {
+      await supabase().from('app_state').update<Partial<AppStateRow>>({
+        pts_para_reais_json: JSON.stringify(mapa),
+      }).eq('id', 'singleton');
     } else {
       gravarSnapshotOffline(snapshotFromState(get()));
     }
@@ -838,8 +1143,26 @@ export const useStore = create<State & Actions>()((set, get) => ({
     const { data, error } = await supabase().from('produtos').select('*').order('nome');
     if (!error && data) set({ produtos: data.map(mapProduto) });
   },
+
+  recarregarCombos: async () => {
+    if (!get().online) return;
+    const { data, error } = await supabase().from('combos').select('*').order('nome');
+    if (!error && data) set({ combos: data.map(mapCombo) });
+  },
+
+  recarregarCampanhas: async () => {
+    if (!get().online) return;
+    const { data, error } = await supabase().from('campanhas').select('*').order('data_criacao', { ascending: false });
+    if (!error && data) set({ campanhas: data.map(mapCampanha) });
+  },
+
+  recarregarResgates: async () => {
+    if (!get().online) return;
+    const { data, error } = await supabase().from('resgates').select('*').order('custo_pontos');
+    if (!error && data) set({ resgates: data.map(mapResgate) });
+  },
 }));
 
 // Re-exporta helpers para componentes importarem do store.
 export { cotarPedido, validadeCashbackISO };
-export { calcularMaximoUsoCashback, nivelPorPontos } from './regras';
+export { calcularMaximoUsoCashback, melhorDescontoPontos, nivelPorPontos } from './regras';

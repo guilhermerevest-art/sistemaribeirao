@@ -12,6 +12,7 @@ export default function ClienteDetalhePage() {
   const cliente = useStore((s) => s.clientes.find((c) => c.id === params.id));
   const pedidos = useStore((s) => s.pedidos.filter((p) => p.clienteId === params.id));
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
 
   if (!cliente) {
     return (
@@ -22,7 +23,7 @@ export default function ClienteDetalhePage() {
     );
   }
 
-  const whatsapp = `https://wa.me/55${cliente.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi ${cliente.nome.split(' ')[0]}, aqui é do Açougue Ribeirão.`)}`;
+  const whatsapp = `https://wa.me/55${cliente.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi ${cliente.nome.split(' ')[0]}, aqui é do Empório Ribeirão.`)}`;
 
   return (
     <div className="min-h-screen bg-papel pb-8">
@@ -65,6 +66,14 @@ export default function ClienteDetalhePage() {
                   </div>
                   <ul className="text-xs text-carvao/70 mt-2">
                     {p.itens.map((it, i) => {
+                      if (it.comboId) {
+                        const combo = combos.find((x) => x.id === it.comboId);
+                        return (
+                          <li key={i} className="font-mono">
+                            {it.pesoKg}x · Combo {combo?.nome} · {brl(it.subtotal)}
+                          </li>
+                        );
+                      }
                       const prod = produtos.find((x) => x.id === it.produtoId);
                       return (
                         <li key={i} className="font-mono">

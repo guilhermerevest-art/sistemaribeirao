@@ -2,6 +2,7 @@
 
 import type {
   Categoria,
+  Combo,
   ItemCarrinho,
   Nivel,
   Oferta,
@@ -16,11 +17,13 @@ import {
 export interface ItemCotado {
   produtoId: string;
   pesoKg: number;
-  categoria: Categoria;
+  categoria?: Categoria;
   precoBase: number;
   precoAplicado: number;
   subtotal: number;
   ofertaId?: string;
+  comboId?: string;
+  percentualCashbackCombo?: number;
 }
 
 export interface CotacaoPedido {
@@ -36,14 +39,17 @@ export function cotarPedido(args: {
   itens: ItemCarrinho[];
   produtos: Produto[];
   ofertas: Oferta[];
+  combos?: Combo[];
   nivel: Nivel;
   cashbackUsado: number;
+  descontoPontosReais?: number;
 }): Omit<CotacaoPedido, 'itens'> & {
   itens: ItemCotado[];
 } {
-  const { itens, produtos, ofertas, nivel, cashbackUsado } = args;
+  const { itens, produtos, ofertas, combos = [], nivel, cashbackUsado, descontoPontosReais = 0 } = args;
   const produtoMap = new Map(produtos.map((p) => [p.id, p]));
   const ofertaMap = new Map(ofertas.filter((o) => o.ativa).map((o) => [o.id, o]));
+  const comboMap = new Map(combos.map((c) => [c.id, c]));
 
   const cotados: ItemCotado[] = [];
   let subtotal = 0;
@@ -51,6 +57,27 @@ export function cotarPedido(args: {
   let totalPesoPago = 0;
 
   for (const item of itens) {
+    if (item.comboId) {
+      const combo = comboMap.get(item.comboId);
+      if (!combo) continue;
+      const precoBase = combo.precoCombo;
+      const precoAplicado = combo.precoCombo;
+      const subtotalItem = precoAplicado * item.pesoKg;
+      cotados.push({
+        produtoId: combo.id,
+        pesoKg: item.pesoKg,
+        precoBase,
+        precoAplicado,
+        subtotal: subtotalItem,
+        comboId: combo.id,
+        percentualCashbackCombo: combo.percentualCashback,
+      });
+      subtotal += precoBase * item.pesoKg;
+      subtotalComOferta += precoAplicado * item.pesoKg;
+      totalPesoPago += item.pesoKg;
+      continue;
+    }
+
     const p = produtoMap.get(item.produtoId);
     if (!p) continue;
     const precoBase = p.precoKg;
@@ -75,16 +102,19 @@ export function cotarPedido(args: {
   }
 
   const descontoOfertas = Math.max(0, subtotal - subtotalComOferta);
-  const valorPago = Math.max(0, subtotalComOferta - cashbackUsado);
+  const valorPago = Math.max(0, subtotalComOferta - cashbackUsado - descontoPontosReais);
 
-  // Cashback aplica por item, percentual do produto, sobre o valor efetivamente pago.
+  // Cashback aplica por item, percentual do produto (ou do combo, quando
+  // for o caso), sobre o valor efetivamente pago.
   let cashbackBase = 0;
   for (const c of cotados) {
     const proporcao =
       subtotalComOferta > 0 ? c.subtotal / subtotalComOferta : 0;
     const valorPagoItem = valorPago * proporcao;
-    const pct =
-      CASHBACK_POR_CATEGORIA[c.categoria] + BONUS_POR_NIVEL[nivel];
+    const pctBase = c.comboId
+      ? (c.percentualCashbackCombo ?? 0)
+      : CASHBACK_POR_CATEGORIA[c.categoria!];
+    const pct = pctBase + BONUS_POR_NIVEL[nivel];
     cashbackBase += valorPagoItem * pct;
   }
   const cashbackGerado = round2(cashbackBase);
@@ -105,6 +135,28 @@ export function calcularMaximoUsoCashback(subtotal: number, saldo: number): numb
   const limitePorPedido = subtotal * 0.3;
   const maximo = Math.min(saldo, limitePorPedido);
   return maximo >= 5 ? round2(maximo) : 0;
+}
+
+// Acha a faixa da tabela pontos->R$ que dá o maior desconto que o
+// cliente consegue pagar (tem pontos suficientes) e que cabe dentro do
+// limite de reais disponível (ex: 30% do subtotal, já descontado o
+// cashback usado no mesmo pedido).
+export function melhorDescontoPontos(
+  pontosDisponiveis: number,
+  limiteReais: number,
+  tabela: Record<string, number>,
+): { pontosUsados: number; valorDesconto: number } | null {
+  let melhor: { pontosUsados: number; valorDesconto: number } | null = null;
+  for (const [ptsStr, valor] of Object.entries(tabela)) {
+    const pts = Number(ptsStr);
+    if (!Number.isFinite(pts) || pts <= 0 || !Number.isFinite(valor) || valor <= 0) continue;
+    if (pts > pontosDisponiveis) continue;
+    if (valor > limiteReais) continue;
+    if (!melhor || valor > melhor.valorDesconto) {
+      melhor = { pontosUsados: pts, valorDesconto: round2(valor) };
+    }
+  }
+  return melhor;
 }
 
 export function nivelPorPontos(pontosAcumulado: number): Nivel {

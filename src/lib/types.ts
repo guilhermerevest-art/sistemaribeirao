@@ -1,4 +1,4 @@
-// Tipos do Açougue Ribeirão — fonte única de verdade.
+// Tipos do Empório Ribeirão — fonte única de verdade.
 
 export type Categoria =
   | 'bovino'
@@ -36,6 +36,11 @@ export interface ItemCarrinho {
   ofertaId?: string;
   precoUnitarioAplicado: number;
   subtotal: number;
+  // Quando setado, o item é um combo (não um produto avulso). `produtoId`
+  // fica igual ao id do combo por compatibilidade com código que ainda
+  // não conhece combos — eles simplesmente não acham o produto e ignoram.
+  // `pesoKg` vira "quantidade" de combos (sempre inteiro, unidade fixa).
+  comboId?: string;
 }
 
 export type StatusPedido =
@@ -55,6 +60,8 @@ export interface Pedido {
   subtotal: number;
   descontoOfertas: number;
   cashbackUsado: number;
+  pontosUsados?: number;
+  descontoPontos?: number;
   taxaEntrega: number;
   total: number;
   cashbackGerado: number;
@@ -98,6 +105,8 @@ export interface Oferta {
   quantidadeVendidaKg: number;
   chamada: string;
   ativa: boolean;
+  comboId?: string;
+  brindeProdutoId?: string;
 }
 
 export interface Resgate {
@@ -105,6 +114,37 @@ export interface Resgate {
   nome: string;
   custoPontos: number;
   imagem: string;
+  ativo: boolean;
+}
+
+export interface ItemCombo {
+  produtoId: string;
+  quantidadeKg: number;
+}
+
+export interface Combo {
+  id: string;
+  slug: string;
+  nome: string;
+  descricao: string;
+  imagem: string;
+  precoCombo: number;
+  percentualCashback: number;
+  itens: ItemCombo[];
+  ativo: boolean;
+}
+
+export type PublicoAlvo = 'novo' | 'fiel' | 'ocasional' | 'em_risco' | 'inativo' | 'todos' | 'custom';
+
+export interface Campanha {
+  id: string;
+  titulo: string;
+  mensagemTemplate: string;
+  publicoAlvo: PublicoAlvo;
+  clientesIds?: string[];
+  dataCriacao: string;
+  dataEnvio?: string;
+  totalDestinatarios: number;
   ativo: boolean;
 }
 

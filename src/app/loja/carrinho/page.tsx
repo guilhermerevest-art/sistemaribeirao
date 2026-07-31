@@ -5,10 +5,11 @@ import { useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Trash2, ChefHat } from 'lucide-react';
-import { brl, formatarPeso } from '@/lib/formato';
+import { ChevronLeft, Trash2, ChefHat, Minus, Plus } from 'lucide-react';
+import { brl } from '@/lib/formato';
 import { CASHBACK_POR_CATEGORIA } from '@/lib/types';
 import { nivelPorPontos } from '@/lib/regras';
+import { ImagemProduto } from '@/components/ui/imagem-produto';
 
 interface Sugestao {
   produtoId: string;
@@ -38,12 +39,14 @@ function sugerirParaItens(categorias: Set<string>): Sugestao[] {
 export default function CarrinhoPage() {
   const itens = useStore((s) => s.carrinho.itens);
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
   const ofertas = useStore((s) => s.ofertas);
   const clienteAtual = useStore((s) => s.clientes.find((c) => c.id === s.clienteAtualId));
   const atualizarItem = useStore((s) => s.atualizarItemCarrinho);
   const removerItem = useStore((s) => s.removerItemCarrinho);
 
   const produtoMap = useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
+  const comboMap = useMemo(() => new Map(combos.map((c) => [c.id, c])), [combos]);
 
   const subtotal = itens.reduce((s, i) => s + i.subtotal, 0);
   const categorias = new Set(itens.map((i) => produtoMap.get(i.produtoId)?.categoria).filter(Boolean) as string[]);
@@ -68,6 +71,14 @@ export default function CarrinhoPage() {
     atualizarItem(idx, { ...it, pesoKg: novoPeso, subtotal: novoSubtotal });
   };
 
+  const alterarQuantidadeCombo = (idx: number, delta: number) => {
+    const it = itens[idx];
+    if (!it) return;
+    const novaQtd = Math.max(1, it.pesoKg + delta);
+    const novoSubtotal = Math.round(novaQtd * it.precoUnitarioAplicado * 100) / 100;
+    atualizarItem(idx, { ...it, pesoKg: novaQtd, subtotal: novoSubtotal });
+  };
+
   return (
     <>
       <HeaderLoja />
@@ -88,11 +99,53 @@ export default function CarrinhoPage() {
           <>
             <ul className="mt-4 space-y-3">
               {itens.map((it, idx) => {
+                if (it.comboId) {
+                  const c = comboMap.get(it.comboId);
+                  if (!c) return null;
+                  return (
+                    <li key={idx} className="bg-branco border border-cinza-claro rounded-xl p-4 flex gap-3">
+                      <ImagemProduto src={c.imagem} alt={c.nome} className="w-20 h-20 rounded-md object-cover bg-cinza-claro shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amarelo text-preto font-extrabold uppercase">Combo</span>
+                        </div>
+                        <div className="font-display font-bold uppercase text-sm leading-tight mt-1">{c.nome}</div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <button
+                            onClick={() => alterarQuantidadeCombo(idx, -1)}
+                            className="w-8 h-8 rounded-md border border-cinza-claro grid place-items-center hover:border-preto"
+                            aria-label="Diminuir"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="text-sm font-sans font-bold w-6 text-center">{it.pesoKg}</span>
+                          <button
+                            onClick={() => alterarQuantidadeCombo(idx, 1)}
+                            className="w-8 h-8 rounded-md border border-cinza-claro grid place-items-center hover:border-preto"
+                            aria-label="Aumentar"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-sans font-bold tabular-nums text-lg">{brl(it.subtotal)}</div>
+                        <button
+                          onClick={() => removerItem(idx)}
+                          className="mt-2 text-xs text-preto/60 hover:text-vermelho inline-flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> remover
+                        </button>
+                      </div>
+                    </li>
+                  );
+                }
+
                 const p = produtoMap.get(it.produtoId);
                 if (!p) return null;
                 return (
                   <li key={idx} className="bg-branco border border-cinza-claro rounded-xl p-4 flex gap-3">
-                    <img src={p.imagem} alt={p.nome} className="w-20 h-20 rounded-md object-cover bg-cinza-claro" />
+                    <ImagemProduto src={p.imagem} alt={p.nome} className="w-20 h-20 rounded-md object-cover bg-cinza-claro shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="font-display font-bold uppercase text-sm leading-tight">{p.nome}</div>
                       {it.preparos.length > 0 && (
@@ -149,7 +202,7 @@ export default function CarrinhoPage() {
                         className="rounded-lg overflow-hidden bg-branco border border-cinza-claro hover:border-vermelho hover:shadow-md transition-all"
                       >
                         <div className="aspect-square bg-cinza-claro">
-                          <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
+                          <ImagemProduto src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
                         </div>
                         <div className="px-2 py-2">
                           <div className="font-display font-bold text-xs uppercase leading-tight line-clamp-2">{p.nome}</div>

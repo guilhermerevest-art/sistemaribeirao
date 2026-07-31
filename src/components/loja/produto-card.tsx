@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { Produto } from '@/lib/types';
 import { brl } from '@/lib/formato';
 import { Sparkles } from 'lucide-react';
+import { ImagemProduto } from '@/components/ui/imagem-produto';
 
 export function ProdutoCard({ produto }: { produto: Produto }) {
   const cashbackPorKg = produto.precoKg * produto.percentualCashback;
@@ -18,11 +19,10 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
         </div>
       )}
       <div className="aspect-square bg-cinza-claro overflow-hidden">
-        <img
+        <ImagemProduto
           src={produto.imagem}
           alt={produto.nome}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
         />
       </div>
       <div className="px-3 pt-3 pb-3">

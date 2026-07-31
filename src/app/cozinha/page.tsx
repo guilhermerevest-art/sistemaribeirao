@@ -27,6 +27,7 @@ export default function CozinhaPage() {
 
   const pedidos = useStore((s) => s.pedidos);
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
   const clientes = useStore((s) => s.clientes);
   const atualizarStatus = useStore((s) => s.atualizarStatusPedido);
 
@@ -100,6 +101,17 @@ export default function CozinhaPage() {
 
                   <ul className="mt-3 space-y-2">
                     {p.itens.map((it, i) => {
+                      if (it.comboId) {
+                        const combo = combos.find((c) => c.id === it.comboId);
+                        return (
+                          <li key={i} className="border-l-4 border-sangue pl-3 py-1">
+                            <div className="text-sm font-semibold">
+                              <span className="font-mono mr-2 text-brasa">{it.pesoKg}x</span>
+                              COMBO {combo?.nome}
+                            </div>
+                          </li>
+                        );
+                      }
                       const prod = produtos.find((pr) => pr.id === it.produtoId);
                       return (
                         <li key={i} className="border-l-4 border-sangue pl-3 py-1">

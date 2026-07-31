@@ -29,6 +29,7 @@ export default function BackofficePedidosPage() {
   const pedidos = useStore((s) => s.pedidos);
   const clientes = useStore((s) => s.clientes);
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
   const atualizarStatus = useStore((s) => s.atualizarStatusPedido);
   const atualizarPedido = useStore((s) => s.atualizarPedido);
   const cancelarPedido = useStore((s) => s.cancelarPedido);
@@ -146,6 +147,7 @@ export default function BackofficePedidosPage() {
           pedido={detalhe}
           clientes={clientes}
           produtos={produtos}
+          combos={combos}
           onClose={() => setDetalhe(null)}
           onMudarStatus={(s) => { void atualizarStatus(detalhe.id, s); setDetalhe({ ...detalhe, status: s }); toast.success('Status atualizado'); }}
           onCancelar={() => {
@@ -167,6 +169,7 @@ function ModalPedido({
   pedido,
   clientes,
   produtos,
+  combos,
   onClose,
   onMudarStatus,
   onCancelar,
@@ -176,6 +179,7 @@ function ModalPedido({
   pedido: Pedido;
   clientes: { id: string; nome: string; telefone: string }[];
   produtos: { id: string; nome: string }[];
+  combos: { id: string; nome: string }[];
   onClose: () => void;
   onMudarStatus: (s: StatusPedido) => void;
   onCancelar: () => void;
@@ -228,6 +232,16 @@ function ModalPedido({
             <div className="text-xs text-carvao/70 mb-1">Itens</div>
             <ul className="border border-sebo rounded-md divide-y divide-sebo">
               {pedido.itens.map((it, i) => {
+                if (it.comboId) {
+                  const c = combos.find((x) => x.id === it.comboId);
+                  return (
+                    <li key={i} className="p-3 flex items-center gap-2 text-sm flex-wrap">
+                      <div className="font-mono text-brasa">{it.pesoKg}x</div>
+                      <div className="flex-1 min-w-[8rem]">Combo {c?.nome}</div>
+                      <div className="font-mono font-bold ml-auto">{brl(it.subtotal)}</div>
+                    </li>
+                  );
+                }
                 const p = produtos.find((x) => x.id === it.produtoId);
                 return (
                   <li key={i} className="p-3 flex items-center gap-2 text-sm flex-wrap">

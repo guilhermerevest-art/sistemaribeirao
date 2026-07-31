@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { ProdutoCard } from '@/components/loja/produto-card';
+import { ComboCard } from '@/components/loja/combo-card';
 import { OfertaRelampago, OfertasSemana } from '@/components/loja/ofertas';
 import { QueTalAdicionar } from '@/components/loja/que-tal-adicionar';
 import { CATEGORIAS, type Categoria } from '@/lib/types';
@@ -14,6 +15,7 @@ import { cn } from '@/lib/formato';
 
 export default function LojaPage() {
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
   const carregado = useStore((s) => s.carregado);
   const [categoriaAtiva, setCategoriaAtiva] = useState<Categoria | 'todas'>('todas');
   const [busca, setBusca] = useState('');
@@ -79,6 +81,19 @@ export default function LojaPage() {
             </div>
           </div>
         </section>
+
+        {combos.filter((c) => c.ativo).length > 0 && (
+          <section className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="font-display font-extrabold uppercase text-xl tracking-tight">Combos</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {combos.filter((c) => c.ativo).map((c) => (
+                <ComboCard key={c.id} combo={c} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <OfertaRelampago />
         <OfertasSemana />

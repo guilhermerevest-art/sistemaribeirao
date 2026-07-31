@@ -1,4 +1,4 @@
-# Açougue Ribeirão — Sistema de Pedidos e Fidelidade
+# Empório Ribeirão — Sistema de Pedidos e Fidelidade
 
 Mock navegável para uma reunião de demonstração. Tudo no navegador, sem backend. Estado persistido em `localStorage`.
 

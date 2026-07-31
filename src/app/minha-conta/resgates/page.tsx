@@ -6,6 +6,7 @@ import { HeaderLoja } from '@/components/loja/header';
 import { Button } from '@/components/ui/button';
 import { Gift, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImagemProduto } from '@/components/ui/imagem-produto';
 
 export default function ResgatesPage() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function ResgatesPage() {
             const pode = cliente.pontos >= r.custoPontos;
             return (
               <li key={r.id} className="bg-azulejo border border-sebo rounded-xl p-3 flex items-center gap-3">
-                <img src={r.imagem} alt={r.nome} className="w-16 h-16 rounded-md object-cover bg-sebo-claro" />
+                <ImagemProduto src={r.imagem} alt={r.nome} className="w-16 h-16 rounded-md object-cover bg-sebo-claro shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-display font-bold uppercase text-sm">{r.nome}</div>
                   <div className="text-xs text-carvao/70 font-mono">{r.custoPontos} pontos</div>

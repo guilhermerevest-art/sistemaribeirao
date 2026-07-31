@@ -14,6 +14,8 @@ export default function CupomPage() {
   const pedido = useStore((s) => s.pedidos.find((p) => p.id === params.id));
   const cliente = useStore((s) => s.clientes.find((c) => c.id === pedido?.clienteId));
   const produtos = useStore((s) => s.produtos);
+  const combos = useStore((s) => s.combos);
+  const ofertas = useStore((s) => s.ofertas);
   const marcarImpresso = useStore((s) => s.marcarImpresso);
   const jaImpresso = useRef(false);
 
@@ -46,6 +48,15 @@ export default function CupomPage() {
 
   const linhas: { texto: string; bold?: boolean }[] = [];
   for (const it of pedido.itens) {
+    if (it.comboId) {
+      const c = combos.find((x) => x.id === it.comboId);
+      if (!c) continue;
+      const qtd = `${it.pesoKg}x`;
+      const nomeCombo = `COMBO ${c.nome}`.toUpperCase().slice(0, 28);
+      linhas.push({ texto: `${qtd.padEnd(8, ' ')} ${nomeCombo}`, bold: true });
+      linhas.push({ texto: `${''.padEnd(20, ' ')}${brl(it.subtotal).padStart(12, ' ')}` });
+      continue;
+    }
     const p = produtos.find((x) => x.id === it.produtoId);
     if (!p) continue;
     const peso = `${it.pesoKg.toFixed(3).replace('.', ',')} kg`;
@@ -57,6 +68,15 @@ export default function CupomPage() {
       linhas.push({ texto: `          obs: ${it.observacao}` });
     }
     linhas.push({ texto: `${''.padEnd(20, ' ')}${brl(it.subtotal).padStart(12, ' ')}` });
+    if (it.ofertaId) {
+      const oferta = ofertas.find((o) => o.id === it.ofertaId);
+      if (oferta?.brindeProdutoId) {
+        const brinde = produtos.find((x) => x.id === oferta.brindeProdutoId);
+        if (brinde) {
+          linhas.push({ texto: `          >> BRINDE: ${brinde.nome.toUpperCase()}`, bold: true });
+        }
+      }
+    }
   }
 
   const handlePrint = () => {
@@ -79,7 +99,7 @@ export default function CupomPage() {
 
       <div className="cupom shadow-xl print:shadow-none">
         <div className="text-center font-bold">
-          <div className="text-base">AÇOUGUE RIBEIRÃO</div>
+          <div className="text-base">EMPÓRIO RIBEIRÃO</div>
           <div>Rua .............., 000</div>
           <div>(34) 3333-0000</div>
         </div>
@@ -104,6 +124,9 @@ export default function CupomPage() {
         )}
         {pedido.cashbackUsado > 0 && (
           <div className="flex justify-between"><span>CASHBACK USADO</span><span>-{brl(pedido.cashbackUsado).padStart(12, ' ')}</span></div>
+        )}
+        {(pedido.descontoPontos ?? 0) > 0 && (
+          <div className="flex justify-between"><span>PONTOS ({pedido.pontosUsados})</span><span>-{brl(pedido.descontoPontos ?? 0).padStart(12, ' ')}</span></div>
         )}
         <div className="flex justify-between"><span>ENTREGA</span><span>{(pedido.taxaEntrega === 0 ? 'GRATIS' : brl(pedido.taxaEntrega)).padStart(12, ' ')}</span></div>
         <div className="flex justify-between font-bold"><span>TOTAL</span><span>{brl(pedido.total).padStart(12, ' ')}</span></div>

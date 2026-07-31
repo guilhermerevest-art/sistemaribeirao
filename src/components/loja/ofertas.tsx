@@ -6,6 +6,7 @@ import { useStore } from '@/lib/store';
 import { brl } from '@/lib/formato';
 import { Clock, Zap } from 'lucide-react';
 import type { Oferta } from '@/lib/types';
+import { ImagemProduto } from '@/components/ui/imagem-produto';
 
 function useContagemRegressiva(fim: string) {
   const [restante, setRestante] = useState<number>(0);
@@ -51,9 +52,7 @@ export function OfertaRelampago() {
       </div>
       <Link href={`/loja/produto/${produto.slug}`} className="block mt-2">
         <div className="flex items-center gap-3">
-          {produto.imagem && (
-            <img src={produto.imagem} alt={produto.nome} className="w-16 h-16 rounded-md object-cover" />
-          )}
+          <ImagemProduto src={produto.imagem} alt={produto.nome} className="w-16 h-16 rounded-md object-cover shrink-0" />
           <div className="flex-1">
             <div className="font-display font-bold uppercase">{produto.nome}</div>
             <div className="text-sm">{oferta.chamada}</div>
@@ -110,7 +109,7 @@ export function OfertasSemana() {
               className="snap-start shrink-0 w-56 rounded-xl bg-branco border border-cinza-claro overflow-hidden hover:shadow-md transition-shadow"
             >
               <div className="aspect-square bg-cinza-claro">
-                <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
+                <ImagemProduto src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
               </div>
               <div className="p-3">
                 <div className="flex items-center justify-between">

@@ -10,6 +10,7 @@ import { sugestoesCruzadas } from '@/lib/regras';
 import { brl } from '@/lib/formato';
 import { X, ShoppingCart, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ImagemProduto } from '@/components/ui/imagem-produto';
 
 export function QueTalAdicionar() {
   const [open, setOpen] = useState(false);
@@ -72,7 +73,7 @@ export function QueTalAdicionar() {
         <ul className="divide-y divide-cinza-claro">
           {sugestoes.map((p) => (
             <li key={p.id} className="flex items-center gap-3 p-3">
-              <img src={p.imagem} alt={p.nome} className="w-14 h-14 rounded-md object-cover bg-cinza-claro" />
+              <ImagemProduto src={p.imagem} alt={p.nome} className="w-14 h-14 rounded-md object-cover bg-cinza-claro shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="font-display font-bold uppercase text-sm truncate">{p.nome}</div>
                 <div className="font-mono font-bold tabular-nums text-sm">

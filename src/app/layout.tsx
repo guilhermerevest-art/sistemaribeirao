@@ -26,8 +26,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Açougue Ribeirão',
-  description: 'Sistema de pedidos e fidelidade — Açougue Ribeirão',
+  title: 'Empório Ribeirão',
+  description: 'Sistema de pedidos e fidelidade — Empório Ribeirão',
 };
 
 export default function RootLayout({

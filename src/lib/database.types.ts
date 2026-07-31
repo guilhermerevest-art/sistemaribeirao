@@ -65,6 +65,8 @@ export type OfertaRow = {
   quantidade_vendida_kg: number;
   chamada: string;
   ativa: boolean;
+  combo_id: string | null;
+  brinde_produto_id: string | null;
   created_at: string;
 };
 
@@ -85,6 +87,8 @@ export type PedidoRow = {
   subtotal: number;
   desconto_ofertas: number;
   cashback_usado: number;
+  pontos_usados: number;
+  desconto_pontos: number;
   taxa_entrega: number;
   total: number;
   cashback_gerado: number;
@@ -115,7 +119,39 @@ export type AppStateRow = {
   som_bancada: boolean;
   impressao_automatica: boolean;
   proximo_pedido: number;
+  pts_para_reais_json: string;
   updated_at: string;
+};
+
+export type ItemComboJson = {
+  produtoId: string;
+  quantidadeKg: number;
+};
+
+export type ComboRow = {
+  id: string;
+  slug: string;
+  nome: string;
+  descricao: string;
+  imagem: string;
+  preco_combo: number;
+  percentual_cashback: number;
+  itens: ItemComboJson[];
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CampanhaRow = {
+  id: string;
+  titulo: string;
+  mensagem_template: string;
+  publico_alvo: 'novo' | 'fiel' | 'ocasional' | 'em_risco' | 'inativo' | 'todos' | 'custom';
+  clientes_ids: string[] | null;
+  data_criacao: string;
+  data_envio: string | null;
+  total_destinatarios: number;
+  ativo: boolean;
 };
 
 export type Database = {
@@ -127,6 +163,8 @@ export type Database = {
       ofertas: { Row: OfertaRow; Insert: OfertaRow; Update: Partial<OfertaRow> };
       pedidos: { Row: PedidoRow; Insert: Partial<PedidoRow>; Update: Partial<PedidoRow> };
       resgates: { Row: ResgateRow; Insert: ResgateRow; Update: Partial<ResgateRow> };
+      combos: { Row: ComboRow; Insert: ComboRow; Update: Partial<ComboRow> };
+      campanhas: { Row: CampanhaRow; Insert: CampanhaRow; Update: Partial<CampanhaRow> };
       app_state: { Row: AppStateRow; Insert: AppStateRow; Update: Partial<AppStateRow> };
     };
     Views: Record<string, never>;
