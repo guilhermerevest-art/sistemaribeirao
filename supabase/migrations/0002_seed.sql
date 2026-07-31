@@ -197,8 +197,8 @@ begin
       criado := now() - ((7 + (random() * 18)::int) || ' days')::interval;
       update public.clientes set criado_em = criado where id = cid;
       itens := jsonb_build_array(
-        jsonb_build_object('produtoId','p-picanha','pesoKg',round((0.5 + random()*2.5)::numeric,2),'preparos','[]'::jsonb,'precoUnitarioAplicado',89.9,'subtotal',round((0.5 + random()*2.5) * 89.9, 2)),
-        jsonb_build_object('produtoId','p-linguica-toscana','pesoKg',round((0.3 + random()*1)::numeric,2),'preparos','["Peça inteira"]'::jsonb,'precoUnitarioAplicado',29.9,'subtotal',round((0.3 + random()*1) * 29.9, 2))
+        jsonb_build_object('produtoId','p-picanha','pesoKg',round((0.5 + random()*2.5)::numeric,2),'preparos','[]'::jsonb,'precoUnitarioAplicado',89.9,'subtotal',round(((0.5 + random()*2.5) * 89.9)::numeric, 2)),
+        jsonb_build_object('produtoId','p-linguica-toscana','pesoKg',round((0.3 + random()*1)::numeric,2),'preparos','["Peça inteira"]'::jsonb,'precoUnitarioAplicado',29.9,'subtotal',round(((0.3 + random()*1) * 29.9)::numeric, 2))
       );
       subtot := (itens->0->>'subtotal')::numeric + (itens->1->>'subtotal')::numeric;
       cb := round(subtot * 0.035, 2);
