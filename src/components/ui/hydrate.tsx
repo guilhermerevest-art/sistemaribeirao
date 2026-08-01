@@ -15,12 +15,17 @@ export function Hydrate() {
   const erro = useStore((s) => s.erro);
   const [temSnapshot, setTemSnapshot] = useState(false);
 
+  // Modo debug: ?safe=1 na URL pula o Hydrate pra confirmar se ele é
+  // a fonte do mismatch.
+  const safe = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('safe') === '1';
+
   useEffect(() => {
+    if (safe) return;
     setTemSnapshot(!!lerSnapshotOffline());
     if (!carregado && !carregando) {
       void carregarTudo();
     }
-  }, [carregarTudo, carregado, carregando]);
+  }, [carregarTudo, carregado, carregando, safe]);
 
   // Feedback discreto em modo demo offline.
   if (carregado && !online) {
