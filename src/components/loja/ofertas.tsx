@@ -8,6 +8,17 @@ import { Clock, Zap } from 'lucide-react';
 import type { Oferta } from '@/lib/types';
 import { ImagemProduto } from '@/components/ui/imagem-produto';
 
+// Flag client-only: durante o SSR, retorna null (mesmo que no client
+// antes do primeiro render). Hidratacao sempre bate. Apos o mount, o
+// useEffect muda pra true e o conteudo real aparece.
+function useClientOnly() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  return mounted;
+}
+
 function useContagemRegressiva(fim: string) {
   const [restante, setRestante] = useState<number>(0);
   useEffect(() => {
@@ -31,8 +42,14 @@ function formatHMS(ms: number): string {
 }
 
 export function OfertaRelampago() {
+  // Durante o SSR, nao renderiza nada. Apos o mount do client,
+  // o filtro por Date.now() roda e a oferta aparece. Isso evita
+  // mismatch de hydration: server e client concordam em "nao tem
+  // nada" no primeiro render.
+  const mounted = useClientOnly();
   const ofertas = useStore((s) => s.ofertas);
   const produtos = useStore((s) => s.produtos);
+  if (!mounted) return null;
   const oferta = ofertas.find((o) => o.tipo === 'relampago' && o.ativa && o.fimEm > new Date().toISOString() && new Date(o.inicioEm) <= new Date());
   if (!oferta) return null;
   const produto = produtos.find((p) => p.id === oferta.produtoId);
@@ -92,9 +109,11 @@ export function OfertaRelampago() {
 }
 
 export function OfertasSemana() {
+  const mounted = useClientOnly();
   const ofertas = useStore((s) => s.ofertas);
   const produtos = useStore((s) => s.produtos);
   const cliente = useStore((s) => s.clientes.find((c) => c.id === s.clienteAtualId));
+  if (!mounted) return null;
   const agora = new Date();
   const isOuro = cliente && cliente.pontosAcumuladoTotal >= 4000;
 
