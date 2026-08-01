@@ -30,9 +30,28 @@ export function Hydrate() {
   // Feedback discreto em modo demo offline.
   if (carregado && !online) {
     return (
-      <div className="fixed bottom-3 right-3 z-50 rounded-md border border-sebo bg-azulejo/95 px-3 py-2 text-xs text-carvao shadow-sm flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-brasa" />
-        {temSnapshot ? 'Demo offline · dados salvos neste navegador' : 'Demo offline · seed em memória'}
+      <>
+        <div
+          className="fixed top-2 right-2 z-50 rounded-full border border-sebo bg-azulejo/95 px-2 py-1 text-[10px] text-carvao shadow-sm flex items-center gap-1.5"
+          title="Modo demo offline — alterações ficam só neste navegador"
+        >
+          <span className="w-2 h-2 rounded-full bg-brasa animate-pulse" />
+          Offline
+        </div>
+        <div className="hidden">
+          {temSnapshot ? 'Demo offline · dados salvos neste navegador' : 'Demo offline · seed em memória'}
+        </div>
+      </>
+    );
+  }
+
+  if (carregado && online && erro) {
+    return (
+      <div
+        className="fixed top-2 right-2 z-50 rounded-full border border-sebo bg-amarelo/95 px-2 py-1 text-[10px] text-preto shadow-sm"
+        title={erro}
+      >
+        ⚠ Modo degradado
       </div>
     );
   }

@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
 import { Search, X, Save, Printer, ChevronRight, Bike, Store } from 'lucide-react';
 import { toast } from 'sonner';
+import { confirmar } from '@/lib/confirmar';
 import type { Pedido, StatusPedido } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 const STATUS_LABEL: Record<StatusPedido, string> = {
   novo: 'Recebido',
   preparando: 'Preparando',
@@ -26,6 +28,7 @@ const STATUS_BADGE: Record<StatusPedido, string> = {
 };
 
 export default function BackofficePedidosPage() {
+  useNoIndex();
   const pedidos = useStore((s) => s.pedidos);
   const clientes = useStore((s) => s.clientes);
   const produtos = useStore((s) => s.produtos);
@@ -150,8 +153,8 @@ export default function BackofficePedidosPage() {
           combos={combos}
           onClose={() => setDetalhe(null)}
           onMudarStatus={(s) => { void atualizarStatus(detalhe.id, s); setDetalhe({ ...detalhe, status: s }); toast.success('Status atualizado'); }}
-          onCancelar={() => {
-            if (confirm('Cancelar este pedido? O cashback usado será devolvido.')) {
+          onCancelar={async () => {
+            if (await confirmar('Cancelar este pedido? O cashback usado será devolvido.')) {
               void cancelarPedido(detalhe.id);
               setDetalhe({ ...detalhe, status: 'cancelado' });
               toast.success('Pedido cancelado');

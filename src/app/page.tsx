@@ -60,6 +60,20 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <CartaoAcesso
+            href="/loja/receitas"
+            icon={<ChefHat />}
+            titulo="Receitas com lista de compra"
+            descricao="Estrogonofe, costelinha, calabresa… Escolha a proteína e adicione tudo no carrinho."
+            tom="brasa"
+          />
+          <CartaoAcesso
+            href="/loja/churrasco"
+            icon={<ChefHat />}
+            titulo="Planejar Churrasco"
+            descricao="Calculadora: quantas pessoas, kg de carne, peças e preço. Adiciona tudo no carrinho."
+            tom="brasa"
+          />
+          <CartaoAcesso
             href="/loja"
             icon={<Store />}
             titulo="Loja / Cardápio"
@@ -88,18 +102,18 @@ export default function HomePage() {
             tom="carvao"
           />
           <CartaoAcesso
-            href="/backoffice"
-            icon={<LayoutDashboard />}
-            titulo="Backoffice"
-            descricao="Cadastros, gestão de pedidos e promoções."
-            tom="sangue"
-          />
-          <CartaoAcesso
             href="/minha-conta"
             icon={<Users />}
             titulo="Minha Conta"
             descricao="Espaço do cliente identificado."
             tom="carvao"
+          />
+          <CartaoAcesso
+            href="/backoffice"
+            icon={<LayoutDashboard />}
+            titulo="Backoffice"
+            descricao="Cadastros, gestão de pedidos e promoções. Para uso interno."
+            tom="sangue"
           />
         </div>
       </section>

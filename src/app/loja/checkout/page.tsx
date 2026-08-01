@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
+import { useNoIndex } from '@/components/ui/use-no-index';
 import { brl, formatarTelefone, normalizarTelefone } from '@/lib/formato';
+import { consumirResumoPlanejador } from '@/lib/planejador-flags';
 import {
   ChevronLeft,
   ChevronRight,
@@ -20,6 +22,7 @@ import {
   MessagesSquare,
   Store,
   Sparkles,
+  Gift,
 } from 'lucide-react';
 import { calcularMaximoUsoCashback, cotarPedido, melhorDescontoPontos, nivelPorPontos } from '@/lib/regras';
 import { toast } from 'sonner';
@@ -28,6 +31,7 @@ type Retirada = 'balcao' | 'entrega';
 type Pagamento = 'pix' | 'cartao_entrega' | 'dinheiro';
 
 export default function CheckoutPage() {
+  useNoIndex();
   const router = useRouter();
   const itens = useStore((s) => s.carrinho.itens);
   const produtos = useStore((s) => s.produtos);
@@ -39,9 +43,16 @@ export default function CheckoutPage() {
   const setClienteAtual = useStore((s) => s.setClienteAtual);
   const criarPedido = useStore((s) => s.criarPedido);
   const criarCliente = useStore((s) => s.criarCliente);
+  const lojaAberta = useStore((s) => s.lojaAberta);
+  const estabelecimento = useStore((s) => s.estabelecimento);
+  const refIndicacao = useStore((s) => s.refIndicacaoPendente);
+  const setRefIndicacao = useStore((s) => s.setRefIndicacaoPendente);
+  const vincularIndicacao = useStore((s) => s.vincularIndicacao);
+  const converterIndicacao = useStore((s) => s.converterIndicacaoSeAplicavel);
 
   const [telefone, setTelefone] = useState('');
   const [novoNome, setNovoNome] = useState('');
+  const [observacaoGeral, setObservacaoGeral] = useState('');
   const [retirada, setRetirada] = useState<Retirada>('balcao');
   const [endereco, setEndereco] = useState('');
   const [querUsarCashback, setQuerUsarCashback] = useState(false);
@@ -63,6 +74,28 @@ export default function CheckoutPage() {
       if (c) setTelefone(c.telefone);
     }
   }, [clienteAtualId, clientes]);
+
+  // Captura `?ref=CODIGO` da URL (vindo de link de indicação) e
+  // guarda no state pra ser usado no próximo criarCliente.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (refIndicacao) return; // já tem um pendente
+    const sp = new URLSearchParams(window.location.search);
+    const code = sp.get('ref');
+    if (!code) return;
+    const norm = code.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4,12}$/.test(norm)) return;
+    // Confere se existe alguém com esse código antes de salvar.
+    const indicador = clientes.find((c) => c.codigoIndicacao?.toUpperCase() === norm);
+    if (!indicador) return;
+    setRefIndicacao(norm);
+  }, [clientes, refIndicacao, setRefIndicacao]);
+
+  // Banner de indicação: pega o nome do indicador a partir do ref.
+  const indicadorPendente = useMemo(() => {
+    if (!refIndicacao) return null;
+    return clientes.find((c) => c.codigoIndicacao?.toUpperCase() === refIndicacao.toUpperCase());
+  }, [clientes, refIndicacao]);
 
   const nivel = cliente ? nivelPorPontos(cliente.pontosAcumuladoTotal) : 'bronze';
 
@@ -98,6 +131,7 @@ export default function CheckoutPage() {
 
   const fone = normalizarTelefone(telefone);
   const podeEnviar =
+    lojaAberta &&
     fone.length >= 10 && (cliente || novoNome.trim().length > 0) && itens.length > 0 &&
     (retirada !== 'entrega' || endereco.trim().length > 0) &&
     (pagamento !== 'dinheiro' || !trocoPara || Number(trocoPara) >= total);
@@ -130,6 +164,10 @@ export default function CheckoutPage() {
           aceitaWhatsapp: true,
         });
         clienteId = novo.id;
+        // Se o cliente chegou por link de indicação, vincula ao
+        // indicador AGORA (antes do pedido) pra que a recompensa
+        // seja creditada no mesmo ciclo de criação do pedido.
+        if (refIndicacao) vincularIndicacao(clienteId);
       }
       await setClienteAtual(clienteId);
       const pedido = await criarPedido({
@@ -142,8 +180,27 @@ export default function CheckoutPage() {
         pontosUsados,
         descontoPontos,
         taxaEntrega,
+        observacaoGeral: [
+          observacaoGeral.trim() || undefined,
+          // Se o cliente veio do planejador de churrasco, prepend o
+          // resumo (aparece no cupom pra controle do açougueiro).
+          consumirResumoPlanejador() ?? undefined,
+        ]
+          .filter(Boolean)
+          .join(' | ') || undefined,
       });
+      // Marca a indicação como convertida e credita o indicador.
+      // Não bloqueia o fluxo se já estava convertida.
+      const conv = converterIndicacao(clienteId, pedido.id);
+      if (conv) {
+        toast.success(`Indicado ativado! ${indicadorPendente?.nome.split(' ')[0] ?? 'Indicador'} ganhou R$ ${conv.valor} de cashback.`, {
+          duration: 6000,
+        });
+      }
       router.push(`/loja/pedido/${pedido.id}`);
+      toast.success('Pedido na fila! Quer mandar o resumo pro açougue?', {
+        duration: 8000,
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erro ao enviar pedido');
       setEnviando(false);
@@ -192,22 +249,28 @@ export default function CheckoutPage() {
     <>
       <HeaderLoja />
 
+      {!lojaAberta && (
+        <div className="bg-vermelho-risco text-branco text-center text-sm font-semibold py-2">
+          Estamos fechados no momento. Seu pedido vai ficar pronto quando reabrirmos.
+        </div>
+      )}
+
       {/* Faixa do açougue — sinaliza "é açougue real". */}
       <div className="bg-preto text-branco">
         <div className="mx-auto max-w-3xl px-4 py-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-vermelho grid place-items-center font-display font-extrabold text-branco shrink-0">
-            ER
+            {estabelecimento.nomeFantasia.slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-display font-extrabold uppercase text-sm leading-tight">
-              Empório Ribeirão
+              {estabelecimento.nomeFantasia}
             </div>
             <div className="text-[11px] text-branco/60 leading-tight">
-              Rua das Flores, 123 · Centro · Ribeirão
+              {estabelecimento.endereco}
             </div>
           </div>
           <a
-            href="https://wa.me/553490000000"
+            href={`https://wa.me/55${(estabelecimento.telefone.replace(/\D/g, '') || '3490000000')}`}
             target="_blank"
             rel="noreferrer"
             className="w-9 h-9 grid place-items-center rounded-md bg-branco/10 hover:bg-branco/20"
@@ -238,6 +301,16 @@ export default function CheckoutPage() {
           </div>
         ) : (
           <div className="mt-4 space-y-6">
+            {indicadorPendente && (
+              <div className="rounded-xl bg-verde-fiel/10 border border-verde-fiel p-3 text-sm flex items-start gap-2">
+                <Gift className="w-4 h-4 text-verde-fiel shrink-0 mt-0.5" />
+                <div>
+                  Você veio por indicação de <strong>{indicadorPendente.nome.split(' ')[0]}</strong>.
+                  Quando fizer o primeiro pedido, ela ganha R$ 10 de cashback e você recebe
+                  um cupom de boas-vindas. 💚
+                </div>
+              </div>
+            )}
             <div>
               <div className="text-sm text-preto/60 mb-2">Como você quer receber?</div>
               <div className="grid grid-cols-2 gap-2">
@@ -402,6 +475,17 @@ export default function CheckoutPage() {
                 </div>
               </label>
             )}
+
+            <div>
+              <div className="text-sm text-preto/60 mb-2">Alguma observação?</div>
+              <textarea
+                value={observacaoGeral}
+                onChange={(e) => setObservacaoGeral(e.target.value.slice(0, 200))}
+                placeholder="ex: sem cebola, entregar após as 19h, carne bem passada..."
+                rows={2}
+                className="w-full rounded-lg border border-cinza-claro px-3 py-2 text-sm focus:outline-none focus:border-vermelho"
+              />
+            </div>
 
             <div className="rounded-xl border border-cinza-claro bg-branco p-4">
               <div className="space-y-1.5 text-sm">

@@ -10,7 +10,13 @@ import {
   Users,
   Bell,
   BarChart3,
-  Wand2,
+  Send,
+  Volume2,
+  Hand,
+  Trash2,
+  Gift,
+  Cake,
+  BookOpen,
   Globe,
   Layers,
   Tag,
@@ -157,6 +163,62 @@ const FEATURES = [
       'A página do pedido faz polling de 4 s e toca um acorde de "pronto" quando a bancada muda o status. Sem F5.',
     pagina: '/loja/pedido/0501',
   },
+  {
+    icon: Send,
+    titulo: 'Enviar pedido pelo WhatsApp',
+    descricao:
+      'Resumo do pedido com cliente, itens, total, forma de pagamento e retirada. Abre wa.me pronto pra mandar pro açougue.',
+    pagina: '/loja/pedido/0501',
+  },
+  {
+    icon: Volume2,
+    titulo: 'Bip de impressão confirmada',
+    descricao:
+      'Sweep ascendente 400→1200 Hz toca quando a impressora termina o cupom. Confirma que saiu papel sem precisar olhar.',
+    pagina: '/bancada/cupom/0501',
+  },
+  {
+    icon: Hand,
+    titulo: 'Swipe pra remover do carrinho',
+    descricao:
+      'No celular, arrastar o item pra esquerda > 80 px remove. Fundo vermelho com ícone de lixeira durante o arrasto.',
+    pagina: '/loja/carrinho',
+  },
+  {
+    icon: Truck,
+    titulo: 'Frete grátis a partir de R$ 150',
+    descricao:
+      'Banner no carrinho mostra "faltam R$ X" com barra de progresso, fica amarelo quando falta pouco e verde quando bate.',
+    pagina: '/loja/carrinho',
+  },
+  {
+    icon: Gift,
+    titulo: 'Indique e ganhe R$ 10',
+    descricao:
+      'Cada cliente tem código curto. Quem é indicado pelo link ?ref= ganha cupom; quem indicou ganha R$ 10 de cashback no primeiro pedido do amigo.',
+    pagina: '/minha-conta',
+  },
+  {
+    icon: Cake,
+    titulo: 'Aniversariantes no painel',
+    descricao:
+      'Banner no topo do /painel mostra quem faz aniversário hoje (ou na semana). Um clique abre o WhatsApp com mensagem personalizada.',
+    pagina: '/painel',
+  },
+  {
+    icon: Beef,
+    titulo: 'Planejador de churrasco',
+    descricao:
+      'Calculadora mobile: o cliente diz quantas pessoas vêm e o estilo. Devolve kg por carne (picanha, linguiça, frango, costelinha), carvão e preço. Um clique adiciona tudo ao carrinho.',
+    pagina: '/loja/churrasco',
+  },
+  {
+    icon: BookOpen,
+    titulo: 'Receitas com lista de compra',
+    descricao:
+      '8 receitas brasileiras canônicas (estrogonofe, costelinha, picanha na manteiga...). Lista de compra calculada por porção, dividida em "do açougue" e "você tem em casa". Um clique adiciona tudo.',
+    pagina: '/loja/receitas',
+  },
 ];
 
 const PASSOS = [
@@ -276,7 +338,7 @@ function Hero() {
             <span className="text-amarelo">do balcão pro celular.</span>
           </h1>
           <p className="mt-5 text-lg text-branco/85 max-w-xl">
-            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tour guiado na primeira visita, status ao vivo do pedido e repetir em 1 clique. Tudo numa demo de 4 minutos.
+            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Planejador de churrasco, tour guiado, status ao vivo, repetir em 1 clique, frete grátis, resumo pelo WhatsApp, bip de impressão, programa de indicação e banner de aniversariantes. Tudo numa demo de 4 minutos.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link

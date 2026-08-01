@@ -107,6 +107,11 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.svg',
   },
+  // PWA manifest servido pelo route handler em /app/manifest.ts.
+  // O Next.js 16 expõe o arquivo em `/manifest.webmanifest`. Apontar
+  // direto pra esse caminho evita o redirect 307 da Vercel, que
+  // vinha sem o header Access-Control-Allow-Origin correto e
+  // bloqueava o fetch do manifest com erro de CORS.
   manifest: '/manifest.webmanifest',
   category: 'food',
 };

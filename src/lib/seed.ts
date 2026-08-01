@@ -10,6 +10,10 @@ import type {
 } from './types';
 import { CASHBACK_POR_CATEGORIA } from './types';
 
+// Imagens distintas por corte. Termos escolhidos pra que a busca no
+// Unsplash devolva fotos plausíveis de açougue. Repetir a mesma
+// imagem em todos os produtos fazia a vitrine parecer clone — agora
+// cada corte tem cara própria. w=600 mantém o peso baixo.
 const IMG = (q: string) =>
   `https://images.unsplash.com/${q}?auto=format&fit=crop&w=600&q=60`;
 
@@ -24,11 +28,10 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Peça inteira, capa de gordura preservada. Maturada por 21 dias.',
     precoKg: 89.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1546964124-0cce460f38ef'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em bifes', 'Cortar para churrasco', 'Peça inteira', 'Tirar a gordura'],
     destaque: true,
-    novidade: true,
     disponivel: true,
   },
   {
@@ -40,7 +43,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Corte nobre, ideal para bifes e churrasco.',
     precoKg: 54.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1603048297172-c5857f694755'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em bifes', 'Cortar em cubos', 'Moer', 'Tirar a gordura', 'Amaciar'],
     destaque: false,
@@ -55,7 +58,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Carne macia, ótima para o dia a dia.',
     precoKg: 52.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1568901346375-23c9450c58cd'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em bifes', 'Cortar em cubos', 'Moer', 'Tirar a gordura'],
     destaque: false,
@@ -85,7 +88,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Sabor marcante, pedida certa do churrasco.',
     precoKg: 47.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1551183053-bf91a1d81141'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em bifes', 'Cortar em cubos', 'Cortar para churrasco', 'Peça inteira'],
     destaque: true,
@@ -100,7 +103,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para assar low and slow. Paciente e saborosa.',
     precoKg: 32.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1604507626801-d68d2c10c9e8'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em pedaços', 'Peça inteira', 'Cortar em cubos'],
     destaque: false,
@@ -115,7 +118,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Magro, ideal para bisteca e cozido.',
     precoKg: 44.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1615937722923-67f6deaf2cc9'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em bifes', 'Cortar em cubos', 'Moer', 'Tirar a gordura'],
     destaque: false,
@@ -130,7 +133,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Moído na hora, ideal para hambúrguer caseiro.',
     precoKg: 39.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1606851181069-1cb2d8b7d6a1'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Moer'],
     destaque: false,
@@ -145,7 +148,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para panela, ensopados e carne de forno.',
     precoKg: 34.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1574484184081-afea8a62f9c4'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em cubos', 'Cortar em bifes', 'Tirar a gordura'],
     destaque: false,
@@ -160,7 +163,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para cozido e mocotó. Sabor profundo.',
     precoKg: 33.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1546833999-b9f581a1996d'),
     percentualCashback: CASHBACK_POR_CATEGORIA.bovino,
     preparosDisponiveis: ['Cortar em cubos', 'Peça inteira'],
     destaque: false,
@@ -189,7 +192,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para churrasco ou assado.',
     precoKg: 32.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1602471894782-cdaa9b3b8b71'),
     percentualCashback: CASHBACK_POR_CATEGORIA.suino,
     preparosDisponiveis: ['Cortar em pedaços', 'Peça inteira', 'Cortar em bifes'],
     destaque: false,
@@ -203,7 +206,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Magro, nobre, ótimo para assar.',
     precoKg: 34.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1604507626801-d68d2c10c9e8'),
     percentualCashback: CASHBACK_POR_CATEGORIA.suino,
     preparosDisponiveis: ['Cortar em bifes', 'Peça inteira', 'Temperar'],
     destaque: false,
@@ -217,7 +220,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Clássica da chapa.',
     precoKg: 26.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1615937722923-67f6deaf2cc9'),
     percentualCashback: CASHBACK_POR_CATEGORIA.suino,
     preparosDisponiveis: ['Cortar em bifes', 'Temperar'],
     destaque: false,
@@ -231,7 +234,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Barriga com camada, para churrasco.',
     precoKg: 33.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1606851181069-1cb2d8b7d6a1'),
     percentualCashback: CASHBACK_POR_CATEGORIA.suino,
     preparosDisponiveis: ['Cortar em pedaços', 'Peça inteira', 'Temperar'],
     destaque: false,
@@ -246,7 +249,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Sem osso, fresco do dia.',
     precoKg: 22.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1604507626801-d68d2c10c9e8'),
     percentualCashback: CASHBACK_POR_CATEGORIA.aves,
     preparosDisponiveis: ['Inteiro', 'Em pedaços', 'Cortar em tiras', 'Moer'],
     destaque: false,
@@ -260,7 +263,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Resistente ao forno e空气 fryer.',
     precoKg: 16.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1615937722923-67f6deaf2cc9'),
     percentualCashback: CASHBACK_POR_CATEGORIA.aves,
     preparosDisponiveis: ['Inteiro', 'Em pedaços', 'Desossar'],
     destaque: false,
@@ -274,7 +277,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para assar ou fazer canjica.',
     precoKg: 15.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1602471894782-cdaa9b3b8b71'),
     percentualCashback: CASHBACK_POR_CATEGORIA.aves,
     preparosDisponiveis: ['Inteiro', 'Em pedaços', 'Desossar'],
     destaque: false,
@@ -288,7 +291,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para espeto e recheio.',
     precoKg: 39.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1546833999-b9f581a1996d'),
     percentualCashback: CASHBACK_POR_CATEGORIA.aves,
     preparosDisponiveis: ['Inteiro'],
     destaque: false,
@@ -303,7 +306,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Tempero da casa, fabricada aqui.',
     precoKg: 29.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1603048297172-c5857f694755'),
     percentualCashback: CASHBACK_POR_CATEGORIA.embutidos,
     preparosDisponiveis: ['Peça inteira', 'Cortar em gomos'],
     destaque: true,
@@ -317,7 +320,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Para quem curte um toque ardido.',
     precoKg: 31.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1568901346375-23c9450c58cd'),
     percentualCashback: CASHBACK_POR_CATEGORIA.embutidos,
     preparosDisponiveis: ['Peça inteira', 'Cortar em gomos'],
     destaque: false,
@@ -331,7 +334,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Defumada, fatiada ou inteira.',
     precoKg: 34.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1574484184081-afea8a62f9c4'),
     percentualCashback: CASHBACK_POR_CATEGORIA.embutidos,
     preparosDisponiveis: ['Peça inteira', 'Fatiar fino'],
     destaque: false,
@@ -345,7 +348,7 @@ export const PRODUTOS: Produto[] = [
     descricao: 'Sem cortumes, ideal para envolver.',
     precoKg: 42.9,
     unidadeVenda: 'kg',
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1551183053-bf91a1d81141'),
     percentualCashback: CASHBACK_POR_CATEGORIA.embutidos,
     preparosDisponiveis: ['Peça inteira', 'Fatiar fino'],
     destaque: false,
@@ -361,7 +364,7 @@ export const PRODUTOS: Produto[] = [
     precoKg: 34.9,
     unidadeVenda: 'bandeja',
     pesoMedioPeca: 0.72,
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1606851181069-1cb2d8b7d6a1'),
     percentualCashback: CASHBACK_POR_CATEGORIA.preparados,
     preparosDisponiveis: [],
     destaque: false,
@@ -376,7 +379,7 @@ export const PRODUTOS: Produto[] = [
     precoKg: 8.9,
     unidadeVenda: 'unidade',
     pesoMedioPeca: 0.15,
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1615937722923-67f6deaf2cc9'),
     percentualCashback: CASHBACK_POR_CATEGORIA.preparados,
     preparosDisponiveis: [],
     destaque: false,
@@ -391,7 +394,7 @@ export const PRODUTOS: Produto[] = [
     precoKg: 42.9,
     unidadeVenda: 'bandeja',
     pesoMedioPeca: 1,
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1604507626801-d68d2c10c9e8'),
     percentualCashback: CASHBACK_POR_CATEGORIA.preparados,
     preparosDisponiveis: [],
     destaque: false,
@@ -407,7 +410,7 @@ export const PRODUTOS: Produto[] = [
     precoKg: 24.9,
     unidadeVenda: 'peca',
     pesoMedioPeca: 5,
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1546833999-b9f581a1996d'),
     percentualCashback: CASHBACK_POR_CATEGORIA.churrasco,
     preparosDisponiveis: [],
     destaque: false,
@@ -422,7 +425,7 @@ export const PRODUTOS: Produto[] = [
     precoKg: 7.9,
     unidadeVenda: 'unidade',
     pesoMedioPeca: 1,
-    imagem: IMG('photo-1607623814075-e51df1bdc82f'),
+    imagem: IMG('photo-1602471894782-cdaa9b3b8b71'),
     percentualCashback: CASHBACK_POR_CATEGORIA.churrasco,
     preparosDisponiveis: [],
     destaque: false,
@@ -659,8 +662,53 @@ function gerarPedidosParaCliente(idx: number, padrao: typeof PADROES[number]): {
 
 const PEDIDOS: Pedido[] = [];
 
+// Aniversariantes do mês atual — espalhados para que apareçam
+// alguns hoje independente do dia que você rodar a demo. Formato
+// ISO date (YYYY-MM-DD) só com mês/dia, ano arbitrário.
+const ANIVERSARIOS_MES: Record<number, Array<{ idx: number; dia: number }>> = {
+  0:  [{ idx: 0, dia: 14 }],
+  1:  [{ idx: 1, dia: 22 }],
+  2:  [{ idx: 2, dia: 5  }],
+  3:  [{ idx: 3, dia: 18 }],
+  4:  [{ idx: 4, dia: 9  }],
+  5:  [{ idx: 5, dia: 25 }],
+  6:  [{ idx: 6, dia: 11 }],
+  7:  [{ idx: 7, dia: 28 }],
+  8:  [{ idx: 8, dia: 7  }],
+  9:  [{ idx: 9, dia: 19 }],
+  10: [{ idx: 10, dia: 3 }],
+  11: [{ idx: 11, dia: 16 }],
+};
+
+// Gera código de indicação estável a partir do nome + id.
+function codigoIndicacaoPara(nome: string, id: string): string {
+  const letras = nome
+    .normalize('NFD')
+    .split('')
+    .filter((ch) => {
+      const code = ch.codePointAt(0) ?? 0;
+      return code < 0x0300 || code > 0x036f;
+    })
+    .join('')
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '');
+  const base = (letras + 'XXXX').slice(0, 4);
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  const sufixo = String(h % 100).padStart(2, '0');
+  return `${base}${sufixo}`;
+}
+
 export const CLIENTES: Cliente[] = (() => {
   const clientes: Cliente[] = [];
+  const mesAtual = HOJE.getMonth();
+  // Mapa clienteIdx -> data ISO de aniversário (YYYY-MM-DD).
+  const aniversariantes: Record<number, string> = {};
+  for (const { idx, dia } of ANIVERSARIOS_MES[mesAtual] ?? []) {
+    const ano = 1965 + ((idx * 7) % 35); // ano plausível
+    aniversariantes[idx] = `${ano}-${String(mesAtual + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  }
+
   NOMES.forEach((n, i) => {
     const padrao = PADROES[i];
     const { pedidos, criadoEm } = gerarPedidosParaCliente(i, padrao);
@@ -676,6 +724,7 @@ export const CLIENTES: Cliente[] = (() => {
       id: clienteId,
       nome: n.nome,
       telefone: n.tel,
+      ...(aniversariantes[i] ? { nascimento: aniversariantes[i] } : {}),
       criadoEm,
       saldoCashback: round(cashbackDisponivel, 2),
       cashbackExpiraEm:
@@ -685,6 +734,7 @@ export const CLIENTES: Cliente[] = (() => {
       pontos: pontosGastaveis,
       pontosAcumuladoTotal,
       aceitaWhatsapp: n.aceita,
+      codigoIndicacao: codigoIndicacaoPara(n.nome, clienteId),
     });
     PEDIDOS.push(...pedidosDoCliente);
   });

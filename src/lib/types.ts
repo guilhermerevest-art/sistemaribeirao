@@ -24,7 +24,6 @@ export interface Produto {
   percentualCashback: number;
   preparosDisponiveis: string[];
   destaque: boolean;
-  novidade?: boolean;
   disponivel: boolean;
 }
 
@@ -41,6 +40,11 @@ export interface ItemCarrinho {
   // não conhece combos — eles simplesmente não acham o produto e ignoram.
   // `pesoKg` vira "quantidade" de combos (sempre inteiro, unidade fixa).
   comboId?: string;
+  // Itens virtuais do planejador (bebidas, carvão). Não têm produto real
+  // — `produtoId` aponta pra um id virtual prefixado com `virtual:`.
+  // O carrinho exibe com badge, mas o cupom/cotação ignoram (peso=0).
+  virtual?: boolean;
+  virtualSlug?: 'bebidas';
 }
 
 export type StatusPedido =
@@ -90,6 +94,22 @@ export interface Cliente {
   pontos: number;
   pontosAcumuladoTotal: number;
   aceitaWhatsapp: boolean;
+  /** Código curto único que o cliente compartilha pra indicar amigos (ex: "MARIA7"). */
+  codigoIndicacao?: string;
+  /** Id do cliente que trouxe este. Preenchido quando o cadastro veio via `?ref=`. */
+  indicadoPor?: string;
+}
+
+/** Indicação feita por um cliente pra um amigo. */
+export interface Indicacao {
+  id: string;
+  indicadorId: string;     // quem indicou
+  indicadoId: string;       // quem foi indicado
+  codigoUsado: string;      // código que foi compartilhado
+  criadoEm: string;
+  status: 'pendente' | 'convertido' | 'expirado';
+  /** Valor em R$ creditado ao indicador quando o indicado converte (1º pedido). */
+  recompensaCreditadaEm?: string;
 }
 
 export interface Oferta {
@@ -115,6 +135,14 @@ export interface Resgate {
   custoPontos: number;
   imagem: string;
   ativo: boolean;
+}
+
+export interface Estabelecimento {
+  nomeFantasia: string;
+  endereco: string;
+  telefone: string;
+  cnpj?: string;
+  mensagemRodape: string;
 }
 
 export interface ItemCombo {

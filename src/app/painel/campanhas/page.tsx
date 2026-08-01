@@ -3,29 +3,14 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
-import { brl, formatarData, formatarTelefone } from '@/lib/formato';
+import { brl, formatarData, formatarTelefone, validadeCashbackParaMensagem } from '@/lib/formato';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, MessageCircle, Plus, X, Save, Power, Send, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Campanha, Cliente, Frequencia, Pedido, PublicoAlvo } from '@/lib/types';
+import type { Campanha, Cliente, Pedido, PublicoAlvo } from '@/lib/types';
+import { infoFrequencia } from '@/lib/frequencia';
 
-function info(c: Cliente, pedidos: Pedido[]) {
-  const ped = pedidos.filter((p) => p.clienteId === c.id);
-  ped.sort((a, b) => (a.criadoEm < b.criadoEm ? 1 : -1));
-  const ultimo = ped[0]?.criadoEm;
-  const dias = ultimo ? Math.floor((Date.now() - new Date(ultimo).getTime()) / 86400000) : 9999;
-  const noventaAtras = new Date();
-  noventaAtras.setDate(noventaAtras.getDate() - 90);
-  const ped90 = ped.filter((p) => new Date(p.criadoEm) >= noventaAtras).length;
-  const diasCadastro = Math.floor((Date.now() - new Date(c.criadoEm).getTime()) / 86400000);
-  let g: Frequencia = 'ocasional';
-  if (dias >= 60) g = 'inativo';
-  else if (dias >= 31) g = 'em_risco';
-  else if (ped90 >= 6 && dias <= 15) g = 'fiel';
-  else if (ped90 <= 1 && diasCadastro <= 30) g = 'novo';
-  return { dias, g };
-}
-
+import { useNoIndex } from '@/components/ui/use-no-index';
 const PUBLICO_LABEL: Record<PublicoAlvo, string> = {
   novo: 'Novos',
   fiel: 'Fiéis',
@@ -40,17 +25,20 @@ function destinatariosPara(publico: PublicoAlvo, clientes: Cliente[], pedidos: P
   const aceitam = clientes.filter((c) => c.aceitaWhatsapp);
   if (publico === 'todos') return aceitam;
   if (publico === 'custom') return [];
-  return aceitam.filter((c) => info(c, pedidos).g === publico);
+  return aceitam.filter((c) => infoFrequencia(c, pedidos).grupo === publico);
 }
 
 function resolverMensagem(template: string, c: Cliente, dias: number): string {
+  const validade = validadeCashbackParaMensagem(c.cashbackExpiraEm);
   return template
     .replaceAll('{{nome}}', c.nome.split(' ')[0])
     .replaceAll('{{saldo}}', brl(c.saldoCashback))
-    .replaceAll('{{dias}}', dias < 9999 ? String(dias) : '—');
+    .replaceAll('{{dias}}', dias < 9999 ? String(dias) : '—')
+    .replaceAll('{{validade}}', validade ?? '—');
 }
 
 export default function CampanhasPage() {
+  useNoIndex();
   const clientes = useStore((s) => s.clientes);
   const pedidos = useStore((s) => s.pedidos);
   const campanhas = useStore((s) => s.campanhas);
@@ -116,8 +104,8 @@ export default function CampanhasPage() {
 
                   <ul className="space-y-1 max-h-64 overflow-auto">
                     {destinatarios.map((c) => {
-                      const i = info(c, pedidos);
-                      const msg = resolverMensagem(camp.mensagemTemplate, c, i.dias);
+                      const i = infoFrequencia(c, pedidos);
+                      const msg = resolverMensagem(camp.mensagemTemplate, c, i.diasSemCompra);
                       const tel = c.telefone.replace(/\D/g, '');
                       return (
                         <li key={c.id} className="flex items-center gap-2 text-sm py-1">

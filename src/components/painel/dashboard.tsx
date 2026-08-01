@@ -8,28 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
 import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight, BarChart3, Sparkles, Wallet } from 'lucide-react';
-import type { Cliente, Frequencia, Pedido } from '@/lib/types';
-
-function classificar(
-  cliente: Cliente,
-  pedidos: Pedido[],
-): { grupo: Frequencia; diasSemCompra: number; pedidos90: number; ticketMedio: number } {
-  const ped = pedidos.filter((p) => p.clienteId === cliente.id);
-  ped.sort((a, b) => (a.criadoEm < b.criadoEm ? 1 : -1));
-  const ultimo = ped[0]?.criadoEm;
-  const diasSemCompra = ultimo ? Math.floor((Date.now() - new Date(ultimo).getTime()) / 86400000) : 9999;
-  const noventaAtras = new Date();
-  noventaAtras.setDate(noventaAtras.getDate() - 90);
-  const pedidos90 = ped.filter((p) => new Date(p.criadoEm) >= noventaAtras).length;
-  const diasCadastro = Math.floor((Date.now() - new Date(cliente.criadoEm).getTime()) / 86400000);
-  let grupo: Frequencia = 'ocasional';
-  if (diasSemCompra >= 60) grupo = 'inativo';
-  else if (diasSemCompra >= 31) grupo = 'em_risco';
-  else if (pedidos90 >= 6 && diasSemCompra <= 15) grupo = 'fiel';
-  else if (pedidos90 <= 1 && diasCadastro <= 30) grupo = 'novo';
-  const ticketMedio = ped.length ? ped.reduce((s, p) => s + p.total, 0) / ped.length : 0;
-  return { grupo, diasSemCompra, pedidos90, ticketMedio };
-}
+import { BannerAniversariantes } from '@/components/ui/banner-aniversariantes';
+import { toast } from 'sonner';
+import type { Cliente, Frequencia } from '@/lib/types';
+import { infoFrequencia } from '@/lib/frequencia';
+import { confirmar } from '@/lib/confirmar';
 
 const GRUPO_LABEL: Record<Frequencia, string> = {
   novo: 'Novo',
@@ -87,11 +70,11 @@ export default function PainelPage() {
   }, [pedidos]);
 
   const grupos = useMemo(() => {
-    const g: Record<Frequencia, { cliente: Cliente; info: ReturnType<typeof classificar> }[]> = {
+    const g: Record<Frequencia, { cliente: Cliente; info: ReturnType<typeof infoFrequencia> }[]> = {
       novo: [], fiel: [], ocasional: [], em_risco: [], inativo: [],
     };
     for (const c of clientes) {
-      const info = classificar(c, pedidos);
+      const info = infoFrequencia(c, pedidos);
       g[info.grupo].push({ cliente: c, info });
     }
     return g;
@@ -141,8 +124,15 @@ export default function PainelPage() {
             <Link href="/painel/campanhas"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Campanhas</Button></Link>
             <Link href="/painel/relatorios"><Button variant="ghost" size="sm" className="text-papel hover:bg-sebo/20">Relatórios</Button></Link>
             <button
-              onClick={() => {
-                if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) void reiniciar();
+              onClick={async () => {
+                if (await confirmar('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) {
+                  try {
+                    await reiniciar();
+                    toast.success('Demonstração reiniciada');
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : 'Não consegui reiniciar');
+                  }
+                }
               }}
               className="w-10 h-10 grid place-items-center rounded-md text-papel/70 hover:text-papel hover:bg-papel/10"
               title="Reiniciar demonstração"
@@ -155,6 +145,8 @@ export default function PainelPage() {
       />
 
       <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <BannerAniversariantes />
+
         {/* KPIs */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KPI label="Faturamento do dia" valor={brl(stats.fatDia)} icon={<DollarSign />} />
@@ -233,8 +225,15 @@ export default function PainelPage() {
 
       <footer className="mx-auto max-w-6xl px-4 pb-4 text-center text-xs text-carvao/50">
         <button
-          onClick={() => {
-            if (confirm('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) void reiniciar();
+          onClick={async () => {
+            if (await confirmar('Reiniciar a demonstração? Isso apaga todos os pedidos novos.')) {
+              try {
+                await reiniciar();
+                toast.success('Demonstração reiniciada');
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : 'Não consegui reiniciar');
+              }
+            }
           }}
           className="underline hover:text-carvao py-2 px-2 -mx-2"
         >

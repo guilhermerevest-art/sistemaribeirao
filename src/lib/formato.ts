@@ -77,3 +77,114 @@ export function classificacaoFrequencia(args: {
 export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ');
 }
+
+// Cashback que expira em até N dias (default 15). Usado pra pintar de
+// vermelho clientes com saldo prestes a vencer — é o tipo de alerta
+// que reverte retenção com um único clique.
+export function cashbackExpiraEmBreve(
+  validadeISO: string | undefined,
+  dias = 15,
+): boolean {
+  if (!validadeISO) return false;
+  const d = new Date(validadeISO);
+  if (Number.isNaN(d.getTime())) return false;
+  const ms = d.getTime() - Date.now();
+  return ms > 0 && ms <= dias * 86400000;
+}
+
+// Data de validade do cashback para mostrar na mensagem de WhatsApp.
+// Se o cliente nunca comprou (`cashbackExpiraEm undefined`) ou se a
+// validade já passou, retorna null pra gente omitir o trecho em vez de
+// mentir ("vale até hoje").
+export function validadeCashbackParaMensagem(
+  cashbackExpiraEm: string | undefined,
+): string | null {
+  if (!cashbackExpiraEm) return null;
+  const d = new Date(cashbackExpiraEm);
+  if (Number.isNaN(d.getTime())) return null;
+  if (d.getTime() < Date.now()) return null;
+  return formatarData(cashbackExpiraEm);
+}
+
+// Link wa.me pronto pra reativação. Usa o saldo real e só inclui a
+// frase de validade quando ela existe de verdade.
+export function linkWhatsAppReativacao(args: {
+  nome: string;
+  telefone: string;
+  diasSemCompra: number;
+  saldo: number;
+  validadeISO?: string;
+  produto?: string; // ex: "Fraldinha a R$ 44,90 o quilo"
+}): string {
+  const primeiroNome = args.nome.split(' ')[0];
+  const validade = validadeCashbackParaMensagem(args.validadeISO);
+  const partes: string[] = [];
+  partes.push(
+    args.diasSemCompra > 0
+      ? `Oi ${primeiroNome}, aqui é do Empório Ribeirão. Faz ${args.diasSemCompra} dias que você não aparece.`
+      : `Oi ${primeiroNome}, aqui é do Empório Ribeirão.`,
+  );
+  if (args.saldo > 0) {
+    partes[0] += ` Você tem ${brl(args.saldo)} de cashback`;
+    if (validade) partes[0] += ` pra usar até ${validade}`;
+    partes[0] += '.';
+  } else {
+    partes[0] += ' Temos uma oferta especial essa semana.';
+  }
+  if (args.produto) partes.push(`Essa semana ${args.produto}.`);
+  partes.push('Quer que eu separe?');
+  const msg = encodeURIComponent(partes.join(' '));
+  const tel = args.telefone.replace(/\D/g, '');
+  return `https://wa.me/55${tel}?text=${msg}`;
+}
+
+// Mensagem de confirmação de pedido que o cliente envia pro açougue
+// (ou que a loja dispara via API quando subir o WhatsApp Business).
+// Inclui número do pedido, resumo curto dos itens, total e forma de
+// pagamento pra registro.
+export function linkWhatsAppConfirmacaoPedido(args: {
+  telefoneEstabelecimento: string;
+  numeroPedido: string;
+  nomeCliente: string;
+  itensDescricao: string; // ex: "2kg Picanha, 1kg Linguiça"
+  total: number;
+  retirada: 'balcao' | 'entrega';
+  pagamento: 'pix' | 'cartao_entrega' | 'dinheiro';
+  trocoPara?: number;
+}): string {
+  const forma = (() => {
+    if (args.pagamento === 'pix') return 'Pix';
+    if (args.pagamento === 'cartao_entrega') return 'Cartão na entrega';
+    if (args.trocoPara && args.trocoPara > args.total) return `Dinheiro (troco pra ${brl(args.trocoPara)})`;
+    return 'Dinheiro';
+  })();
+  const entrega = args.retirada === 'entrega' ? 'entrega' : 'retirada no balcão';
+  const msg =
+    `Oi! Acabei de fazer o pedido *#${args.numeroPedido}* pelo app do Empório Ribeirão.\n\n` +
+    `*Cliente:* ${args.nomeCliente}\n` +
+    `*Itens:* ${args.itensDescricao}\n` +
+    `*Total:* ${brl(args.total)}\n` +
+    `*Pagamento:* ${forma}\n` +
+    `*${entrega.charAt(0).toUpperCase()}${entrega.slice(1)}*`;
+  const tel = args.telefoneEstabelecimento.replace(/\D/g, '');
+  return `https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`;
+}
+
+// Helper pra montar o resumo curto dos itens do pedido pro WhatsApp
+// ("2kg Picanha, 1kg Linguiça"). Limita a ~3 itens pra mensagem
+// não ficar gigante; o resto entra como "+N itens".
+export function resumoItensParaWhatsApp(args: {
+  itens: Array<{
+    pesoKg: number;
+    produtoNome?: string;
+    comboNome?: string;
+    quantidade?: number;
+  }>;
+}): string {
+  const partes = args.itens.slice(0, 3).map((it) => {
+    if (it.comboNome) return `${it.quantidade ?? 1}x Combo ${it.comboNome}`;
+    return `${it.pesoKg.toFixed(2).replace('.', ',')}kg ${it.produtoNome ?? 'Item'}`;
+  });
+  if (args.itens.length > 3) partes.push(`+${args.itens.length - 3} itens`);
+  return partes.join(', ');
+}

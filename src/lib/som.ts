@@ -67,3 +67,26 @@ export function tocarBipPronto() {
     osc.stop(agora + offset + 0.25);
   }
 }
+
+// Bipe "impressora cuspiu o cupom" — sweep ascendente de 400→1200 Hz
+// por 350 ms. Confirmação auditiva de que a Epson respondeu. Toca
+// depois do `window.print()` retornar (no iframe via `onafterprint`).
+export function tocarBipImpressao() {
+  const ctx = pegarCtx();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') void ctx.resume();
+  const agora = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  // Sweep: começa em 400 Hz e sobe pra 1200 em 300 ms.
+  osc.frequency.setValueAtTime(400, agora);
+  osc.frequency.exponentialRampToValueAtTime(1200, agora + 0.3);
+  gain.gain.setValueAtTime(0, agora);
+  gain.gain.linearRampToValueAtTime(0.2, agora + 0.02);
+  gain.gain.linearRampToValueAtTime(0.2, agora + 0.3);
+  gain.gain.linearRampToValueAtTime(0, agora + 0.4);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(agora);
+  osc.stop(agora + 0.45);
+}

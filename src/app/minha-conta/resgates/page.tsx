@@ -8,7 +8,9 @@ import { Gift, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImagemProduto } from '@/components/ui/imagem-produto';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function ResgatesPage() {
+  useNoIndex();
   const router = useRouter();
   const clienteAtualId = useStore((s) => s.clienteAtualId);
   const cliente = useStore((s) => s.clientes.find((c) => c.id === clienteAtualId));

@@ -9,6 +9,7 @@ import { Plus, X, Save, Power, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Oferta } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 function inicioDeHojeISO(): string {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -28,6 +29,7 @@ function daquiUmDiaISO(): string {
 }
 
 export default function BackofficePromocoesPage() {
+  useNoIndex();
   const ofertas = useStore((s) => s.ofertas);
   const produtos = useStore((s) => s.produtos);
   const criar = useStore((s) => s.criarOferta);

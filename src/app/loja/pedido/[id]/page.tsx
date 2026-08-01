@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { Button } from '@/components/ui/button';
-import { brl, formatarData, formatarHora, formatarPeso } from '@/lib/formato';
+import { brl, formatarData, formatarHora, formatarPeso, linkWhatsAppConfirmacaoPedido, resumoItensParaWhatsApp } from '@/lib/formato';
 import { CheckCircle2, MessageCircle, Truck, Store, Repeat } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/components/ui/use-no-index';
@@ -23,6 +23,7 @@ export default function ConfirmacaoPage() {
   const clonarItens = useStore((s) => s.clonarItensParaCarrinho);
   const recarregarPedidos = useStore((s) => s.recarregarPedidos);
   const recarregarClientes = useStore((s) => s.recarregarClientes);
+  const estabelecimento = useStore((s) => s.estabelecimento);
 
   // Polling leve: enquanto o pedido não estiver "entregue" ou "cancelado",
   // busca dados novos a cada 4 s. Em modo offline (sem Supabase), o
@@ -58,9 +59,23 @@ export default function ConfirmacaoPage() {
   const order: Array<typeof pedido.status> = ['novo', 'preparando', 'pronto', 'entregue'];
   const idxAtual = order.indexOf(pedido.status);
 
-  const whatsAppLink = `https://wa.me/553490000000?text=${encodeURIComponent(
-    `Oi Empório Ribeirão, fiz o pedido ${pedido.id}. Tô aguardando!`,
-  )}`;
+  const whatsAppLink = linkWhatsAppConfirmacaoPedido({
+    telefoneEstabelecimento: estabelecimento.telefone || '3490000000',
+    numeroPedido: pedido.id,
+    nomeCliente: cliente.nome,
+    itensDescricao: resumoItensParaWhatsApp({
+      itens: pedido.itens.map((it) => ({
+        pesoKg: it.pesoKg,
+        produtoNome: it.comboId ? undefined : produtos.find((p) => p.id === it.produtoId)?.nome,
+        comboNome: it.comboId ? combos.find((c) => c.id === it.comboId)?.nome : undefined,
+        quantidade: it.comboId ? it.pesoKg : undefined,
+      })),
+    }),
+    total: pedido.total,
+    retirada: pedido.retirada,
+    pagamento: pedido.pagamento,
+    trocoPara: pedido.trocoPara,
+  });
 
   return (
     <>
@@ -152,7 +167,7 @@ export default function ConfirmacaoPage() {
         <div className="mt-4 grid grid-cols-2 gap-2">
           <a href={whatsAppLink} target="_blank" rel="noreferrer">
             <Button variant="secondary" full>
-              <MessageCircle className="w-4 h-4 mr-1" /> Falar no WhatsApp
+              <MessageCircle className="w-4 h-4 mr-1" /> Enviar pro açougue
             </Button>
           </a>
           <Link href="/minha-conta">

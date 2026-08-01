@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
 import { Search, Plus, Pencil, Trash2, MessageCircle, X, Save, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { confirmar } from '@/lib/confirmar';
 import type { Cliente } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function BackofficeClientesPage() {
+  useNoIndex();
   const clientes = useStore((s) => s.clientes);
   const pedidos = useStore((s) => s.pedidos);
   const criar = useStore((s) => s.criarCliente);
@@ -103,8 +106,10 @@ export default function BackofficeClientesPage() {
                     </div>
                   )}
                   <button
-                    onClick={() => {
-                      if (confirm(`Remover ${c.nome}?`)) void remover(c.id);
+                    onClick={async () => {
+                      if (await confirmar(`Remover ${c.nome}? O histórico de pedidos dele continua.`)) {
+                        void remover(c.id);
+                      }
                     }}
                     className="h-11 rounded-md bg-vermelho-risco text-papel text-xs font-semibold flex flex-col items-center justify-center gap-0.5"
                     title="Remover"

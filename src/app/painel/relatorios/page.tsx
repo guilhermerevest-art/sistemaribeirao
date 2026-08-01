@@ -21,8 +21,10 @@ import { nivelPorPontos, round2 } from '@/lib/regras';
 import { toCsv, downloadCsv } from '@/lib/csv';
 import { AdminHeader } from '@/components/ui/admin-header';
 import { Download } from 'lucide-react';
-import type { Cliente, Nivel, Pedido } from '@/lib/types';
+import type { Nivel, Pedido } from '@/lib/types';
+import { infoFrequencia } from '@/lib/frequencia';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 type Periodo = 'dia' | 'semana' | 'mes';
 
 const CORES_NIVEL: Record<Nivel, string> = {
@@ -93,16 +95,8 @@ function agregarVendas(pedidos: Pedido[], periodo: Periodo): { label: string; va
   return arr;
 }
 
-function info(c: Cliente, pedidos: Pedido[]) {
-  const ped = pedidos.filter((p) => p.clienteId === c.id);
-  ped.sort((a, b) => (a.criadoEm < b.criadoEm ? 1 : -1));
-  const ultimo = ped[0]?.criadoEm;
-  const dias = ultimo ? Math.floor((Date.now() - new Date(ultimo).getTime()) / 86400000) : 9999;
-  const ticketMedio = ped.length ? ped.reduce((s, p) => s + p.total, 0) / ped.length : 0;
-  return { dias, ticketMedio };
-}
-
 export default function RelatoriosPage() {
+  useNoIndex();
   const pedidos = useStore((s) => s.pedidos);
   const clientes = useStore((s) => s.clientes);
   const produtos = useStore((s) => s.produtos);
@@ -160,7 +154,10 @@ export default function RelatoriosPage() {
 
   const emRisco = useMemo(() => {
     return clientes
-      .map((c) => ({ cliente: c, ...info(c, pedidos) }))
+      .map((c) => {
+        const f = infoFrequencia(c, pedidos);
+        return { cliente: c, dias: f.diasSemCompra, ticketMedio: f.ticketMedio };
+      })
       .filter((x) => x.dias >= 31 && x.dias < 60)
       .sort((a, b) => b.dias - a.dias);
   }, [clientes, pedidos]);
