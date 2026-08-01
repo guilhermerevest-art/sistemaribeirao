@@ -1,27 +1,19 @@
 import type { Metadata } from 'next';
-import LojaVitrine from '@/components/loja/loja-client-shared';
 
-// A home agora e a vitrine. Server component puro: nada de
-// use client aqui, nenhum overlay. O metadata e o titulo sao
-// os mesmos da /loja, ja que o conteudo e identico.
+// Teste minimo: home renderiza so um paragrafo.
+// Se o React #185 sumir nesta configuracao, o problema esta
+// no LojaClient (renderizado em /loja). Se persistir, o
+// problema esta no store ou em algum layout.
 //
-// Se o React #185 persistir nesta configuracao minima, o
-// problema esta no proprio LojaClient (loop de useEffect /
-// setState em alguma parte do componente). A gente isola a
-// partir dai.
+// Build leve pra isolar.
 export const metadata: Metadata = {
-  title: 'Empório Ribeirão — Açougue, pedidos e fidelidade',
-  description:
-    'Catálogo, pedidos pelo celular, cupom na bancada, cashback e pontos. Sistema completo do Empório Ribeirão.',
-  alternates: { canonical: '/' },
-  openGraph: {
-    title: 'Empório Ribeirão — Açougue, pedidos e fidelidade',
-    description:
-      'Catálogo, pedidos pelo celular, cupom na bancada, cashback e pontos. Sistema completo do Empório Ribeirão.',
-    url: '/',
-  },
+  title: 'Teste home minima',
 };
 
 export default function Page() {
-  return <LojaVitrine />;
+  return (
+    <main className="min-h-screen grid place-items-center bg-papel">
+      <h1 className="font-display font-extrabold text-2xl">Home minima de teste</h1>
+    </main>
+  );
 }
