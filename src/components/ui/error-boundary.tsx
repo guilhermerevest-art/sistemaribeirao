@@ -12,6 +12,7 @@ interface Props {
 
 interface State {
   erro: Error | null;
+  componentStack?: string;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -21,14 +22,22 @@ export class ErrorBoundary extends Component<Props, State> {
     return { erro };
   }
 
-  componentDidCatch(erro: Error) {
-    // Loga no console pra facilitar diagnóstico no F12 do navegador.
+  componentDidCatch(erro: Error, info: { componentStack?: string }) {
     // eslint-disable-next-line no-console
-    console.error('[ErrorBoundary]', erro);
+    console.error(
+      '[ErrorBoundary] message:',
+      erro.message,
+      '\n[ErrorBoundary] stack:',
+      erro.stack,
+      '\n[ErrorBoundary] componentStack:',
+      info?.componentStack ?? '',
+    );
+    // Guarda o stack no state pra mostrar na tela.
+    this.setState({ componentStack: info?.componentStack ?? '' });
   }
 
   handleRetry = () => {
-    this.setState({ erro: null });
+    this.setState({ erro: null, componentStack: undefined });
   };
 
   handleReload = () => {
@@ -65,6 +74,26 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="mt-4 text-[10px] text-preto/50 font-mono break-all">
             {this.state.erro.message}
           </div>
+          {this.state.erro.stack && (
+            <details className="mt-2 text-left">
+              <summary className="text-[10px] text-preto/50 font-mono cursor-pointer">
+                Stack técnico (pra debug)
+              </summary>
+              <pre className="mt-1 text-[9px] text-preto/40 font-mono break-all whitespace-pre-wrap max-h-48 overflow-auto">
+                {this.state.erro.stack.slice(0, 1500)}
+              </pre>
+            </details>
+          )}
+          {this.state.componentStack && (
+            <details className="mt-2 text-left">
+              <summary className="text-[10px] text-preto/50 font-mono cursor-pointer">
+                Component stack
+              </summary>
+              <pre className="mt-1 text-[9px] text-preto/40 font-mono break-all whitespace-pre-wrap max-h-48 overflow-auto">
+                {this.state.componentStack.slice(0, 1500)}
+              </pre>
+            </details>
+          )}
         </div>
       </div>
     );
