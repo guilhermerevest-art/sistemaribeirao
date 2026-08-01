@@ -58,10 +58,11 @@ export default function PlanejadorChurrascoClient() {
   const [fome, setFome] = useState<NivelFome>(3);
   const [comBebidas, setComBebidas] = useState(true);
   const [modoRapido, setModoRapido] = useState(true);
-  const [modoAtivo, setModoAtivo] = useState(false);
+  // Modo visual sexta-dom: começa "null" (indeterminado) pra evitar
+  // mismatch entre server (renderiza nada) e client (renderiza cor).
+  // Só depois do mount sabemos se é sexta/domingo.
+  const [modoAtivo, setModoAtivo] = useState<boolean | null>(null);
 
-  // Modo visual sexta-dom. Seta após mount (evita hydration mismatch
-  // — server renderiza false, client confirma com Date.now).
   useEffect(() => {
     setModoAtivo(modoChurrascoAtivo());
   }, []);
@@ -208,14 +209,19 @@ export default function PlanejadorChurrascoClient() {
         {/* Hero */}
         <section
           className={`mt-3 rounded-2xl text-branco p-5 relative overflow-hidden transition-colors ${
-            modoAtivo
+            modoAtivo === true
               ? 'bg-gradient-to-br from-amarelo via-brasa to-preto'
               : 'bg-gradient-to-br from-vermelho via-vermelho to-preto'
           }`}
         >
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-amarelo/30 rounded-full blur-3xl animate-pulse" aria-hidden />
+          <div
+            className={`absolute -top-10 -right-10 w-40 h-40 bg-amarelo/30 rounded-full blur-3xl ${
+              modoAtivo === true ? 'animate-pulse' : ''
+            }`}
+            aria-hidden
+          />
           <div className="relative">
-            {modoAtivo && (
+            {modoAtivo === true && (
               <div className="inline-flex items-center gap-2 rounded-full bg-branco text-preto px-3 py-1 text-xs uppercase tracking-wider font-extrabold mb-3 animate-pulse">
                 <span>🔥</span> Modo churrasco ligado
               </div>
