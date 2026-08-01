@@ -130,7 +130,7 @@ export default function RootLayout({
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    image: `${SITE_URL}/og-cover.png`,
+    image: `${SITE_URL}/og-cover.svg`,
     telephone: '+55-34-3333-0000',
     address: {
       '@type': 'PostalAddress',

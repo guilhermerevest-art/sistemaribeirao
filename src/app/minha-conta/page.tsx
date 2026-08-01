@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { nivelPorPontos } from '@/lib/regras';
 import { toast } from 'sonner';
+import { ProgramaIndicacao } from '@/components/ui/programa-indicacao';
 
 import { useNoIndex } from '@/components/ui/use-no-index';
 export default function MinhaContaPage() {
@@ -112,6 +113,8 @@ export default function MinhaContaPage() {
             <span>Pontos: <strong>{cliente.pontos}</strong> (acumulado {cliente.pontosAcumuladoTotal})</span>
           </div>
         </section>
+
+        <ProgramaIndicacao />
 
         <section className="mt-4 grid grid-cols-2 gap-2">
           <Link href="/minha-conta/resgates">

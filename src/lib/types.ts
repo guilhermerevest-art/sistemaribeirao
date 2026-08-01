@@ -89,6 +89,22 @@ export interface Cliente {
   pontos: number;
   pontosAcumuladoTotal: number;
   aceitaWhatsapp: boolean;
+  /** Código curto único que o cliente compartilha pra indicar amigos (ex: "MARIA7"). */
+  codigoIndicacao?: string;
+  /** Id do cliente que trouxe este. Preenchido quando o cadastro veio via `?ref=`. */
+  indicadoPor?: string;
+}
+
+/** Indicação feita por um cliente pra um amigo. */
+export interface Indicacao {
+  id: string;
+  indicadorId: string;     // quem indicou
+  indicadoId: string;       // quem foi indicado
+  codigoUsado: string;      // código que foi compartilhado
+  criadoEm: string;
+  status: 'pendente' | 'convertido' | 'expirado';
+  /** Valor em R$ creditado ao indicador quando o indicado converte (1º pedido). */
+  recompensaCreditadaEm?: string;
 }
 
 export interface Oferta {

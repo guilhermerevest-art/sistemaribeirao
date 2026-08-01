@@ -21,6 +21,7 @@ import {
   MessagesSquare,
   Store,
   Sparkles,
+  Gift,
 } from 'lucide-react';
 import { calcularMaximoUsoCashback, cotarPedido, melhorDescontoPontos, nivelPorPontos } from '@/lib/regras';
 import { toast } from 'sonner';
@@ -43,6 +44,10 @@ export default function CheckoutPage() {
   const criarCliente = useStore((s) => s.criarCliente);
   const lojaAberta = useStore((s) => s.lojaAberta);
   const estabelecimento = useStore((s) => s.estabelecimento);
+  const refIndicacao = useStore((s) => s.refIndicacaoPendente);
+  const setRefIndicacao = useStore((s) => s.setRefIndicacaoPendente);
+  const vincularIndicacao = useStore((s) => s.vincularIndicacao);
+  const converterIndicacao = useStore((s) => s.converterIndicacaoSeAplicavel);
 
   const [telefone, setTelefone] = useState('');
   const [novoNome, setNovoNome] = useState('');
@@ -67,6 +72,28 @@ export default function CheckoutPage() {
       if (c) setTelefone(c.telefone);
     }
   }, [clienteAtualId, clientes]);
+
+  // Captura `?ref=CODIGO` da URL (vindo de link de indicação) e
+  // guarda no state pra ser usado no próximo criarCliente.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (refIndicacao) return; // já tem um pendente
+    const sp = new URLSearchParams(window.location.search);
+    const code = sp.get('ref');
+    if (!code) return;
+    const norm = code.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4,12}$/.test(norm)) return;
+    // Confere se existe alguém com esse código antes de salvar.
+    const indicador = clientes.find((c) => c.codigoIndicacao?.toUpperCase() === norm);
+    if (!indicador) return;
+    setRefIndicacao(norm);
+  }, [clientes, refIndicacao, setRefIndicacao]);
+
+  // Banner de indicação: pega o nome do indicador a partir do ref.
+  const indicadorPendente = useMemo(() => {
+    if (!refIndicacao) return null;
+    return clientes.find((c) => c.codigoIndicacao?.toUpperCase() === refIndicacao.toUpperCase());
+  }, [clientes, refIndicacao]);
 
   const nivel = cliente ? nivelPorPontos(cliente.pontosAcumuladoTotal) : 'bronze';
 
@@ -135,6 +162,10 @@ export default function CheckoutPage() {
           aceitaWhatsapp: true,
         });
         clienteId = novo.id;
+        // Se o cliente chegou por link de indicação, vincula ao
+        // indicador AGORA (antes do pedido) pra que a recompensa
+        // seja creditada no mesmo ciclo de criação do pedido.
+        if (refIndicacao) vincularIndicacao(clienteId);
       }
       await setClienteAtual(clienteId);
       const pedido = await criarPedido({
@@ -148,6 +179,14 @@ export default function CheckoutPage() {
         descontoPontos,
         taxaEntrega,
       });
+      // Marca a indicação como convertida e credita o indicador.
+      // Não bloqueia o fluxo se já estava convertida.
+      const conv = converterIndicacao(clienteId, pedido.id);
+      if (conv) {
+        toast.success(`Indicado ativado! ${indicadorPendente?.nome.split(' ')[0] ?? 'Indicador'} ganhou R$ ${conv.valor} de cashback.`, {
+          duration: 6000,
+        });
+      }
       router.push(`/loja/pedido/${pedido.id}`);
       toast.success('Pedido na fila! Quer mandar o resumo pro açougue?', {
         duration: 8000,
@@ -252,6 +291,16 @@ export default function CheckoutPage() {
           </div>
         ) : (
           <div className="mt-4 space-y-6">
+            {indicadorPendente && (
+              <div className="rounded-xl bg-verde-fiel/10 border border-verde-fiel p-3 text-sm flex items-start gap-2">
+                <Gift className="w-4 h-4 text-verde-fiel shrink-0 mt-0.5" />
+                <div>
+                  Você veio por indicação de <strong>{indicadorPendente.nome.split(' ')[0]}</strong>.
+                  Quando fizer o primeiro pedido, ela ganha R$ 10 de cashback e você recebe
+                  um cupom de boas-vindas. 💚
+                </div>
+              </div>
+            )}
             <div>
               <div className="text-sm text-preto/60 mb-2">Como você quer receber?</div>
               <div className="grid grid-cols-2 gap-2">

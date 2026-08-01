@@ -662,8 +662,53 @@ function gerarPedidosParaCliente(idx: number, padrao: typeof PADROES[number]): {
 
 const PEDIDOS: Pedido[] = [];
 
+// Aniversariantes do mês atual — espalhados para que apareçam
+// alguns hoje independente do dia que você rodar a demo. Formato
+// ISO date (YYYY-MM-DD) só com mês/dia, ano arbitrário.
+const ANIVERSARIOS_MES: Record<number, Array<{ idx: number; dia: number }>> = {
+  0:  [{ idx: 0, dia: 14 }],
+  1:  [{ idx: 1, dia: 22 }],
+  2:  [{ idx: 2, dia: 5  }],
+  3:  [{ idx: 3, dia: 18 }],
+  4:  [{ idx: 4, dia: 9  }],
+  5:  [{ idx: 5, dia: 25 }],
+  6:  [{ idx: 6, dia: 11 }],
+  7:  [{ idx: 7, dia: 28 }],
+  8:  [{ idx: 8, dia: 7  }],
+  9:  [{ idx: 9, dia: 19 }],
+  10: [{ idx: 10, dia: 3 }],
+  11: [{ idx: 11, dia: 16 }],
+};
+
+// Gera código de indicação estável a partir do nome + id.
+function codigoIndicacaoPara(nome: string, id: string): string {
+  const letras = nome
+    .normalize('NFD')
+    .split('')
+    .filter((ch) => {
+      const code = ch.codePointAt(0) ?? 0;
+      return code < 0x0300 || code > 0x036f;
+    })
+    .join('')
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '');
+  const base = (letras + 'XXXX').slice(0, 4);
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  const sufixo = String(h % 100).padStart(2, '0');
+  return `${base}${sufixo}`;
+}
+
 export const CLIENTES: Cliente[] = (() => {
   const clientes: Cliente[] = [];
+  const mesAtual = HOJE.getMonth();
+  // Mapa clienteIdx -> data ISO de aniversário (YYYY-MM-DD).
+  const aniversariantes: Record<number, string> = {};
+  for (const { idx, dia } of ANIVERSARIOS_MES[mesAtual] ?? []) {
+    const ano = 1965 + ((idx * 7) % 35); // ano plausível
+    aniversariantes[idx] = `${ano}-${String(mesAtual + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  }
+
   NOMES.forEach((n, i) => {
     const padrao = PADROES[i];
     const { pedidos, criadoEm } = gerarPedidosParaCliente(i, padrao);
@@ -679,6 +724,7 @@ export const CLIENTES: Cliente[] = (() => {
       id: clienteId,
       nome: n.nome,
       telefone: n.tel,
+      ...(aniversariantes[i] ? { nascimento: aniversariantes[i] } : {}),
       criadoEm,
       saldoCashback: round(cashbackDisponivel, 2),
       cashbackExpiraEm:
@@ -688,6 +734,7 @@ export const CLIENTES: Cliente[] = (() => {
       pontos: pontosGastaveis,
       pontosAcumuladoTotal,
       aceitaWhatsapp: n.aceita,
+      codigoIndicacao: codigoIndicacaoPara(n.nome, clienteId),
     });
     PEDIDOS.push(...pedidosDoCliente);
   });

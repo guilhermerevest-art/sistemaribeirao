@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
 import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight, BarChart3, Sparkles, Wallet } from 'lucide-react';
+import { BannerAniversariantes } from '@/components/ui/banner-aniversariantes';
 import { toast } from 'sonner';
 import type { Cliente, Frequencia } from '@/lib/types';
 import { infoFrequencia } from '@/lib/frequencia';
@@ -144,6 +145,8 @@ export default function PainelPage() {
       />
 
       <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <BannerAniversariantes />
+
         {/* KPIs */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KPI label="Faturamento do dia" valor={brl(stats.fatDia)} icon={<DollarSign />} />

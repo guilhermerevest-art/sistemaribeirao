@@ -9,14 +9,14 @@
 // Manter separado do store.ts evita que o resto do código se preocupe
 // com o detalhe.
 
-import type { Campanha, Cliente, Combo, Estabelecimento, Oferta, Pedido, Produto, Resgate } from './types';
+import type { Campanha, Cliente, Combo, Estabelecimento, Indicacao, Oferta, Pedido, Produto, Resgate } from './types';
 
 const CHAVE = 'ribeirao-mock-v1';
 
 // Versão atual do schema do snapshot. Quando o formato mudar, incre-
 // mente e adicione uma migration em `migrarSnapshot`. Snapshots anti-
 // gos (sem `_v`) são tratados como versão 0.
-const VERSAO_ATUAL = 2;
+const VERSAO_ATUAL = 3;
 
 export const ESTABELECIMENTO_PADRAO: Estabelecimento = {
   nomeFantasia: 'Empório Ribeirão',
@@ -34,6 +34,7 @@ export interface SnapshotOffline {
   resgates: Resgate[];
   combos: Combo[];
   campanhas: Campanha[];
+  indicacoes: Indicacao[];
   proximoPedido: number;
   clienteAtualId?: string;
   somBancada: boolean;
@@ -59,6 +60,11 @@ function migrarSnapshot(s: SnapshotOffline): SnapshotOffline {
     s.lojaAberta = s.lojaAberta ?? true;
     v = 2;
   }
+  if (v < 3) {
+    // v2 → v3: adicionadas `indicacoes` (programa de referral).
+    s.indicacoes = s.indicacoes ?? [];
+    v = 3;
+  }
   s._v = v;
   return s;
 }
@@ -78,6 +84,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
       resgates: parsed.resgates ?? [],
       combos: parsed.combos ?? [],
       campanhas: parsed.campanhas ?? [],
+      indicacoes: parsed.indicacoes ?? [],
       proximoPedido: parsed.proximoPedido ?? 600,
       clienteAtualId: parsed.clienteAtualId,
       somBancada: parsed.somBancada ?? true,

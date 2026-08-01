@@ -17,6 +17,7 @@ import type {
   Cliente,
   Combo,
   Estabelecimento,
+  Indicacao,
   ItemCarrinho,
   Oferta,
   Pedido,
@@ -60,7 +61,7 @@ import { marcarCriadoLocalmente } from './sync-flags';
 // para que o reload não apague o trabalho da demo.
 function snapshotFromState(s: State): SnapshotOffline {
   return {
-    _v: 2,
+    _v: 3,
     produtos: s.produtos,
     clientes: s.clientes,
     pedidos: s.pedidos,
@@ -68,6 +69,7 @@ function snapshotFromState(s: State): SnapshotOffline {
     resgates: s.resgates,
     combos: s.combos,
     campanhas: s.campanhas,
+    indicacoes: s.indicacoes,
     proximoPedido: s.proximoPedido,
     clienteAtualId: s.clienteAtualId,
     somBancada: s.somBancada,
@@ -251,8 +253,12 @@ interface State {
   resgates: Resgate[];
   combos: Combo[];
   campanhas: Campanha[];
+  /** Indicações ativas. Persistido no snapshot e no Supabase (tabela indicacoes). */
+  indicacoes: Indicacao[];
   carrinho: CarrinhoState;
   clienteAtualId?: string;
+  /** Código de indicação lido do `?ref=` da URL, válido só no checkout. */
+  refIndicacaoPendente?: string;
   somBancada: boolean;
   impressaoAutomatica: boolean;
   proximoPedido: number;
@@ -313,6 +319,12 @@ interface Actions {
   setEstabelecimento: (e: Estabelecimento) => Promise<void>;
   setLojaAberta: (aberta: boolean) => Promise<void>;
 
+  // Referral
+  setRefIndicacaoPendente: (codigo: string | undefined) => void;
+  vincularIndicacao: (clienteNovoId: string) => string | null;
+  converterIndicacaoSeAplicavel: (clienteId: string, pedidoId: string) => { indicadorId: string; valor: number } | null;
+  recarregarIndicacoes: () => Promise<void>;
+
   // Clientes
   criarCliente: (c: Omit<Cliente, 'id' | 'criadoEm' | 'saldoCashback' | 'pontos' | 'pontosAcumuladoTotal'>) => Promise<Cliente>;
   atualizarCliente: (c: Cliente) => Promise<void>;
@@ -363,8 +375,10 @@ const initialState: State = {
   resgates: [],
   combos: [],
   campanhas: [],
+  indicacoes: [],
   carrinho: { itens: [] },
   clienteAtualId: undefined,
+  refIndicacaoPendente: undefined,
   somBancada: true,
   impressaoAutomatica: true,
   proximoPedido: 600,
@@ -381,6 +395,7 @@ const seedFallback = (): SnapshotOffline => ({
   resgates: RESGATES,
   combos: [],
   campanhas: [],
+  indicacoes: [],
   proximoPedido: 600,
   clienteAtualId: undefined,
   somBancada: true,
@@ -433,6 +448,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
           resgates: base.resgates,
           combos: base.combos,
           campanhas: base.campanhas,
+          indicacoes: base.indicacoes ?? [],
           online: false,
           erro: snap
             ? 'Modo demo offline — usando dados salvos neste navegador.'
@@ -489,6 +505,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
         resgates: base.resgates,
         combos: base.combos,
         campanhas: base.campanhas,
+        indicacoes: base.indicacoes ?? [],
         online: false,
         erro: e instanceof Error ? e.message : 'Erro ao carregar dados.',
         carregado: true,
@@ -1229,6 +1246,85 @@ export const useStore = create<State & Actions>()((set, get) => ({
     } else {
       gravarSnapshotOffline(snapshotFromState(get()));
     }
+  },
+
+  // ---- Referral ----
+  // Armazena o `?ref=` capturado na URL até o cliente concluir o
+  // cadastro. Validade: até o próximo reload ou 24 h.
+  setRefIndicacaoPendente: (codigo) => {
+    set({ refIndicacaoPendente: codigo });
+  },
+
+  // Chamado em criarCliente: vincula o novo cliente ao indicador
+  // (se houver `refIndicacaoPendente`) e cria uma indicação pendente.
+  // Retorna o id do indicador pra UI exibir confirmação.
+  vincularIndicacao: (clienteNovoId) => {
+    const s = get();
+    const codigo = s.refIndicacaoPendente;
+    if (!codigo) return null;
+    const indicador = s.clientes.find(
+      (c) => c.codigoIndicacao?.toUpperCase() === codigo.toUpperCase(),
+    );
+    if (!indicador) return null;
+    if (indicador.id === clienteNovoId) return null; // não pode indicar a si mesmo
+    const jaIndicou = s.indicacoes.some(
+      (i) => i.indicadorId === indicador.id && i.indicadoId === clienteNovoId,
+    );
+    if (jaIndicou) return indicador.id;
+    const nova: Indicacao = {
+      id: `ind-${Date.now()}`,
+      indicadorId: indicador.id,
+      indicadoId: clienteNovoId,
+      codigoUsado: codigo,
+      criadoEm: new Date().toISOString(),
+      status: 'pendente',
+    };
+    set((st) => ({
+      indicacoes: [...st.indicacoes, nova],
+      clientes: st.clientes.map((c) =>
+        c.id === clienteNovoId ? { ...c, indicadoPor: indicador.id } : c,
+      ),
+      refIndicacaoPendente: undefined,
+    }));
+    if (!get().online) gravarSnapshotOffline(snapshotFromState(get()));
+    return indicador.id;
+  },
+
+  // Chamado em criarPedido: quando o cliente é um indicado com
+  // indicação pendente, marca como convertida e credita R$ 10 de
+  // cashback ao indicador. Idempotente (segunda chamada não credita
+  // duas vezes).
+  converterIndicacaoSeAplicavel: (clienteId, pedidoId) => {
+    const s = get();
+    const ind = s.indicacoes.find(
+      (i) => i.indicadoId === clienteId && i.status === 'pendente',
+    );
+    if (!ind) return null;
+    // Marca convertida
+    set((st) => ({
+      indicacoes: st.indicacoes.map((i) =>
+        i.id === ind.id
+          ? { ...i, status: 'convertido', recompensaCreditadaEm: new Date().toISOString() }
+          : i,
+      ),
+      clientes: st.clientes.map((c) =>
+        c.id === ind.indicadorId
+          ? {
+              ...c,
+              saldoCashback: c.saldoCashback + 10,
+              cashbackExpiraEm: new Date(Date.now() + 60 * 86400000).toISOString(),
+            }
+          : c,
+      ),
+    }));
+    if (!get().online) gravarSnapshotOffline(snapshotFromState(get()));
+    return { indicadorId: ind.indicadorId, valor: 10 };
+  },
+
+  recarregarIndicacoes: async () => {
+    if (!get().online) return;
+    // Online: tabela indicacoes — sem RPC específica aqui, deixa só
+    // como esqueleto pra quando o Supabase for plugado.
   },
 
   // ============================================================

@@ -14,6 +14,8 @@ import {
   Volume2,
   Hand,
   Trash2,
+  Gift,
+  Cake,
   Wand2,
   Globe,
   Layers,
@@ -189,6 +191,20 @@ const FEATURES = [
       'Banner no carrinho mostra "faltam R$ X" com barra de progresso, fica amarelo quando falta pouco e verde quando bate.',
     pagina: '/loja/carrinho',
   },
+  {
+    icon: Gift,
+    titulo: 'Indique e ganhe R$ 10',
+    descricao:
+      'Cada cliente tem código curto. Quem é indicado pelo link ?ref= ganha cupom; quem indicou ganha R$ 10 de cashback no primeiro pedido do amigo.',
+    pagina: '/minha-conta',
+  },
+  {
+    icon: Cake,
+    titulo: 'Aniversariantes no painel',
+    descricao:
+      'Banner no topo do /painel mostra quem faz aniversário hoje (ou na semana). Um clique abre o WhatsApp com mensagem personalizada.',
+    pagina: '/painel',
+  },
 ];
 
 const PASSOS = [
@@ -308,7 +324,7 @@ function Hero() {
             <span className="text-amarelo">do balcão pro celular.</span>
           </h1>
           <p className="mt-5 text-lg text-branco/85 max-w-xl">
-            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tour guiado, status ao vivo, repetir em 1 clique, frete grátis com barra de progresso, resumo pelo WhatsApp e bip de impressão confirmada. Tudo numa demo de 4 minutos.
+            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tour guiado, status ao vivo, repetir em 1 clique, frete grátis, resumo pelo WhatsApp, bip de impressão, programa de indicação e banner de aniversariantes. Tudo numa demo de 4 minutos.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link
