@@ -97,3 +97,7 @@ O botão da impressora no header da bancada liga/desliga a impressão automátic
 - Imagens de produto vêm do Unsplash via `images.unsplash.com` (whitelist em `next.config.ts`).
 - O estado todo vive em `localStorage` (chave `ribeirao-mock-v1`). Abrir a `/bancada` e o celular em duas abas do mesmo navegador já sincroniza via `storage` event + polling de 2s.
 - A impressão do cupom usa `@media print` com `@page { size: 80mm auto; margin: 0 }`. Configure a impressora térmica de 80mm como padrão no Windows.
+
+## Hydration: por que algumas seções são client-only
+
+Componentes que filtram por `new Date()` ou `Date.now()` no corpo do render (ex: ofertas com janela de validade ativa) são **client-only** por design. Server renderiza em T0, client renderiza em T0+latência; se a janela de validade cruza esse intervalo, o HTML diverge e o React dispara "hydration mismatch" (erro #185). A solução é o hook `useClientOnly()` em `src/components/loja/ofertas.tsx` — retorna `false` no SSR (mesmo valor no server e no client antes do mount) e `true` após o primeiro `useEffect` no client. O conteúdo das ofertas só aparece depois da hidratação completar, eliminando o mismatch.
