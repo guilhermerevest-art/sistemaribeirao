@@ -107,6 +107,10 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.svg',
   },
+  // PWA manifest servido pelo route handler em /app/manifest.ts.
+  // Cuidado: usar 'manifest: /manifest.webmanifest' faz o Next injetar
+  // um <link> pra um arquivo que não existe — a Vercel redireciona
+  // e o React dispara erro de hidratação por causa do CORS.
   manifest: '/manifest',
   category: 'food',
 };
