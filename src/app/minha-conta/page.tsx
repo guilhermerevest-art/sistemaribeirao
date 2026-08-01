@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { brl, formatarData, formatarHora } from '@/lib/formato';
 import Link from 'next/link';
-import { Gift, History, Sparkles, Loader2, Repeat } from 'lucide-react';
+import { Gift, History, Sparkles, Loader2, Repeat, Heart, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { nivelPorPontos } from '@/lib/regras';
@@ -116,6 +116,8 @@ export default function MinhaContaPage() {
 
         <ProgramaIndicacao />
 
+        <ReceitasFavoritas />
+
         <section className="mt-4 grid grid-cols-2 gap-2">
           <Link href="/minha-conta/resgates">
             <Button variant="outline" full>
@@ -165,5 +167,40 @@ export default function MinhaContaPage() {
         </section>
       </main>
     </>
+  );
+}
+
+// Lista de receitas marcadas como favoritas. Aparece só quando
+// há pelo menos uma — sem card vazio.
+function ReceitasFavoritas() {
+  const favoritas = useStore((s) => s.receitasFavoritas);
+  if (favoritas.length === 0) return null;
+  return (
+    <section className="mt-4 rounded-2xl bg-branco border border-cinza-claro p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Heart className="w-4 h-4 text-vermelho-risco fill-vermelho-risco" />
+        <span className="font-display font-bold uppercase text-sm">
+          Receitas favoritas
+        </span>
+        <Link
+          href="/loja/receitas"
+          className="ml-auto text-[10px] uppercase tracking-wider font-semibold text-preto/60 hover:text-preto underline underline-offset-4"
+        >
+          ver todas →
+        </Link>
+      </div>
+      <ul className="space-y-2">
+        {favoritas.slice(-5).reverse().map((slug) => (
+          <li key={slug}>
+            <Link
+              href={`/loja/receitas/${slug}`}
+              className="block rounded-lg bg-sebo-claro/40 px-3 py-2 text-sm font-semibold hover:bg-sebo-claro"
+            >
+              {slug.split('-').map((p) => p[0].toUpperCase() + p.slice(1)).join(' ')}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

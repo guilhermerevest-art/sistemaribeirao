@@ -10,6 +10,8 @@ import { useNoIndex } from '@/components/ui/use-no-index';
 import {
   calcularChurrasco,
   projecaoCashbackChurrasco,
+  modoChurrascoAtivo,
+  resumoPlanejadorCurto,
   ESTILO_OPCOES,
   PRESETS_RAPIDOS,
   NIVEL_FOME_LABEL,
@@ -17,6 +19,7 @@ import {
   type EstiloChurrasco,
   type NivelFome,
 } from '@/lib/churrasco';
+import { setResumoPlanejador } from '@/lib/planejador-flags';
 import { brl } from '@/lib/formato';
 import { toast } from 'sonner';
 import {
@@ -55,6 +58,13 @@ export default function PlanejadorChurrascoClient() {
   const [fome, setFome] = useState<NivelFome>(3);
   const [comBebidas, setComBebidas] = useState(true);
   const [modoRapido, setModoRapido] = useState(true);
+  const [modoAtivo, setModoAtivo] = useState(false);
+
+  // Modo visual sexta-dom. Seta após mount (evita hydration mismatch
+  // — server renderiza false, client confirma com Date.now).
+  useEffect(() => {
+    setModoAtivo(modoChurrascoAtivo());
+  }, []);
 
   // Restaura rascunho ao montar.
   useEffect(() => {
@@ -121,10 +131,36 @@ export default function PlanejadorChurrascoClient() {
       });
       adicionados++;
     }
+    // Item virtual de bebidas (vai pro carrinho como "estimativa de
+    // bebidas", não pro cupom).
+    if (comBebidas && resultado.totalBebidas && resultado.totalBebidas > 0) {
+      adicionarAoCarrinho({
+        produtoId: 'virtual:bebidas',
+        pesoKg: 0,
+        preparos: [],
+        observacao: 'Refrigerante, cerveja e água — estimativa do planejador',
+        precoUnitarioAplicado: resultado.totalBebidas,
+        subtotal: resultado.totalBebidas,
+        virtual: true,
+        virtualSlug: 'bebidas',
+      });
+      adicionados++;
+    }
     if (adicionados === 0) {
       toast.error('Nada pra adicionar (sem itens com peso).');
       return;
     }
+    // Salva o resumo do planejador — o checkout injeta no
+    // observacaoGeral do pedido (e o cupom mostra).
+    setResumoPlanejador(
+      resumoPlanejadorCurto({
+        adultos,
+        criancas,
+        estilo,
+        fome,
+        totalCarneKg: resultado.totalCarneKg,
+      }),
+    );
     toast.success(`${adicionados} itens adicionados ao carrinho!`, {
       description: 'Você pode revisar e ajustar antes de enviar.',
       duration: 5000,
@@ -170,9 +206,20 @@ export default function PlanejadorChurrascoClient() {
         </Link>
 
         {/* Hero */}
-        <section className="mt-3 rounded-2xl bg-gradient-to-br from-vermelho via-vermelho to-preto text-branco p-5 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-amarelo/20 rounded-full blur-3xl" aria-hidden />
+        <section
+          className={`mt-3 rounded-2xl text-branco p-5 relative overflow-hidden transition-colors ${
+            modoAtivo
+              ? 'bg-gradient-to-br from-amarelo via-brasa to-preto'
+              : 'bg-gradient-to-br from-vermelho via-vermelho to-preto'
+          }`}
+        >
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-amarelo/30 rounded-full blur-3xl animate-pulse" aria-hidden />
           <div className="relative">
+            {modoAtivo && (
+              <div className="inline-flex items-center gap-2 rounded-full bg-branco text-preto px-3 py-1 text-xs uppercase tracking-wider font-extrabold mb-3 animate-pulse">
+                <span>🔥</span> Modo churrasco ligado
+              </div>
+            )}
             <div className="inline-flex items-center gap-2 rounded-full bg-branco/10 px-3 py-1 text-xs uppercase tracking-wider font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-amarelo" />
               Planejador de churrasco

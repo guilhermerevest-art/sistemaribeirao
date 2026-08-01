@@ -85,6 +85,10 @@ export function cotarPedido(args: {
       continue;
     }
 
+    // Itens virtuais do planejador (bebidas, carvão) não têm produto
+    // real e devem ser pulados na cotação — eles só aparecem como
+    // badge no carrinho pra referência do cliente.
+    if (item.virtual) continue;
     const p = produtoMap.get(item.produtoId);
     if (!p) continue;
     const precoBase = p.precoKg;

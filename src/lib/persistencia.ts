@@ -16,7 +16,7 @@ const CHAVE = 'ribeirao-mock-v1';
 // Versão atual do schema do snapshot. Quando o formato mudar, incre-
 // mente e adicione uma migration em `migrarSnapshot`. Snapshots anti-
 // gos (sem `_v`) são tratados como versão 0.
-const VERSAO_ATUAL = 3;
+const VERSAO_ATUAL = 4;
 
 export const ESTABELECIMENTO_PADRAO: Estabelecimento = {
   nomeFantasia: 'Empório Ribeirão',
@@ -35,6 +35,7 @@ export interface SnapshotOffline {
   combos: Combo[];
   campanhas: Campanha[];
   indicacoes: Indicacao[];
+  receitasFavoritas?: string[];
   proximoPedido: number;
   clienteAtualId?: string;
   somBancada: boolean;
@@ -65,6 +66,11 @@ function migrarSnapshot(s: SnapshotOffline): SnapshotOffline {
     s.indicacoes = s.indicacoes ?? [];
     v = 3;
   }
+  if (v < 4) {
+    // v3 → v4: adicionadas `receitasFavoritas` (favoritos da cliente).
+    s.receitasFavoritas = s.receitasFavoritas ?? [];
+    v = 4;
+  }
   s._v = v;
   return s;
 }
@@ -85,6 +91,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
       combos: parsed.combos ?? [],
       campanhas: parsed.campanhas ?? [],
       indicacoes: parsed.indicacoes ?? [],
+      receitasFavoritas: parsed.receitasFavoritas ?? [],
       proximoPedido: parsed.proximoPedido ?? 600,
       clienteAtualId: parsed.clienteAtualId,
       somBancada: parsed.somBancada ?? true,

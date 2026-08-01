@@ -12,6 +12,7 @@ import { CASHBACK_POR_CATEGORIA } from '@/lib/types';
 import { FRETE_GRATIS_ACIMA_DE, TAXA_ENTREGA, faltaParaFreteGratis, nivelPorPontos } from '@/lib/regras';
 import { ImagemProduto } from '@/components/ui/imagem-produto';
 import { ItemSwipeable } from '@/components/ui/item-swipeable';
+import { BottleWine } from 'lucide-react';
 
 interface Sugestao {
   produtoId: string;
@@ -192,6 +193,31 @@ export default function CarrinhoPage() {
                 );
               })}
             </ul>
+
+            {/* Itens virtuais do planejador (bebidas, carvão). */}
+            {itens.filter((i) => i.virtual).length > 0 && (
+              <div className="mt-3 rounded-xl bg-sebo-claro border border-sebo p-3 text-xs text-preto/70 flex items-start gap-2">
+                <BottleWine className="w-4 h-4 shrink-0 mt-0.5 text-vermelho" />
+                <div className="flex-1">
+                  <div className="font-semibold text-preto">Estimativas do planejador</div>
+                  <ul className="mt-1 space-y-0.5">
+                    {itens.filter((i) => i.virtual).map((it, i) => (
+                      <li key={i} className="flex items-center justify-between gap-2">
+                        <span className="truncate">
+                          {it.observacao ?? 'Item virtual'}
+                        </span>
+                        <span className="font-mono tabular-nums shrink-0">
+                          {brl(it.subtotal)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="text-[10px] text-preto/50 mt-1">
+                    Não vai pro cupom impresso — só referência pra você.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {sugestoes.length > 0 && (
               <section className="mt-6">

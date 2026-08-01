@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { HeaderLoja } from '@/components/loja/header';
 import { useNoIndex } from '@/components/ui/use-no-index';
+import { useStore } from '@/lib/store';
 import {
   filtrarReceitas,
   PROTEINAS_OPCOES,
@@ -11,10 +12,14 @@ import {
   type ProteinaReceita,
   type OcasiãoReceita,
 } from '@/lib/receitas';
-import { Search, ChefHat, Clock, ArrowRight } from 'lucide-react';
+import { Search, ChefHat, Clock, ArrowRight, Heart } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function ReceitasClient() {
   useNoIndex();
+  const receitasFavoritas = useStore((s) => s.receitasFavoritas);
+  const toggleFavorita = useStore((s) => s.toggleFavoritaReceita);
   const [texto, setTexto] = useState('');
   const [proteina, setProteina] = useState<ProteinaReceita | 'todas'>('todas');
   const [ocasiao, setOcasiao] = useState<OcasiãoReceita | 'todas'>('todas');
@@ -22,6 +27,10 @@ export default function ReceitasClient() {
   const receitas = useMemo(
     () => filtrarReceitas({ texto, proteina, ocasiao }),
     [texto, proteina, ocasiao],
+  );
+  const favoritas = useMemo(
+    () => receitas.filter((r) => receitasFavoritas.includes(r.slug)),
+    [receitas, receitasFavoritas],
   );
 
   return (
@@ -115,6 +124,42 @@ export default function ReceitasClient() {
           </div>
         </section>
 
+        {/* Favoritas — só aparece quando há alguma. */}
+        {favoritas.length > 0 && (
+          <section className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Heart className="w-4 h-4 text-vermelho-risco fill-vermelho-risco" />
+              <span className="font-display font-bold uppercase text-sm">
+                Suas favoritas
+              </span>
+              <span className="ml-auto text-xs text-preto/60">
+                {favoritas.length}
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {favoritas.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/loja/receitas/${r.slug}`}
+                  className="shrink-0 w-44 bg-branco border border-cinza-claro rounded-xl p-3 hover:border-vermelho hover:shadow transition-all"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl">{r.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display font-bold uppercase text-xs leading-tight truncate">
+                        {r.nome}
+                      </div>
+                      <div className="text-[10px] text-preto/60">
+                        {r.tempoTotalMin} min
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Lista */}
         <section className="mt-4">
           <div className="text-xs text-preto/60 mb-2">
@@ -127,8 +172,28 @@ export default function ReceitasClient() {
               <li key={r.slug}>
                 <Link
                   href={`/loja/receitas/${r.slug}`}
-                  className="block bg-branco border border-cinza-claro rounded-2xl overflow-hidden hover:border-vermelho hover:shadow-md transition-all"
+                  className="relative block bg-branco border border-cinza-claro rounded-2xl overflow-hidden hover:border-vermelho hover:shadow-md transition-all"
                 >
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleFavorita(r.slug);
+                      const isFav = receitasFavoritas.includes(r.slug);
+                      toast.success(isFav ? 'Tirado dos favoritos' : 'Salvo nos favoritos!');
+                    }}
+                    className="absolute top-2 right-2 z-10 w-9 h-9 rounded-full bg-branco/90 grid place-items-center hover:bg-branco shadow"
+                    aria-label={receitasFavoritas.includes(r.slug) ? 'Tirar dos favoritos' : 'Salvar nos favoritos'}
+                  >
+                    <Heart
+                      className={cn(
+                        'w-4 h-4 transition-colors',
+                        receitasFavoritas.includes(r.slug)
+                          ? 'fill-vermelho-risco text-vermelho-risco'
+                          : 'text-preto/40',
+                      )}
+                    />
+                  </button>
                   <div className="aspect-[16/10] bg-gradient-to-br from-vermelho/15 to-amarelo/15 grid place-items-center text-6xl">
                     {r.emoji}
                   </div>

@@ -397,6 +397,39 @@ export function projecaoCashbackChurrasco(itens: ItemChurrasco[]): number {
   return round2(total);
 }
 
+// "Modo churrasco" visual: sexta 17h até domingo 23h. A UI pode
+// ativar gradiente quente, sticker animado, etc. Função pura pra
+// facilitar testes (passa uma data customizada).
+export function modoChurrascoAtivo(agora: Date = new Date()): boolean {
+  const dia = agora.getDay(); // 0=dom, 5=sex, 6=sab
+  const hora = agora.getHours();
+  if (dia === 5 && hora >= 17) return true;
+  if (dia === 6) return true; // sábado o dia todo
+  if (dia === 0 && hora < 23) return true; // domingo até 23h
+  return false;
+}
+
+// Resumo de uma linha pra ir no `observacaoGeral` do pedido (e no
+// cupom). Ex: "Planejador: 10 pessoas, tradicional · fome normal ·
+// 2kg carne". O açougueiro bate o olho e já sabe o que preparar.
+export function resumoPlanejadorCurto(args: {
+  adultos: number;
+  criancas: number;
+  estilo: EstiloChurrasco;
+  fome: NivelFome;
+  totalCarneKg: number;
+}): string {
+  const fomeLabel =
+    args.fome === 3
+      ? ''
+      : args.fome >= 4
+        ? ` · fome ${args.fome === 5 ? 'matador' : 'alta'}`
+        : args.fome <= 2
+          ? ` · fome ${args.fome === 1 ? 'leve' : 'moderada'}`
+          : '';
+  return `Churrasco p/ ${args.adultos} adultos + ${args.criancas} crianças · ${args.estilo}${fomeLabel} · ${args.totalCarneKg.toFixed(1).replace('.', ',')}kg carne`;
+}
+
 export const ESTILO_OPCOES: Array<{ id: EstiloChurrasco; titulo: string; descricao: string; emoji: string }> = (
   Object.entries(ESTILO_LABEL) as Array<[EstiloChurrasco, string]>
 ).map(([id, titulo]) => ({

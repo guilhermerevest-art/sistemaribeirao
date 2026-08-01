@@ -7,6 +7,7 @@ import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { useNoIndex } from '@/components/ui/use-no-index';
 import { brl, formatarTelefone, normalizarTelefone } from '@/lib/formato';
+import { consumirResumoPlanejador } from '@/lib/planejador-flags';
 import {
   ChevronLeft,
   ChevronRight,
@@ -51,6 +52,7 @@ export default function CheckoutPage() {
 
   const [telefone, setTelefone] = useState('');
   const [novoNome, setNovoNome] = useState('');
+  const [observacaoGeral, setObservacaoGeral] = useState('');
   const [retirada, setRetirada] = useState<Retirada>('balcao');
   const [endereco, setEndereco] = useState('');
   const [querUsarCashback, setQuerUsarCashback] = useState(false);
@@ -178,6 +180,14 @@ export default function CheckoutPage() {
         pontosUsados,
         descontoPontos,
         taxaEntrega,
+        observacaoGeral: [
+          observacaoGeral.trim() || undefined,
+          // Se o cliente veio do planejador de churrasco, prepend o
+          // resumo (aparece no cupom pra controle do açougueiro).
+          consumirResumoPlanejador() ?? undefined,
+        ]
+          .filter(Boolean)
+          .join(' | ') || undefined,
       });
       // Marca a indicação como convertida e credita o indicador.
       // Não bloqueia o fluxo se já estava convertida.
@@ -465,6 +475,17 @@ export default function CheckoutPage() {
                 </div>
               </label>
             )}
+
+            <div>
+              <div className="text-sm text-preto/60 mb-2">Alguma observação?</div>
+              <textarea
+                value={observacaoGeral}
+                onChange={(e) => setObservacaoGeral(e.target.value.slice(0, 200))}
+                placeholder="ex: sem cebola, entregar após as 19h, carne bem passada..."
+                rows={2}
+                className="w-full rounded-lg border border-cinza-claro px-3 py-2 text-sm focus:outline-none focus:border-vermelho"
+              />
+            </div>
 
             <div className="rounded-xl border border-cinza-claro bg-branco p-4">
               <div className="space-y-1.5 text-sm">

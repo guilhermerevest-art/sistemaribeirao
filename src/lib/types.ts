@@ -40,6 +40,11 @@ export interface ItemCarrinho {
   // não conhece combos — eles simplesmente não acham o produto e ignoram.
   // `pesoKg` vira "quantidade" de combos (sempre inteiro, unidade fixa).
   comboId?: string;
+  // Itens virtuais do planejador (bebidas, carvão). Não têm produto real
+  // — `produtoId` aponta pra um id virtual prefixado com `virtual:`.
+  // O carrinho exibe com badge, mas o cupom/cotação ignoram (peso=0).
+  virtual?: boolean;
+  virtualSlug?: 'bebidas';
 }
 
 export type StatusPedido =

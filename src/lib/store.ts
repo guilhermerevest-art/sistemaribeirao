@@ -61,7 +61,7 @@ import { marcarCriadoLocalmente } from './sync-flags';
 // para que o reload não apague o trabalho da demo.
 function snapshotFromState(s: State): SnapshotOffline {
   return {
-    _v: 3,
+    _v: 4,
     produtos: s.produtos,
     clientes: s.clientes,
     pedidos: s.pedidos,
@@ -70,6 +70,7 @@ function snapshotFromState(s: State): SnapshotOffline {
     combos: s.combos,
     campanhas: s.campanhas,
     indicacoes: s.indicacoes,
+    receitasFavoritas: s.receitasFavoritas,
     proximoPedido: s.proximoPedido,
     clienteAtualId: s.clienteAtualId,
     somBancada: s.somBancada,
@@ -255,6 +256,8 @@ interface State {
   campanhas: Campanha[];
   /** Indicações ativas. Persistido no snapshot e no Supabase (tabela indicacoes). */
   indicacoes: Indicacao[];
+  /** Slugs de receitas marcadas como favoritas. Persistido no snapshot. */
+  receitasFavoritas: string[];
   carrinho: CarrinhoState;
   clienteAtualId?: string;
   /** Código de indicação lido do `?ref=` da URL, válido só no checkout. */
@@ -325,6 +328,9 @@ interface Actions {
   converterIndicacaoSeAplicavel: (clienteId: string, pedidoId: string) => { indicadorId: string; valor: number } | null;
   recarregarIndicacoes: () => Promise<void>;
 
+  // Receitas favoritas — toggle simples que persiste no snapshot.
+  toggleFavoritaReceita: (slug: string) => void;
+
   // Clientes
   criarCliente: (c: Omit<Cliente, 'id' | 'criadoEm' | 'saldoCashback' | 'pontos' | 'pontosAcumuladoTotal'>) => Promise<Cliente>;
   atualizarCliente: (c: Cliente) => Promise<void>;
@@ -374,8 +380,9 @@ const initialState: State = {
   ofertas: [],
   resgates: [],
   combos: [],
-  campanhas: [],
   indicacoes: [],
+  receitasFavoritas: [],
+  campanhas: [],
   carrinho: { itens: [] },
   clienteAtualId: undefined,
   refIndicacaoPendente: undefined,
@@ -396,6 +403,7 @@ const seedFallback = (): SnapshotOffline => ({
   combos: [],
   campanhas: [],
   indicacoes: [],
+  receitasFavoritas: [],
   proximoPedido: 600,
   clienteAtualId: undefined,
   somBancada: true,
@@ -1325,6 +1333,18 @@ export const useStore = create<State & Actions>()((set, get) => ({
     if (!get().online) return;
     // Online: tabela indicacoes — sem RPC específica aqui, deixa só
     // como esqueleto pra quando o Supabase for plugado.
+  },
+
+  toggleFavoritaReceita: (slug) => {
+    set((st) => {
+      const tem = st.receitasFavoritas.includes(slug);
+      return {
+        receitasFavoritas: tem
+          ? st.receitasFavoritas.filter((s) => s !== slug)
+          : [...st.receitasFavoritas, slug],
+      };
+    });
+    if (!get().online) gravarSnapshotOffline(snapshotFromState(get()));
   },
 
   // ============================================================

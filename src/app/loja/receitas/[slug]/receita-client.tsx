@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
@@ -19,7 +19,12 @@ import {
   ChefHat,
   CheckCircle2,
   Circle,
+  Play,
+  Pause,
+  RotateCcw,
+  Heart,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const JSONLD_TYPE = 'application/ld+json';
 
@@ -28,8 +33,39 @@ export default function ReceitaClient({ receita }: { receita: Receita }) {
   const router = useRouter();
   const adicionarAoCarrinho = useStore((s) => s.adicionarAoCarrinho);
   const produtos = useStore((s) => s.produtos);
+  const receitasFavoritas = useStore((s) => s.receitasFavoritas);
+  const toggleFavorita = useStore((s) => s.toggleFavoritaReceita);
   const [pessoas, setPessoas] = useState(receita.porcoesBase);
   const [passoAtual, setPassoAtual] = useState(0);
+  const [timerRodando, setTimerRodando] = useState(false);
+  const [segundosDecorridos, setSegundosDecorridos] = useState(0);
+  const timerRef = useRef<number | null>(null);
+
+  // Tick do timer — incrementa a cada segundo enquanto roda.
+  useEffect(() => {
+    if (!timerRodando) return;
+    timerRef.current = window.setInterval(() => {
+      setSegundosDecorridos((s) => s + 1);
+    }, 1000);
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
+  }, [timerRodando]);
+
+  // Reseta o timer quando troca de passo.
+  useEffect(() => {
+    setSegundosDecorridos(0);
+    setTimerRodando(false);
+  }, [passoAtual]);
+
+  const formatHMS = (s: number) => {
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+  };
+
+  const passoAtualObj = receita.passos[passoAtual];
+  const passoDuracao = passoAtualObj.duracaoMin ?? 5;
 
   const compra = useMemo(
     () => calcularCompraReceita({ receita, pessoas }),
@@ -225,7 +261,33 @@ export default function ReceitaClient({ receita }: { receita: Receita }) {
             <span className="font-display font-bold uppercase text-sm">
               Modo de preparo
             </span>
-            <span className="ml-auto text-xs text-preto/60">
+            <button
+              onClick={() => {
+                toggleFavorita(receita.slug);
+                toast.success(
+                  receitasFavoritas.includes(receita.slug)
+                    ? 'Tirado dos favoritos'
+                    : 'Salvo nos favoritos!',
+                );
+              }}
+              className="ml-auto inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-preto/60 hover:text-vermelho"
+              aria-label={
+                receitasFavoritas.includes(receita.slug)
+                  ? 'Tirar dos favoritos'
+                  : 'Salvar nos favoritos'
+              }
+            >
+              <Heart
+                className={cn(
+                  'w-3.5 h-3.5',
+                  receitasFavoritas.includes(receita.slug)
+                    ? 'fill-vermelho-risco text-vermelho-risco'
+                    : 'text-preto/40',
+                )}
+              />
+              {receitasFavoritas.includes(receita.slug) ? 'Favorita' : 'Salvar'}
+            </button>
+            <span className="text-xs text-preto/60 ml-2">
               ~{receita.tempoTotalMin} min
             </span>
           </div>
@@ -264,6 +326,55 @@ export default function ReceitaClient({ receita }: { receita: Receita }) {
               );
             })}
           </ol>
+
+          {/* Timer do passo atual */}
+          <div
+            className={cn(
+              'mt-3 rounded-lg p-3 flex items-center gap-3',
+              timerRodando
+                ? 'bg-vermelho/5 border border-vermelho'
+                : 'bg-cinza-claro/40',
+            )}
+          >
+            <Clock className={cn('w-4 h-4', timerRodando ? 'text-vermelho animate-pulse' : 'text-preto/40')} />
+            <div className="flex-1">
+              <div className="font-mono font-extrabold text-2xl tabular-nums">
+                {formatHMS(segundosDecorridos)}
+              </div>
+              <div className="text-[10px] text-preto/60">
+                {timerRodando ? 'Cronometrando' : `Sugestão: ~${passoDuracao} min`}
+              </div>
+            </div>
+            {segundosDecorridos >= passoDuracao * 60 && !timerRodando && (
+              <span className="text-[10px] uppercase tracking-wider font-bold text-amarelo">
+                Tempo sugerido
+              </span>
+            )}
+            <button
+              onClick={() => setTimerRodando((v) => !v)}
+              aria-label={timerRodando ? 'Pausar timer' : 'Iniciar timer'}
+              className={cn(
+                'w-10 h-10 rounded-full grid place-items-center',
+                timerRodando
+                  ? 'bg-preto text-branco'
+                  : 'bg-vermelho text-branco',
+              )}
+            >
+              {timerRodando ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 translate-x-0.5" />}
+            </button>
+            <button
+              onClick={() => {
+                setTimerRodando(false);
+                setSegundosDecorridos(0);
+              }}
+              disabled={segundosDecorridos === 0}
+              className="w-10 h-10 rounded-full bg-cinza-claro grid place-items-center disabled:opacity-40"
+              aria-label="Zerar timer"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
+
           <div className="mt-3 flex items-center justify-between">
             <button
               onClick={() => setPassoAtual(Math.max(0, passoAtual - 1))}
