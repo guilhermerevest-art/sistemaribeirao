@@ -9,10 +9,16 @@ export default function HomePage() {
       <header className="bg-carvao text-papel p-6">
         <div className="mx-auto max-w-5xl flex items-center gap-3">
           <div className="w-12 h-12 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-2xl">R</div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="font-display font-extrabold text-2xl uppercase">Empório Ribeirão</div>
             <div className="text-papel/60 text-sm">Sistema de pedidos e fidelidade</div>
           </div>
+          <Link
+            href="/landing"
+            className="hidden sm:inline-flex h-10 px-4 rounded-md bg-amarelo text-preto font-bold uppercase text-sm items-center hover:bg-amarelo/90"
+          >
+            Landing pública
+          </Link>
         </div>
       </header>
 
