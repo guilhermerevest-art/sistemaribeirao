@@ -24,6 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${SITE_URL}/loja/receitas`,
+      lastModified: agora,
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    {
       url: `${SITE_URL}/loja/churrasco`,
       lastModified: agora,
       changeFrequency: 'monthly',
@@ -40,5 +46,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     }));
 
-  return [...estaticas, ...produtos];
+  // Import lazy pra evitar ciclo no build (sitemap → receitas → store).
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { RECEITAS } = require('@/lib/receitas') as typeof import('@/lib/receitas');
+  const receitas: MetadataRoute.Sitemap = RECEITAS.map((r) => ({
+    url: `${SITE_URL}/loja/receitas/${r.slug}`,
+    lastModified: agora,
+    changeFrequency: 'monthly' as const,
+    priority: 0.75,
+  }));
+
+  return [...estaticas, ...produtos, ...receitas];
 }

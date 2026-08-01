@@ -60,6 +60,13 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <CartaoAcesso
+            href="/loja/receitas"
+            icon={<ChefHat />}
+            titulo="Receitas com lista de compra"
+            descricao="Estrogonofe, costelinha, calabresa… Escolha a proteína e adicione tudo no carrinho."
+            tom="brasa"
+          />
+          <CartaoAcesso
             href="/loja/churrasco"
             icon={<ChefHat />}
             titulo="Planejar Churrasco"

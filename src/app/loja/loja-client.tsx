@@ -88,17 +88,40 @@ export default function LojaClient() {
           </div>
         </section>
 
+        {/* Banner: receitas */}
+        <Link
+          href="/loja/receitas"
+          className="mt-6 block rounded-2xl bg-vermelho text-branco p-4 sm:p-5 relative overflow-hidden hover:shadow-lg transition-shadow"
+        >
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-amarelo/30 rounded-full blur-3xl" aria-hidden />
+          <div className="relative flex items-center gap-4">
+            <div className="text-4xl sm:text-5xl">🍛</div>
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-branco text-vermelho text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5">
+                Novo · receitas
+              </div>
+              <div className="font-display font-extrabold uppercase text-lg sm:text-xl leading-tight mt-1">
+                Quero comer costelinha hoje
+              </div>
+              <div className="text-xs text-branco/85 mt-0.5">
+                Escolha a receita. Lista de compra pronta, 1 clique no carrinho.
+              </div>
+            </div>
+            <ArrowRight className="w-6 h-6 text-amarelo shrink-0" />
+          </div>
+        </Link>
+
         {/* Banner: planejador de churrasco */}
         <Link
           href="/loja/churrasco"
-          className="mt-6 block rounded-2xl bg-preto text-branco p-4 sm:p-5 relative overflow-hidden hover:shadow-lg transition-shadow"
+          className="mt-3 block rounded-2xl bg-preto text-branco p-4 sm:p-5 relative overflow-hidden hover:shadow-lg transition-shadow"
         >
           <div className="absolute -top-12 -right-12 w-40 h-40 bg-vermelho/30 rounded-full blur-3xl" aria-hidden />
           <div className="relative flex items-center gap-4">
             <div className="text-4xl sm:text-5xl">🥩</div>
             <div className="flex-1 min-w-0">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-amarelo text-preto text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5">
-                Novo
+                Churrasco
               </div>
               <div className="font-display font-extrabold uppercase text-lg sm:text-xl leading-tight mt-1">
                 Planeje seu churrasco

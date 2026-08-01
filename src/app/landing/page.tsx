@@ -16,7 +16,7 @@ import {
   Trash2,
   Gift,
   Cake,
-  Wand2,
+  BookOpen,
   Globe,
   Layers,
   Tag,
@@ -211,6 +211,13 @@ const FEATURES = [
     descricao:
       'Calculadora mobile: o cliente diz quantas pessoas vêm e o estilo. Devolve kg por carne (picanha, linguiça, frango, costelinha), carvão e preço. Um clique adiciona tudo ao carrinho.',
     pagina: '/loja/churrasco',
+  },
+  {
+    icon: BookOpen,
+    titulo: 'Receitas com lista de compra',
+    descricao:
+      '8 receitas brasileiras canônicas (estrogonofe, costelinha, picanha na manteiga...). Lista de compra calculada por porção, dividida em "do açougue" e "você tem em casa". Um clique adiciona tudo.',
+    pagina: '/loja/receitas',
   },
 ];
 
