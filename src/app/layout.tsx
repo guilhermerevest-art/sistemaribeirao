@@ -28,6 +28,11 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Empório Ribeirão',
   description: 'Sistema de pedidos e fidelidade — Empório Ribeirão',
+  // PWA manifest servido pelo route handler em /app/manifest.ts.
+  // O Next.js 16 expõe o arquivo em `/manifest.webmanifest`. Apontar
+  // direto pra esse caminho evita o redirect 307 que dispara erro
+  // de CORS no fetch.
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({
