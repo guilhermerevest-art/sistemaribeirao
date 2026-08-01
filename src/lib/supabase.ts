@@ -43,3 +43,12 @@ export function supabase(): Client {
 }
 
 let _warned = false;
+
+// Helper pra checar se o Supabase está configurado sem instanciar
+// o client. Usado pelo endpoint /status pra reportar saúde.
+export function hasSupabaseEnv(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+}
