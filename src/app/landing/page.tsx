@@ -22,6 +22,10 @@ import {
   ShoppingBag,
   ArrowRight,
   Check,
+  Repeat,
+  Compass,
+  Radio,
+  QrCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -124,6 +128,34 @@ const FEATURES = [
     descricao:
       'Clientes, pedidos, produtos, promoções, combos, resgates, configurações (pts→R$, loja aberta, dados do estabelecimento).',
     pagina: '/backoffice',
+  },
+  {
+    icon: Compass,
+    titulo: 'Tour guiado na primeira visita',
+    descricao:
+      'Overlay de 4 passos pra quem abre a home pela primeira vez: bancada, loja, painel, "em risco". Lembrado em localStorage.',
+    pagina: '/',
+  },
+  {
+    icon: Repeat,
+    titulo: 'Pedir de novo em 1 clique',
+    descricao:
+      'Card grande na home quando o cliente tem histórico. Um toque repete o último pedido com pesos e preparos originais.',
+    pagina: '/',
+  },
+  {
+    icon: QrCode,
+    titulo: 'Boas-vindas com QR Code',
+    descricao:
+      'Cliente novo vê modal com QR da loja pra salvar no celular. Aparece uma vez por cliente.',
+    pagina: '/loja/checkout',
+  },
+  {
+    icon: Radio,
+    titulo: 'Status do pedido ao vivo',
+    descricao:
+      'A página do pedido faz polling de 4 s e toca um acorde de "pronto" quando a bancada muda o status. Sem F5.',
+    pagina: '/loja/pedido/0501',
   },
 ];
 
@@ -244,7 +276,7 @@ function Hero() {
             <span className="text-amarelo">do balcão pro celular.</span>
           </h1>
           <p className="mt-5 text-lg text-branco/85 max-w-xl">
-            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tudo numa demo de 4 minutos.
+            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tour guiado na primeira visita, status ao vivo do pedido e repetir em 1 clique. Tudo numa demo de 4 minutos.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link
@@ -408,7 +440,7 @@ function PassoAPasso() {
         <div className="max-w-3xl">
           <span className="text-xs uppercase tracking-widest font-semibold text-vermelho">Como funciona</span>
           <h2 className="mt-2 font-display font-extrabold text-3xl sm:text-4xl uppercase tracking-tight leading-tight">
-            Quatro toques do cliente até o próximo pedido dele.
+            Quatro toques até virar cliente fiel.
           </h2>
         </div>
         <ol className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">

@@ -2,10 +2,40 @@
 
 import Link from 'next/link';
 import { Store, ChefHat, LayoutDashboard, ShoppingCart, Users, Tag, BarChart3 } from 'lucide-react';
+import { TourGuiado, TourReabrir } from '@/components/ui/tour-guiado';
+import { PedirDeNovoHome, EntrarComoCliente } from '@/components/ui/pedir-de-novo-home';
+import { BoasVindasCliente } from '@/components/ui/boas-vindas-cliente';
+import { useStore } from '@/lib/store';
+
+function PedirDeNovoHomeOuEntrar() {
+  const clienteAtualId = useStore((s) => s.clienteAtualId);
+  const cliente = useStore((s) => s.clientes.find((c) => c.id === clienteAtualId));
+  const temPedido = useStore((s) =>
+    cliente ? s.pedidos.some((p) => p.clienteId === cliente.id && p.status !== 'cancelado') : false,
+  );
+  if (cliente && temPedido) return <PedirDeNovoHome />;
+  return <EntrarComoCliente />;
+}
+
+// Boas-vindas só pra cliente novo (criado há < 60s).
+function ClienteNovo() {
+  const clienteAtualId = useStore((s) => s.clienteAtualId);
+  const cliente = useStore((s) => s.clientes.find((c) => c.id === clienteAtualId));
+  if (!cliente) return null;
+  return (
+    <BoasVindasCliente
+      clienteId={cliente.id}
+      criadoEm={cliente.criadoEm}
+      nome={cliente.nome}
+    />
+  );
+}
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-papel">
+      <TourGuiado />
+      <ClienteNovo />
       <header className="bg-carvao text-papel p-6">
         <div className="mx-auto max-w-5xl flex items-center gap-3">
           <div className="w-12 h-12 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-2xl">R</div>
@@ -21,6 +51,8 @@ export default function HomePage() {
           </Link>
         </div>
       </header>
+
+      <PedirDeNovoHomeOuEntrar />
 
       <section className="mx-auto max-w-5xl px-4 py-8">
         <div className="font-display font-extrabold text-2xl uppercase mb-1">Acessos rápidos</div>
@@ -72,8 +104,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-5xl px-4 pb-8 text-xs text-carvao/50 text-center">
-        Mock navegável para demonstração. Dados persistidos em localStorage.
+      <footer className="mx-auto max-w-5xl px-4 pb-8 text-xs text-carvao/50 text-center space-x-2">
+        <span>Mock navegável para demonstração. Dados persistidos em localStorage.</span>
+        <span>·</span>
+        <TourReabrir />
       </footer>
     </main>
   );

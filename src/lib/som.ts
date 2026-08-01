@@ -41,3 +41,29 @@ export function tocarBipNovoPedido() {
   osc.start(agora);
   osc.stop(agora + 0.3);
 }
+
+// Bipe "ficou pronto" — mais alto, mais longo, dois tons (acorde
+// curto) pra ser inconfundível na cozinha cheia.
+export function tocarBipPronto() {
+  const ctx = pegarCtx();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') void ctx.resume();
+  const agora = ctx.currentTime;
+  const tons: Array<[number, number]> = [
+    [660, 0],
+    [880, 0.16],
+  ];
+  for (const [freq, offset] of tons) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, agora + offset);
+    gain.gain.setValueAtTime(0, agora + offset);
+    gain.gain.linearRampToValueAtTime(0.22, agora + offset + 0.01);
+    gain.gain.linearRampToValueAtTime(0.22, agora + offset + 0.13);
+    gain.gain.linearRampToValueAtTime(0, agora + offset + 0.2);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(agora + offset);
+    osc.stop(agora + offset + 0.25);
+  }
+}

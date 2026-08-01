@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
@@ -10,6 +10,7 @@ import { brl, formatarData, formatarHora, formatarPeso } from '@/lib/formato';
 import { CheckCircle2, MessageCircle, Truck, Store, Repeat } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/components/ui/use-no-index';
+import { tocarBipPronto } from '@/lib/som';
 
 export default function ConfirmacaoPage() {
   useNoIndex();
@@ -20,6 +21,33 @@ export default function ConfirmacaoPage() {
   const produtos = useStore((s) => s.produtos);
   const combos = useStore((s) => s.combos);
   const clonarItens = useStore((s) => s.clonarItensParaCarrinho);
+  const recarregarPedidos = useStore((s) => s.recarregarPedidos);
+  const recarregarClientes = useStore((s) => s.recarregarClientes);
+
+  // Polling leve: enquanto o pedido não estiver "entregue" ou "cancelado",
+  // busca dados novos a cada 4 s. Em modo offline (sem Supabase), o
+  // recarregarPedidos é no-op, mas mantemos a página atualizada via
+  // sync entre abas (useSyncEntreAbas já trata isso).
+  useEffect(() => {
+    if (!pedido) return;
+    if (pedido.status === 'entregue' || pedido.status === 'cancelado') return;
+    const id = window.setInterval(() => {
+      void recarregarPedidos();
+      void recarregarClientes();
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [pedido, recarregarPedidos, recarregarClientes]);
+
+  // Bipe quando o pedido passa pra "Pronto". Guardamos o último status
+  // visto em ref pra não tocar em re-render do mesmo status.
+  const statusAnteriorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!pedido) return;
+    if (statusAnteriorRef.current && statusAnteriorRef.current !== pedido.status && pedido.status === 'pronto') {
+      tocarBipPronto();
+    }
+    statusAnteriorRef.current = pedido.status;
+  }, [pedido]);
 
   useEffect(() => {
     if (!pedido) router.push('/loja');
@@ -52,7 +80,18 @@ export default function ConfirmacaoPage() {
         </div>
 
         <section className="mt-6 bg-branco border border-cinza-claro rounded-xl p-4">
-          <div className="font-display font-bold uppercase text-sm mb-3">Status</div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="font-display font-bold uppercase text-sm">Status</div>
+            {pedido.status !== 'entregue' && pedido.status !== 'cancelado' && (
+              <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-verde-fiel">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 rounded-full bg-verde-fiel animate-ping opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-verde-fiel" />
+                </span>
+                Ao vivo
+              </span>
+            )}
+          </div>
           <ol className="space-y-2">
             {(['Recebido', 'Preparando', 'Pronto', 'Entregue'] as const).map((label, i) => {
               const ativo = i <= idxAtual;
@@ -60,7 +99,7 @@ export default function ConfirmacaoPage() {
               return (
                 <li key={label} className="flex items-center gap-3">
                   <span
-                    className={`w-7 h-7 rounded-full grid place-items-center text-xs font-bold ${
+                    className={`w-7 h-7 rounded-full grid place-items-center text-xs font-bold transition-colors ${
                       ativo ? 'bg-vermelho text-branco' : 'bg-cinza-claro text-preto/60'
                     }`}
                   >
