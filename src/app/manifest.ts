@@ -38,9 +38,10 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     lang: 'pt-BR',
     categories: ['food', 'shopping'],
-    // `id` precisa ser same-origin. O Chrome recusa com warning
-    // "property 'id' ignored, should be same origin as document".
-    // Usamos só o path pra evitar isso.
-    id: '/',
+    // `id` precisa ser URL absoluta same-origin com o documento, ou
+    // simplesmente omitido. O Chrome ignora com warning
+    // "property 'id' ignored, should be same origin as document"
+    // quando recebe só um path. Usamos a URL completa.
+    id: `${SITE_URL}/`,
   };
 }
