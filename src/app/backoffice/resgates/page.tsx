@@ -9,7 +9,9 @@ import { toast } from 'sonner';
 import type { Resgate } from '@/lib/types';
 import { ImagemProduto } from '@/components/ui/imagem-produto';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function BackofficeResgatesPage() {
+  useNoIndex();
   const resgates = useStore((s) => s.resgates);
   const criar = useStore((s) => s.criarResgate);
   const atualizar = useStore((s) => s.atualizarResgate);

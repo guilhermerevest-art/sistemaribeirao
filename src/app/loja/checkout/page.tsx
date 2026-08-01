@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
+import { useNoIndex } from '@/components/ui/use-no-index';
 import { brl, formatarTelefone, normalizarTelefone } from '@/lib/formato';
 import {
   ChevronLeft,
@@ -28,6 +29,7 @@ type Retirada = 'balcao' | 'entrega';
 type Pagamento = 'pix' | 'cartao_entrega' | 'dinheiro';
 
 export default function CheckoutPage() {
+  useNoIndex();
   const router = useRouter();
   const itens = useStore((s) => s.carrinho.itens);
   const produtos = useStore((s) => s.produtos);

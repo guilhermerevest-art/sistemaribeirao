@@ -24,6 +24,7 @@ import { Download } from 'lucide-react';
 import type { Nivel, Pedido } from '@/lib/types';
 import { infoFrequencia } from '@/lib/frequencia';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 type Periodo = 'dia' | 'semana' | 'mes';
 
 const CORES_NIVEL: Record<Nivel, string> = {
@@ -95,6 +96,7 @@ function agregarVendas(pedidos: Pedido[], periodo: Periodo): { label: string; va
 }
 
 export default function RelatoriosPage() {
+  useNoIndex();
   const pedidos = useStore((s) => s.pedidos);
   const clientes = useStore((s) => s.clientes);
   const produtos = useStore((s) => s.produtos);

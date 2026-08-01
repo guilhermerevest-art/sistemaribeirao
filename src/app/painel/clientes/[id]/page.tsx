@@ -7,8 +7,10 @@ import { brl, cashbackExpiraEmBreve, formatarData, formatarHora, formatarTelefon
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, MessageCircle, AlertTriangle, Repeat } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNoIndex } from '@/components/ui/use-no-index';
 
 export default function ClienteDetalhePage() {
+  useNoIndex();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const cliente = useStore((s) => s.clientes.find((c) => c.id === params.id));

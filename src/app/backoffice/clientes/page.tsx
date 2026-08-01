@@ -10,7 +10,9 @@ import { toast } from 'sonner';
 import { confirmar } from '@/lib/confirmar';
 import type { Cliente } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function BackofficeClientesPage() {
+  useNoIndex();
   const clientes = useStore((s) => s.clientes);
   const pedidos = useStore((s) => s.pedidos);
   const criar = useStore((s) => s.criarCliente);

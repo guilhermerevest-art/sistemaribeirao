@@ -8,6 +8,7 @@ import { Plus, Save, Trash2, Power, PowerOff } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Estabelecimento } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 interface Faixa {
   pontos: number;
   reais: number;
@@ -20,6 +21,7 @@ function mapaParaFaixas(mapa: Record<string, number>): Faixa[] {
 }
 
 export default function BackofficeConfiguracoesPage() {
+  useNoIndex();
   const ptsParaReais = useStore((s) => s.ptsParaReais);
   const setPontosParaReais = useStore((s) => s.setPontosParaReais);
   const estabelecimento = useStore((s) => s.estabelecimento);

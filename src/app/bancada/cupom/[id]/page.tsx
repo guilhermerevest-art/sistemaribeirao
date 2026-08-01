@@ -7,8 +7,10 @@ import { brl, formatarData, formatarTelefone } from '@/lib/formato';
 import { Button } from '@/components/ui/button';
 import { Printer, ChevronLeft } from 'lucide-react';
 import { nivelPorPontos } from '@/lib/regras';
+import { useNoIndex } from '@/components/ui/use-no-index';
 
 export default function CupomPage() {
+  useNoIndex();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const pedido = useStore((s) => s.pedidos.find((p) => p.id === params.id));

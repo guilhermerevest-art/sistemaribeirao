@@ -9,7 +9,9 @@ import { AdminHeader } from '@/components/ui/admin-header';
 import { toast } from 'sonner';
 import { confirmar } from '@/lib/confirmar';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function BackofficePage() {
+  useNoIndex();
   const pedidos = useStore((s) => s.pedidos);
   const clientes = useStore((s) => s.clientes);
   const ofertas = useStore((s) => s.ofertas);

@@ -9,6 +9,7 @@ import { Plus, X, Save, Power, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Combo, ItemCombo } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 function slugify(nome: string): string {
   const semAcentos = nome
     .normalize('NFD')
@@ -27,6 +28,7 @@ function slugify(nome: string): string {
 }
 
 export default function BackofficeCombosPage() {
+  useNoIndex();
   const combos = useStore((s) => s.combos);
   const produtos = useStore((s) => s.produtos);
   const criar = useStore((s) => s.criarCombo);

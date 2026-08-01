@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import type { Campanha, Cliente, Pedido, PublicoAlvo } from '@/lib/types';
 import { infoFrequencia } from '@/lib/frequencia';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 const PUBLICO_LABEL: Record<PublicoAlvo, string> = {
   novo: 'Novos',
   fiel: 'Fiéis',
@@ -37,6 +38,7 @@ function resolverMensagem(template: string, c: Cliente, dias: number): string {
 }
 
 export default function CampanhasPage() {
+  useNoIndex();
   const clientes = useStore((s) => s.clientes);
   const pedidos = useStore((s) => s.pedidos);
   const campanhas = useStore((s) => s.campanhas);

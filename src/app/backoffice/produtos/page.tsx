@@ -9,7 +9,9 @@ import { Search, Save, X, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { CATEGORIAS, CASHBACK_POR_CATEGORIA, type Produto } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function BackofficeProdutosPage() {
+  useNoIndex();
   const produtos = useStore((s) => s.produtos);
   const atualizar = useStore((s) => s.atualizarProduto);
 

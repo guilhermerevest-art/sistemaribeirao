@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { confirmar } from '@/lib/confirmar';
 import type { Pedido, StatusPedido } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 const STATUS_LABEL: Record<StatusPedido, string> = {
   novo: 'Recebido',
   preparando: 'Preparando',
@@ -27,6 +28,7 @@ const STATUS_BADGE: Record<StatusPedido, string> = {
 };
 
 export default function BackofficePedidosPage() {
+  useNoIndex();
   const pedidos = useStore((s) => s.pedidos);
   const clientes = useStore((s) => s.clientes);
   const produtos = useStore((s) => s.produtos);

@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { brl, formatarHora, formatarTelefone } from '@/lib/formato';
 import type { Pedido, StatusPedido } from '@/lib/types';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 function idadeMinutos(p: Pedido): number {
   return Math.floor((Date.now() - new Date(p.criadoEm).getTime()) / 60000);
 }
 
 export default function BancadaPage() {
+  useNoIndex();
   useSyncEntreAbas();
   useAutoAvanco();
 

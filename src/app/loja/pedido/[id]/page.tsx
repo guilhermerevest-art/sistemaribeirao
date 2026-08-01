@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { brl, formatarData, formatarHora, formatarPeso } from '@/lib/formato';
 import { CheckCircle2, MessageCircle, Truck, Store, Repeat } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNoIndex } from '@/components/ui/use-no-index';
 
 export default function ConfirmacaoPage() {
+  useNoIndex();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const pedido = useStore((s) => s.pedidos.find((p) => p.id === params.id));

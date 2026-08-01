@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { HeaderLoja } from '@/components/loja/header';
 import { Button } from '@/components/ui/button';
+import { useNoIndex } from '@/components/ui/use-no-index';
 import { ChevronLeft, Trash2, ChefHat, Minus, Plus } from 'lucide-react';
 import { brl } from '@/lib/formato';
 import { CASHBACK_POR_CATEGORIA } from '@/lib/types';
@@ -37,6 +38,7 @@ function sugerirParaItens(categorias: Set<string>): Sugestao[] {
 }
 
 export default function CarrinhoPage() {
+  useNoIndex();
   const itens = useStore((s) => s.carrinho.itens);
   const produtos = useStore((s) => s.produtos);
   const combos = useStore((s) => s.combos);

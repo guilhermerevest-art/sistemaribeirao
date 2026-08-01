@@ -12,7 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { nivelPorPontos } from '@/lib/regras';
 import { toast } from 'sonner';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 export default function MinhaContaPage() {
+  useNoIndex();
   const router = useRouter();
   const clienteAtualId = useStore((s) => s.clienteAtualId);
   const cliente = useStore((s) => s.clientes.find((c) => c.id === clienteAtualId));

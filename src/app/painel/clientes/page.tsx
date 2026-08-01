@@ -11,6 +11,7 @@ import { MessageCircle, ChevronLeft, AlertTriangle } from 'lucide-react';
 import type { Cliente, Frequencia } from '@/lib/types';
 import { infoFrequencia } from '@/lib/frequencia';
 
+import { useNoIndex } from '@/components/ui/use-no-index';
 const GRUPO_LABEL: Record<Frequencia, string> = {
   novo: 'Novo',
   fiel: 'Fiel',
@@ -27,6 +28,7 @@ const GRUPO_TONE: Record<Frequencia, 'amarelo' | 'verde' | 'sebo' | 'brasa' | 's
 };
 
 export default function ClientesPage() {
+  useNoIndex();
   return (
     <Suspense fallback={<div className="p-8">Carregando...</div>}>
       <ClientesInner />
