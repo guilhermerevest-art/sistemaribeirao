@@ -137,3 +137,54 @@ export function linkWhatsAppReativacao(args: {
   const tel = args.telefone.replace(/\D/g, '');
   return `https://wa.me/55${tel}?text=${msg}`;
 }
+
+// Mensagem de confirmação de pedido que o cliente envia pro açougue
+// (ou que a loja dispara via API quando subir o WhatsApp Business).
+// Inclui número do pedido, resumo curto dos itens, total e forma de
+// pagamento pra registro.
+export function linkWhatsAppConfirmacaoPedido(args: {
+  telefoneEstabelecimento: string;
+  numeroPedido: string;
+  nomeCliente: string;
+  itensDescricao: string; // ex: "2kg Picanha, 1kg Linguiça"
+  total: number;
+  retirada: 'balcao' | 'entrega';
+  pagamento: 'pix' | 'cartao_entrega' | 'dinheiro';
+  trocoPara?: number;
+}): string {
+  const forma = (() => {
+    if (args.pagamento === 'pix') return 'Pix';
+    if (args.pagamento === 'cartao_entrega') return 'Cartão na entrega';
+    if (args.trocoPara && args.trocoPara > args.total) return `Dinheiro (troco pra ${brl(args.trocoPara)})`;
+    return 'Dinheiro';
+  })();
+  const entrega = args.retirada === 'entrega' ? 'entrega' : 'retirada no balcão';
+  const msg =
+    `Oi! Acabei de fazer o pedido *#${args.numeroPedido}* pelo app do Empório Ribeirão.\n\n` +
+    `*Cliente:* ${args.nomeCliente}\n` +
+    `*Itens:* ${args.itensDescricao}\n` +
+    `*Total:* ${brl(args.total)}\n` +
+    `*Pagamento:* ${forma}\n` +
+    `*${entrega.charAt(0).toUpperCase()}${entrega.slice(1)}*`;
+  const tel = args.telefoneEstabelecimento.replace(/\D/g, '');
+  return `https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`;
+}
+
+// Helper pra montar o resumo curto dos itens do pedido pro WhatsApp
+// ("2kg Picanha, 1kg Linguiça"). Limita a ~3 itens pra mensagem
+// não ficar gigante; o resto entra como "+N itens".
+export function resumoItensParaWhatsApp(args: {
+  itens: Array<{
+    pesoKg: number;
+    produtoNome?: string;
+    comboNome?: string;
+    quantidade?: number;
+  }>;
+}): string {
+  const partes = args.itens.slice(0, 3).map((it) => {
+    if (it.comboNome) return `${it.quantidade ?? 1}x Combo ${it.comboNome}`;
+    return `${it.pesoKg.toFixed(2).replace('.', ',')}kg ${it.produtoNome ?? 'Item'}`;
+  });
+  if (args.itens.length > 3) partes.push(`+${args.itens.length - 3} itens`);
+  return partes.join(', ');
+}

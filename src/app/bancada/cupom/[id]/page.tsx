@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, ChevronLeft } from 'lucide-react';
 import { nivelPorPontos } from '@/lib/regras';
 import { useNoIndex } from '@/components/ui/use-no-index';
+import { tocarBipImpressao } from '@/lib/som';
 
 export default function CupomPage() {
   useNoIndex();
@@ -38,7 +39,12 @@ export default function CupomPage() {
     const avisarPai = () => {
       window.parent?.postMessage({ tipo: 'ribeirao-cupom-impresso', pedidoId: pedido.id }, '*');
     };
-    window.onafterprint = avisarPai;
+    // onafterprint roda quando o diálogo fecha (ou a impressão termina).
+    // Aproveitamos pra tocar o bip de confirmação.
+    window.onafterprint = () => {
+      tocarBipImpressao();
+      avisarPai();
+    };
     // Pequeno atraso pra garantir que o layout terminou de pintar.
     const t = setTimeout(() => window.print(), 350);
     return () => clearTimeout(t);
@@ -96,6 +102,8 @@ export default function CupomPage() {
     if (jaImpresso.current) return;
     jaImpresso.current = true;
     void marcarImpresso(pedido.id);
+    // Bipe de confirmação quando a impressora cuspir o cupom.
+    window.onafterprint = () => tocarBipImpressao();
     window.print();
   };
 

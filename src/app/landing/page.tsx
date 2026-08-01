@@ -10,6 +10,10 @@ import {
   Users,
   Bell,
   BarChart3,
+  Send,
+  Volume2,
+  Hand,
+  Trash2,
   Wand2,
   Globe,
   Layers,
@@ -157,6 +161,34 @@ const FEATURES = [
       'A página do pedido faz polling de 4 s e toca um acorde de "pronto" quando a bancada muda o status. Sem F5.',
     pagina: '/loja/pedido/0501',
   },
+  {
+    icon: Send,
+    titulo: 'Enviar pedido pelo WhatsApp',
+    descricao:
+      'Resumo do pedido com cliente, itens, total, forma de pagamento e retirada. Abre wa.me pronto pra mandar pro açougue.',
+    pagina: '/loja/pedido/0501',
+  },
+  {
+    icon: Volume2,
+    titulo: 'Bip de impressão confirmada',
+    descricao:
+      'Sweep ascendente 400→1200 Hz toca quando a impressora termina o cupom. Confirma que saiu papel sem precisar olhar.',
+    pagina: '/bancada/cupom/0501',
+  },
+  {
+    icon: Hand,
+    titulo: 'Swipe pra remover do carrinho',
+    descricao:
+      'No celular, arrastar o item pra esquerda > 80 px remove. Fundo vermelho com ícone de lixeira durante o arrasto.',
+    pagina: '/loja/carrinho',
+  },
+  {
+    icon: Truck,
+    titulo: 'Frete grátis a partir de R$ 150',
+    descricao:
+      'Banner no carrinho mostra "faltam R$ X" com barra de progresso, fica amarelo quando falta pouco e verde quando bate.',
+    pagina: '/loja/carrinho',
+  },
 ];
 
 const PASSOS = [
@@ -276,7 +308,7 @@ function Hero() {
             <span className="text-amarelo">do balcão pro celular.</span>
           </h1>
           <p className="mt-5 text-lg text-branco/85 max-w-xl">
-            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tour guiado na primeira visita, status ao vivo do pedido e repetir em 1 clique. Tudo numa demo de 4 minutos.
+            Vitrine mobile, pedido com cashback, cupom impresso na bancada e painel do dono com a lista de quem não volta há um mês. Tour guiado, status ao vivo, repetir em 1 clique, frete grátis com barra de progresso, resumo pelo WhatsApp e bip de impressão confirmada. Tudo numa demo de 4 minutos.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link

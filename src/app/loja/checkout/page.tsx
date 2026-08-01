@@ -149,6 +149,9 @@ export default function CheckoutPage() {
         taxaEntrega,
       });
       router.push(`/loja/pedido/${pedido.id}`);
+      toast.success('Pedido na fila! Quer mandar o resumo pro açougue?', {
+        duration: 8000,
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erro ao enviar pedido');
       setEnviando(false);

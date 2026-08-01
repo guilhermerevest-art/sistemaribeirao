@@ -148,6 +148,15 @@ export function calcularMaximoUsoCashback(subtotal: number, saldo: number): numb
   return maximo >= 5 ? round2(maximo) : 0;
 }
 
+// Constantes da regra de frete (espelham o checkout).
+export const FRETE_GRATIS_ACIMA_DE = 150;
+export const TAXA_ENTREGA = 8;
+
+// Quanto falta pra liberar o frete grátis. Retorna 0 se já passou.
+export function faltaParaFreteGratis(subtotal: number): number {
+  return Math.max(0, round2(FRETE_GRATIS_ACIMA_DE - subtotal));
+}
+
 // Acha a faixa da tabela pontos->R$ que dá o maior desconto que o
 // cliente consegue pagar (tem pontos suficientes) e que cabe dentro do
 // limite de reais disponível (ex: 30% do subtotal, já descontado o
