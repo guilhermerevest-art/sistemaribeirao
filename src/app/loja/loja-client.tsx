@@ -88,6 +88,29 @@ export default function LojaClient() {
           </div>
         </section>
 
+        {/* Banner: planejador de churrasco */}
+        <Link
+          href="/loja/churrasco"
+          className="mt-6 block rounded-2xl bg-preto text-branco p-4 sm:p-5 relative overflow-hidden hover:shadow-lg transition-shadow"
+        >
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-vermelho/30 rounded-full blur-3xl" aria-hidden />
+          <div className="relative flex items-center gap-4">
+            <div className="text-4xl sm:text-5xl">🥩</div>
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-amarelo text-preto text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5">
+                Novo
+              </div>
+              <div className="font-display font-extrabold uppercase text-lg sm:text-xl leading-tight mt-1">
+                Planeje seu churrasco
+              </div>
+              <div className="text-xs text-branco/75 mt-0.5">
+                Me diz quantas pessoas vêm. Eu calculo kg, peças e preço.
+              </div>
+            </div>
+            <ArrowRight className="w-6 h-6 text-amarelo shrink-0" />
+          </div>
+        </Link>
+
         {combos.filter((c) => c.ativo).length > 0 && (
           <section className="mt-6">
             <div className="flex items-center gap-2 mb-3">
