@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { Store, ChefHat, LayoutDashboard, ShoppingCart, Users, Tag, BarChart3 } from 'lucide-react';
 import { TourGuiado, TourReabrir } from '@/components/ui/tour-guiado';
-import { PedirDeNovoHome, EntrarComoCliente } from '@/components/ui/pedir-de-novo-home';
 import { BoasVindasCliente } from '@/components/ui/boas-vindas-cliente';
+import { PedirDeNovoHome, EntrarComoCliente } from '@/components/ui/pedir-de-novo-home';
 import { useStore } from '@/lib/store';
+import LojaVitrine from '@/components/loja/loja-client-shared';
 
 function PedirDeNovoHomeOuEntrar() {
   const clienteAtualId = useStore((s) => s.clienteAtualId);
@@ -31,133 +30,22 @@ function ClienteNovo() {
   );
 }
 
+// A home agora é a vitrine diretamente. Tour, Pedir-de-novo e
+// Boas-vindas ficam como overlays por cima. Os "Acessos rápidos"
+// eram uma página administrativa — agora estão em /backoffice e
+// /painel, onde fazem sentido.
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-papel">
+    <>
       <TourGuiado />
       <ClienteNovo />
-      <header className="bg-carvao text-papel p-6">
-        <div className="mx-auto max-w-5xl flex items-center gap-3">
-          <div className="w-12 h-12 rounded-md bg-sangue grid place-items-center font-display font-extrabold text-2xl">R</div>
-          <div className="flex-1 min-w-0">
-            <div className="font-display font-extrabold text-2xl uppercase">Empório Ribeirão</div>
-            <div className="text-papel/60 text-sm">Sistema de pedidos e fidelidade</div>
-          </div>
-          <Link
-            href="/landing"
-            className="hidden sm:inline-flex h-10 px-4 rounded-md bg-amarelo text-preto font-bold uppercase text-sm items-center hover:bg-amarelo/90"
-          >
-            Landing pública
-          </Link>
-        </div>
-      </header>
-
+      <LojaVitrine />
       <PedirDeNovoHomeOuEntrar />
-
-      <section className="mx-auto max-w-5xl px-4 py-8">
-        <div className="font-display font-extrabold text-2xl uppercase mb-1">Acessos rápidos</div>
-        <p className="text-sm text-carvao/70 mb-6">Cada área é uma porta separada. Use o link certo para cada tela.</p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <CartaoAcesso
-            href="/loja/receitas"
-            icon={<ChefHat />}
-            titulo="Receitas com lista de compra"
-            descricao="Estrogonofe, costelinha, calabresa… Escolha a proteína e adicione tudo no carrinho."
-            tom="brasa"
-          />
-          <CartaoAcesso
-            href="/loja/churrasco"
-            icon={<ChefHat />}
-            titulo="Planejar Churrasco"
-            descricao="Calculadora: quantas pessoas, kg de carne, peças e preço. Adiciona tudo no carrinho."
-            tom="brasa"
-          />
-          <CartaoAcesso
-            href="/loja"
-            icon={<Store />}
-            titulo="Loja / Cardápio"
-            descricao="Vitrine, carrinho e checkout para o cliente."
-            tom="sangue"
-          />
-          <CartaoAcesso
-            href="/cozinha"
-            icon={<ChefHat />}
-            titulo="Cozinha"
-            descricao="Pedidos em preparo, fila com timer e botão de pronto."
-            tom="brasa"
-          />
-          <CartaoAcesso
-            href="/bancada"
-            icon={<ShoppingCart />}
-            titulo="Bancada / KDS"
-            descricao="Fila de pedidos no balcão, impressão de cupom."
-            tom="carvao"
-          />
-          <CartaoAcesso
-            href="/painel"
-            icon={<BarChart3 />}
-            titulo="Painel do Dono"
-            descricao="KPIs do dia, frequência dos clientes, WhatsApp."
-            tom="carvao"
-          />
-          <CartaoAcesso
-            href="/minha-conta"
-            icon={<Users />}
-            titulo="Minha Conta"
-            descricao="Espaço do cliente identificado."
-            tom="carvao"
-          />
-          <CartaoAcesso
-            href="/backoffice"
-            icon={<LayoutDashboard />}
-            titulo="Backoffice"
-            descricao="Cadastros, gestão de pedidos e promoções. Para uso interno."
-            tom="sangue"
-          />
-        </div>
-      </section>
-
       <footer className="mx-auto max-w-5xl px-4 pb-8 text-xs text-carvao/50 text-center space-x-2">
         <span>Mock navegável para demonstração. Dados persistidos em localStorage.</span>
         <span>·</span>
         <TourReabrir />
       </footer>
-    </main>
-  );
-}
-
-function CartaoAcesso({
-  href,
-  icon,
-  titulo,
-  descricao,
-  tom,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  titulo: string;
-  descricao: string;
-  tom: 'sangue' | 'carvao' | 'brasa';
-}) {
-  const tomClass: Record<typeof tom, string> = {
-    sangue: 'bg-sangue',
-    brasa: 'bg-brasa',
-    carvao: 'bg-carvao',
-  };
-  return (
-    <Link
-      href={href}
-      className="group bg-azulejo border border-sebo rounded-xl p-5 hover:shadow-md transition-shadow flex flex-col gap-3"
-    >
-      <div className={`w-12 h-12 rounded-md ${tomClass[tom]} text-papel grid place-items-center`}>
-        {icon}
-      </div>
-      <div>
-        <div className="font-display font-extrabold uppercase text-lg">{titulo}</div>
-        <div className="text-sm text-carvao/70 mt-1">{descricao}</div>
-      </div>
-      <div className="text-xs text-brasa font-semibold mt-auto">Entrar →</div>
-    </Link>
+    </>
   );
 }
