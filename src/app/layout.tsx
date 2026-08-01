@@ -107,7 +107,7 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.svg',
   },
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest',
   category: 'food',
 };
 
