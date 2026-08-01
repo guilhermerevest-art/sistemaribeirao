@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Inter_Tight, JetBrains_Mono } from 'next/font/goog
 import './globals.css';
 import { Toaster } from 'sonner';
 import { Hydrate } from '@/components/ui/hydrate';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 const display = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -168,7 +169,9 @@ export default function RootLayout({
           // JSON.stringify com escape pra evitar injection no payload.
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ldJson).replace(/</g, '\\u003c') }}
         />
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
         <Hydrate />
         <Toaster richColors position="top-center" />
       </body>
