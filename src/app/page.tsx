@@ -1,6 +1,5 @@
 'use client';
 
-import { TourGuiado, TourReabrir } from '@/components/ui/tour-guiado';
 import { BoasVindasCliente } from '@/components/ui/boas-vindas-cliente';
 import { PedirDeNovoHome, EntrarComoCliente } from '@/components/ui/pedir-de-novo-home';
 import { useStore } from '@/lib/store';
@@ -30,22 +29,16 @@ function ClienteNovo() {
   );
 }
 
-// A home agora é a vitrine diretamente. Tour, Pedir-de-novo e
-// Boas-vindas ficam como overlays por cima. Os "Acessos rápidos"
-// eram uma página administrativa — agora estão em /backoffice e
-// /painel, onde fazem sentido.
+// A home agora é a vitrine diretamente. Boas-vindas e
+// Pedir-de-novo ficam como overlays. O Tour foi removido
+// temporariamente da home porque disparava React #185
+// (ver commit de fix subsequente).
 export default function HomePage() {
   return (
     <>
-      <TourGuiado />
       <ClienteNovo />
       <LojaVitrine />
       <PedirDeNovoHomeOuEntrar />
-      <footer className="mx-auto max-w-5xl px-4 pb-8 text-xs text-carvao/50 text-center space-x-2">
-        <span>Mock navegável para demonstração. Dados persistidos em localStorage.</span>
-        <span>·</span>
-        <TourReabrir />
-      </footer>
     </>
   );
 }
