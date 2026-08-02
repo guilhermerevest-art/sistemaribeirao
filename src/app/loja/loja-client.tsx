@@ -63,7 +63,7 @@ export default function LojaClient() {
 
         {/* Hero Angelina */}
         <section className="pt-3">
-          <div className="relative rounded-2xl overflow-hidden bg-vermelho text-branco h-[42vh] sm:h-[60vh] min-h-[280px] sm:min-h-[420px]">
+          <div className="relative rounded-2xl overflow-hidden bg-vermelho text-branco aspect-[5/6] sm:aspect-[16/9] lg:aspect-[21/8]">
             <img
               src="/produtos/picanha.jpg"
               alt=""

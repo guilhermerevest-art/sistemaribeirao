@@ -7,6 +7,7 @@ import { brl } from '@/lib/formato';
 import { Clock, Zap } from 'lucide-react';
 import type { Oferta } from '@/lib/types';
 import { ImagemProduto } from '@/components/ui/imagem-produto';
+import { ofertaVigenteHoje } from '@/lib/regras';
 
 // Flag client-only: durante o SSR, retorna null (mesmo que no client
 // antes do primeiro render). Hidratacao sempre bate. Apos o mount, o
@@ -50,7 +51,9 @@ export function OfertaRelampago() {
   const ofertas = useStore((s) => s.ofertas);
   const produtos = useStore((s) => s.produtos);
   if (!mounted) return null;
-  const oferta = ofertas.find((o) => o.tipo === 'relampago' && o.ativa && o.fimEm > new Date().toISOString() && new Date(o.inicioEm) <= new Date());
+  const oferta = ofertas.find(
+    (o) => o.tipo === 'relampago' && o.ativa && ofertaVigenteHoje(o, new Date()),
+  );
   if (!oferta) return null;
   const produto = produtos.find((p) => p.id === oferta.produtoId);
   if (!produto) return null;
@@ -117,7 +120,9 @@ export function OfertasSemana() {
   const agora = new Date();
   const isOuro = cliente && cliente.pontosAcumuladoTotal >= 4000;
 
-  const semRelampago = ofertas.filter((o) => o.tipo === 'semana' && o.ativa && o.fimEm > agora.toISOString());
+  const semRelampago = ofertas.filter(
+    (o) => o.tipo === 'semana' && o.ativa && ofertaVigenteHoje(o, agora),
+  );
   const visiveis: Oferta[] = [];
   for (const o of semRelampago) {
     const inicio = new Date(o.inicioEm);
@@ -131,7 +136,7 @@ export function OfertasSemana() {
   return (
     <section className="my-4">
       <div className="font-display font-extrabold uppercase text-xl tracking-tight mb-2">Ofertas da semana</div>
-      <div className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-2 snap-x">
+      <div className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-2 snap-x snap-mandatory [overflow-scrolling:touch]">
         {visiveis.map((o) => {
           const p = produtos.find((x) => x.id === o.produtoId);
           if (!p) return null;
@@ -139,7 +144,7 @@ export function OfertasSemana() {
             <Link
               key={o.id}
               href={`/loja/produto/${p.slug}`}
-              className="snap-start shrink-0 w-56 rounded-xl bg-branco border border-cinza-claro overflow-hidden hover:shadow-md transition-shadow"
+              className="snap-start shrink-0 basis-[44vw] max-w-[180px] sm:basis-56 sm:max-w-none rounded-xl bg-branco border border-cinza-claro overflow-hidden hover:shadow-md transition-shadow"
             >
               <div className="aspect-square bg-cinza-claro">
                 <ImagemProduto src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
