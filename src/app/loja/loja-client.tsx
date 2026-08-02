@@ -191,9 +191,9 @@ export default function LojaClient() {
         {/* Grade de produtos — por seção / categoria */}
         <section id="produtos" className="mt-6 space-y-10">
           {!carregado && produtos.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-lg bg-cinza-claro aspect-[3/4] animate-pulse" />
+                <div key={i} className="shrink-0 w-[44vw] max-w-[180px] sm:w-auto sm:max-w-none rounded-lg bg-cinza-claro aspect-[3/4] animate-pulse snap-start" />
               ))}
             </div>
           ) : (
@@ -206,9 +206,12 @@ export default function LojaClient() {
                   </h2>
                   <span className="text-xs text-preto/60 ml-1">{sec.produtos.length} itens</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* Mobile: carrossel horizontal com snap. Desktop (sm+): grid normal. */}
+                <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 lg:grid-cols-4">
                   {sec.produtos.map((p) => (
-                    <ProdutoCard key={p.id} produto={p} />
+                    <div key={p.id} className="shrink-0 w-[44vw] max-w-[180px] sm:w-auto sm:max-w-none snap-start">
+                      <ProdutoCard produto={p} />
+                    </div>
                   ))}
                 </div>
               </div>
