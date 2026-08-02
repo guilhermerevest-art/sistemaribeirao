@@ -7,7 +7,7 @@ import { brl, formatarData, formatarTelefone } from '@/lib/formato';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
-import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight, BarChart3, Sparkles, Wallet } from 'lucide-react';
+import { MessageCircle, RotateCcw, Users, DollarSign, ShoppingBag, Award, ChevronRight, BarChart3, Sparkles, Wallet, ShoppingCart, ChefHat, Tag, Megaphone, LayoutDashboard, ExternalLink } from 'lucide-react';
 import { BannerAniversariantes } from '@/components/ui/banner-aniversariantes';
 import { toast } from 'sonner';
 import type { Cliente, Frequencia } from '@/lib/types';
@@ -221,6 +221,72 @@ export default function PainelPage() {
             })}
           </ul>
         </section>
+
+        {/* Atalhos pros outros modulos do sistema */}
+        <section className="mt-6">
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="font-display font-extrabold uppercase text-lg">Outros modulos</h2>
+            <span className="text-[10px] uppercase tracking-wider text-carvao/50">Atalhos rapidos</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <Atalho
+              href="/bancada"
+              icon={<ShoppingCart className="w-5 h-5" />}
+              titulo="Bancada / KDS"
+              descricao="Fila de pedidos no balcao, impressao de cupom."
+              tom="carvao"
+            />
+            <Atalho
+              href="/cozinha"
+              icon={<ChefHat className="w-5 h-5" />}
+              titulo="Cozinha"
+              descricao="Pedidos em preparo com timer e botao de pronto."
+              tom="brasa"
+            />
+            <Atalho
+              href="/painel/ofertas"
+              icon={<Tag className="w-5 h-5" />}
+              titulo="Ofertas"
+              descricao="Criar e editar ofertas da semana e relampago."
+              tom="brasa"
+            />
+            <Atalho
+              href="/painel/campanhas"
+              icon={<Megaphone className="w-5 h-5" />}
+              titulo="Campanhas"
+              descricao="Montar listas pra reativar clientes no WhatsApp."
+              tom="brasa"
+            />
+            <Atalho
+              href="/painel/clientes"
+              icon={<Users className="w-5 h-5" />}
+              titulo="Clientes"
+              descricao="Lista completa com frequencia e saldo."
+              tom="carvao"
+            />
+            <Atalho
+              href="/painel/relatorios"
+              icon={<BarChart3 className="w-5 h-5" />}
+              titulo="Relatorios"
+              descricao="Exportar CSV e ver metricas detalhadas."
+              tom="carvao"
+            />
+            <Atalho
+              href="/backoffice"
+              icon={<LayoutDashboard className="w-5 h-5" />}
+              titulo="Backoffice"
+              descricao="Cadastros, combos, resgates e configuracoes."
+              tom="sangue"
+            />
+            <Atalho
+              href="/loja"
+              icon={<ExternalLink className="w-5 h-5" />}
+              titulo="Loja (cliente)"
+              descricao="Abrir a vitrine como se fosse o cliente."
+              tom="sangue"
+            />
+          </div>
+        </section>
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-4 text-center text-xs text-carvao/50">
@@ -253,5 +319,44 @@ function KPI({ label, valor, icon }: { label: string; valor: string; icon: React
       </div>
       <div className="font-mono font-extrabold text-lg sm:text-2xl mt-1.5 sm:mt-2 tabular-nums truncate">{valor}</div>
     </div>
+  );
+}
+
+const TOM_BG: Record<'sangue' | 'carvao' | 'brasa', string> = {
+  sangue: 'bg-sangue',
+  carvao: 'bg-carvao',
+  brasa: 'bg-brasa',
+};
+
+function Atalho({
+  href,
+  icon,
+  titulo,
+  descricao,
+  tom,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  titulo: string;
+  descricao: string;
+  tom: 'sangue' | 'carvao' | 'brasa';
+}) {
+  return (
+    <Link
+      href={href}
+      className="group bg-azulejo border border-sebo rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow flex flex-col gap-2 min-w-0"
+    >
+      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md ${TOM_BG[tom]} text-papel grid place-items-center shrink-0`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="font-display font-extrabold uppercase text-sm sm:text-base leading-tight truncate">
+          {titulo}
+        </div>
+        <div className="text-[11px] sm:text-xs text-carvao/70 mt-1 line-clamp-2">
+          {descricao}
+        </div>
+      </div>
+    </Link>
   );
 }
