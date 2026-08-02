@@ -207,9 +207,9 @@ export default function LojaClient() {
                   <span className="text-xs text-preto/60 ml-1">{sec.produtos.length} itens</span>
                 </div>
                 {/* Mobile: carrossel horizontal com snap. Desktop (sm+): grid normal. */}
-                <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 lg:grid-cols-4">
+                <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-2 snap-x snap-mandatory [overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 lg:grid-cols-4">
                   {sec.produtos.map((p) => (
-                    <div key={p.id} className="shrink-0 w-[44vw] max-w-[180px] sm:w-auto sm:max-w-none snap-start">
+                    <div key={p.id} className="shrink-0 basis-[44vw] max-w-[180px] sm:basis-auto sm:max-w-none snap-start">
                       <ProdutoCard produto={p} />
                     </div>
                   ))}
