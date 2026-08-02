@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+/* Tailwind 4 com @tailwindcss/postcss precisa de @source explicito
+   pra varrer o codigo em busca de classes. Sem isso, classes como
+   basis-[44vw], aspect-[5/6], overflow-scrolling:touch nao sao
+   geradas no CSS final. O path "../**" varre recursivamente todos
+   os arquivos em src/, incluindo .ts, .tsx, .css, .js. */
+@source "../**";
+
 /* Ribeirão — tokens visuais. Paleta cliente: branco + vermelho + amarelo. */
 :root {
   /* Cores principais (aliases novos e antigos convivem). */
