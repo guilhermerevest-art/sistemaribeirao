@@ -67,6 +67,8 @@ export type OfertaRow = {
   ativa: boolean;
   combo_id: string | null;
   brinde_produto_id: string | null;
+  /** Recorrência semanal: 0=domingo, 6=sábado. Vazio = todos os dias. */
+  dias_semana: number[];
   created_at: string;
 };
 

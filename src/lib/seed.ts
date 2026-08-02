@@ -786,11 +786,13 @@ export const OFERTAS: Oferta[] = [
     precoDe: 89.9,
     precoPor: 79.9,
     inicioEm: diasAtrasISO(1, 0),
-    fimEm: new Date(HOJE.getTime() + 5 * 86400000).toISOString(),
+    fimEm: new Date(HOJE.getTime() + 60 * 86400000).toISOString(),
     limitePorCliente: 3,
     quantidadeVendidaKg: 0,
     chamada: 'Picanha com 10% off',
     ativa: true,
+    // Recorrente: sexta, sábado e domingo — fim de semana é o pico.
+    diasSemana: [5, 6, 0],
   },
   {
     id: 'o-fraldinha-semana',
@@ -799,11 +801,12 @@ export const OFERTAS: Oferta[] = [
     precoDe: 47.9,
     precoPor: 42.9,
     inicioEm: diasAtrasISO(1, 0),
-    fimEm: new Date(HOJE.getTime() + 5 * 86400000).toISOString(),
+    fimEm: new Date(HOJE.getTime() + 30 * 86400000).toISOString(),
     limitePorCliente: 2,
     quantidadeVendidaKg: 0,
     chamada: 'Fraldinha que vira churrasco',
     ativa: true,
+    diasSemana: [5, 6],
   },
   {
     id: 'o-linguica-semana',
@@ -812,11 +815,13 @@ export const OFERTAS: Oferta[] = [
     precoDe: 29.9,
     precoPor: 24.9,
     inicioEm: diasAtrasISO(1, 0),
-    fimEm: new Date(HOJE.getTime() + 5 * 86400000).toISOString(),
+    fimEm: new Date(HOJE.getTime() + 30 * 86400000).toISOString(),
     limitePorCliente: 2,
     quantidadeVendidaKg: 0,
     chamada: 'Toscana que sempre volta',
     ativa: true,
+    // Toda sexta e sábado — o clássico churrasco de fim de semana.
+    diasSemana: [5, 6],
   },
   {
     id: 'o-alcatra-relampago',
@@ -831,6 +836,7 @@ export const OFERTAS: Oferta[] = [
     quantidadeVendidaKg: 12,
     chamada: 'Só hoje até acabar',
     ativa: true,
+    // Relâmpago: sem recorrência, vale enquanto não acabar ou virar o dia.
   },
 ];
 

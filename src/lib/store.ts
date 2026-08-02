@@ -168,6 +168,7 @@ function mapOferta(r: OfertaRow): Oferta {
     ativa: r.ativa,
     comboId: r.combo_id ?? undefined,
     brindeProdutoId: r.brinde_produto_id ?? undefined,
+    diasSemana: Array.isArray(r.dias_semana) ? r.dias_semana : [],
   };
 }
 
@@ -305,6 +306,12 @@ interface Actions {
   criarOferta: (o: Oferta) => Promise<void>;
   atualizarOferta: (o: Oferta) => Promise<void>;
   desativarOferta: (id: string) => Promise<void>;
+  /**
+   * Liga/desliga a flag `ativa` da oferta. Equivalente a "ativar" quando
+   * está desativada e "desativar" quando está ativa — usado no botão
+   * único do painel de promoções. Não apaga a oferta.
+   */
+  alternarAtivacaoOferta: (id: string) => Promise<void>;
 
   // Combos
   criarCombo: (c: Combo) => Promise<void>;
@@ -856,6 +863,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
       ativa: o.ativa,
       combo_id: o.comboId ?? null,
       brinde_produto_id: o.brindeProdutoId ?? null,
+      dias_semana: o.diasSemana ?? [],
     });
     if (error) throw new Error(error.message);
     await get().recarregarOfertas();
@@ -881,6 +889,7 @@ export const useStore = create<State & Actions>()((set, get) => ({
       ativa: o.ativa,
       combo_id: o.comboId ?? null,
       brinde_produto_id: o.brindeProdutoId ?? null,
+      dias_semana: o.diasSemana ?? [],
     }).eq('id', o.id);
     if (error) throw new Error(error.message);
     await get().recarregarOfertas();
@@ -893,6 +902,22 @@ export const useStore = create<State & Actions>()((set, get) => ({
       return;
     }
     await supabase().from('ofertas').update({ ativa: false }).eq('id', id);
+    await get().recarregarOfertas();
+  },
+
+  alternarAtivacaoOferta: async (id) => {
+    const oferta = get().ofertas.find((o) => o.id === id);
+    if (!oferta) return;
+    const proximaAtiva = !oferta.ativa;
+    if (!get().online) {
+      set((s) => ({
+        ofertas: s.ofertas.map((o) => (o.id === id ? { ...o, ativa: proximaAtiva } : o)),
+      }));
+      gravarSnapshotOffline(snapshotFromState(get()));
+      return;
+    }
+    const { error } = await supabase().from('ofertas').update({ ativa: proximaAtiva }).eq('id', id);
+    if (error) throw new Error(error.message);
     await get().recarregarOfertas();
   },
 

@@ -213,6 +213,7 @@ export function ofertaAtivaPara(
     const inicio = new Date(o.inicioEm);
     const fim = new Date(o.fimEm);
     if (agora < inicio || agora > fim) return false;
+    if (!ofertaVigenteHoje(o, agora)) return false;
     if (o.tipo === 'relampago') {
       if (o.quantidadeTotalKg && o.quantidadeVendidaKg >= o.quantidadeTotalKg) {
         return false;
@@ -232,6 +233,52 @@ export function ofertaAtivaPara(
     if (agora.getTime() >= inicio + 24 * 3600 * 1000) return semana;
   }
   return undefined;
+}
+
+/**
+ * Verifica se a oferta deve aparecer HOJE, considerando o intervalo
+ * `inicioEm`/`fimEm` e a recorrência semanal (`diasSemana`). A função
+ * ignora o campo `ativa` — quem chama decide se quer só as ativas.
+ *
+ * Comportamento:
+ *   - `diasSemana` ausente ou vazio → sempre que hoje está no intervalo.
+ *   - `diasSemana` definido          → só quando `getDay()` bate.
+ */
+export function ofertaVigenteHoje(oferta: Oferta, agora: Date): boolean {
+  const inicio = new Date(oferta.inicioEm);
+  const fim = new Date(oferta.fimEm);
+  if (agora < inicio || agora > fim) return false;
+  const dias = oferta.diasSemana;
+  if (!dias || dias.length === 0) return true;
+  return dias.includes(agora.getDay());
+}
+
+/**
+ * Próxima data (>= `agora`) em que a oferta fica visível, considerando o
+ * período e a recorrência semanal. Devolve `null` se já passou do fim.
+ * Útil para mostrar "abre de novo na sexta" no painel.
+ */
+export function proximaOcorrenciaOferta(
+  oferta: Oferta,
+  agora: Date,
+): Date | null {
+  const fim = new Date(oferta.fimEm);
+  if (agora > fim) return null;
+  const inicio = new Date(oferta.inicioEm);
+  const base = agora < inicio ? inicio : agora;
+  const dias = oferta.diasSemana && oferta.diasSemana.length > 0
+    ? oferta.diasSemana
+    : null;
+  // Busca o próximo dia (incluindo hoje) que satisfaz o filtro.
+  const candidato = new Date(base);
+  candidato.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(candidato);
+    d.setDate(d.getDate() + i);
+    if (d > fim) return null;
+    if (!dias || dias.includes(d.getDay())) return d;
+  }
+  return null;
 }
 
 // Quanto da oferta já está efetivamente reservado pelos itens do

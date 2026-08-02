@@ -5,9 +5,16 @@ import { useStore } from '@/lib/store';
 import { brl, formatarData, formatarHora } from '@/lib/formato';
 import { Button } from '@/components/ui/button';
 import { AdminHeader } from '@/components/ui/admin-header';
-import { Plus, X, Save, Power, Pencil } from 'lucide-react';
+import { Plus, X, Save, Power, Pencil, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Oferta } from '@/lib/types';
+import {
+  DIAS_SEMANA,
+  DIAS_UTEIS,
+  FINS_DE_SEMANA,
+  TODOS_OS_DIAS,
+  type Oferta,
+} from '@/lib/types';
+import { proximaOcorrenciaOferta } from '@/lib/regras';
 
 import { useNoIndex } from '@/components/ui/use-no-index';
 function inicioDeHojeISO(): string {
@@ -28,13 +35,28 @@ function daquiUmDiaISO(): string {
   return d.toISOString();
 }
 
+// Junta 0..6 em rótulo curto tipo "SEX·SÁB". Quando vazio, mostra
+// "Todos os dias" pra deixar claro o comportamento legado.
+function resumirDias(dias: number[] | undefined): string {
+  if (!dias || dias.length === 0) return 'Todos os dias';
+  if (dias.length === 7) return 'Todos os dias';
+  const set = new Set(dias);
+  if (set.size === 5 && DIAS_UTEIS.every((d) => set.has(d))) return 'Dias úteis';
+  if (set.size === 2 && FINS_DE_SEMANA.every((d) => set.has(d))) return 'Fins de semana';
+  return dias
+    .slice()
+    .sort((a, b) => a - b)
+    .map((d) => DIAS_SEMANA[d].curto)
+    .join('·');
+}
+
 export default function BackofficePromocoesPage() {
   useNoIndex();
   const ofertas = useStore((s) => s.ofertas);
   const produtos = useStore((s) => s.produtos);
   const criar = useStore((s) => s.criarOferta);
   const atualizar = useStore((s) => s.atualizarOferta);
-  const desativar = useStore((s) => s.desativarOferta);
+  const alternar = useStore((s) => s.alternarAtivacaoOferta);
 
   const [modal, setModal] = useState<{ tipo: 'criar' | 'editar'; oferta?: Oferta } | null>(null);
 
@@ -58,6 +80,8 @@ export default function BackofficePromocoesPage() {
             const p = produtos.find((x) => x.id === o.produtoId);
             const total = o.quantidadeTotalKg;
             const pctVendido = total ? Math.min(100, (o.quantidadeVendidaKg / total) * 100) : 0;
+            const resumoDias = resumirDias(o.diasSemana);
+            const ehRecorrente = !!o.diasSemana && o.diasSemana.length > 0 && o.diasSemana.length < 7;
             return (
               <li key={o.id} className="bg-azulejo border border-sebo rounded-xl p-3">
                 <div className="flex items-start gap-2">
@@ -72,6 +96,11 @@ export default function BackofficePromocoesPage() {
                       )}
                       {o.brindeProdutoId && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-verde-fiel text-papel">BRINDE</span>
+                      )}
+                      {ehRecorrente && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amarelo text-carvao">
+                          Recorrente · {resumoDias}
+                        </span>
                       )}
                     </div>
                     <div className="font-display font-bold uppercase truncate mt-1">{p?.nome}</div>
@@ -105,14 +134,21 @@ export default function BackofficePromocoesPage() {
                   </button>
                   <button
                     onClick={() => {
-                      if (!o.ativa) return;
-                      void desativar(o.id);
-                      toast.success('Promoção desativada');
+                      const proximaAtiva = !o.ativa;
+                      void alternar(o.id);
+                      toast.success(proximaAtiva ? 'Promoção reativada' : 'Promoção desativada');
                     }}
-                    disabled={!o.ativa}
-                    className="h-11 rounded-md bg-sebo-claro text-carvao text-xs font-semibold flex items-center justify-center gap-1 disabled:opacity-40"
+                    className={`h-11 rounded-md text-xs font-semibold flex items-center justify-center gap-1 ${
+                      o.ativa
+                        ? 'bg-sebo-claro text-carvao'
+                        : 'bg-verde-fiel text-papel'
+                    }`}
                   >
-                    <Power className="w-4 h-4" /> {o.ativa ? 'Desativar' : 'Inativa'}
+                    {o.ativa ? (
+                      <><Power className="w-4 h-4" /> Desativar</>
+                    ) : (
+                      <><Check className="w-4 h-4" /> Reativar</>
+                    )}
                   </button>
                 </div>
               </li>
@@ -171,8 +207,39 @@ function ModalPromocao({
   const [chamada, setChamada] = useState(oferta?.chamada ?? '');
   const [comboId, setComboId] = useState(oferta?.comboId ?? '');
   const [brindeProdutoId, setBrindeProdutoId] = useState(oferta?.brindeProdutoId ?? '');
+  // `diasSemana` é a recorrência semanal. Quando vazio, vale todos os
+  // dias do intervalo (legado). Quando preenchido, só nos dias marcados.
+  const [diasSemana, setDiasSemana] = useState<number[]>(oferta?.diasSemana ?? []);
 
   const produto = produtos.find((p) => p.id === produtoId);
+  const ehRecorrente = diasSemana.length > 0;
+  const proxima = ehRecorrente
+    ? proximaOcorrenciaOferta(
+        {
+          id: '',
+          tipo,
+          produtoId,
+          precoDe,
+          precoPor,
+          inicioEm,
+          fimEm,
+          chamada: chamada || ' ',
+          ativa: true,
+          quantidadeVendidaKg: 0,
+          diasSemana,
+        },
+        new Date(),
+      )
+    : null;
+
+  function alternarDia(d: number) {
+    setDiasSemana((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b),
+    );
+  }
+  function setAtalho(dias: number[]) {
+    setDiasSemana(dias.slice());
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-carvao/60 flex items-end sm:items-center justify-center sm:p-4">
@@ -262,6 +329,71 @@ function ModalPromocao({
             </label>
           </div>
 
+          {tipo === 'semana' && (
+            <fieldset className="border border-sebo rounded-md p-3">
+              <legend className="text-xs text-carvao/70 px-1">Recorrência semanal</legend>
+              <p className="text-[11px] text-carvao/60 mb-2">
+                Sem dias marcados, vale todos os dias do período. Marque os dias em que a oferta
+                deve aparecer — toda sexta e sábado, por exemplo.
+              </p>
+              <div className="flex items-center gap-1">
+                {DIAS_SEMANA.map((d) => {
+                  const ativo = diasSemana.includes(d.valor);
+                  return (
+                    <button
+                      key={d.valor}
+                      type="button"
+                      onClick={() => alternarDia(d.valor)}
+                      title={d.longo}
+                      className={`w-10 h-10 rounded-md font-display font-bold text-sm border ${
+                        ativo
+                          ? 'bg-sangue text-papel border-sangue'
+                          : 'bg-azulejo text-carvao border-sebo'
+                      }`}
+                    >
+                      {d.curto}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  onClick={() => setAtalho([])}
+                  className="text-[11px] h-8 px-2 rounded-md bg-sebo-claro text-carvao"
+                >
+                  Limpar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAtalho(DIAS_UTEIS)}
+                  className="text-[11px] h-8 px-2 rounded-md bg-sebo-claro text-carvao"
+                >
+                  Dias úteis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAtalho(FINS_DE_SEMANA)}
+                  className="text-[11px] h-8 px-2 rounded-md bg-sebo-claro text-carvao"
+                >
+                  Fins de semana
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAtalho(TODOS_OS_DIAS)}
+                  className="text-[11px] h-8 px-2 rounded-md bg-sebo-claro text-carvao"
+                >
+                  Todos
+                </button>
+              </div>
+              {ehRecorrente && proxima && (
+                <div className="mt-2 text-[11px] text-carvao/70 font-mono">
+                  Próxima abertura: {formatarData(proxima.toISOString())}
+                </div>
+              )}
+            </fieldset>
+          )}
+
           {produto && precoPor > 0 && (
             <div className="border border-sebo rounded-md p-3 bg-sebo-claro text-sm">
               <div className="text-xs text-carvao/70 mb-2">Pré-visualização na loja</div>
@@ -270,6 +402,9 @@ function ModalPromocao({
                 <div className="flex-1 min-w-0">
                   <div className="font-display font-bold uppercase text-sm truncate">{produto.nome}</div>
                   <div className="text-xs text-carvao/60 truncate">{chamada || 'Oferta especial'}</div>
+                  {ehRecorrente && (
+                    <div className="text-[10px] text-carvao/70 mt-0.5">Recorrente · {resumirDias(diasSemana)}</div>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <div className="font-mono line-through text-carvao/50 text-xs">{brl(precoDe)}</div>
@@ -298,6 +433,8 @@ function ModalPromocao({
                 chamada: chamada || (tipo === 'relampago' ? 'Só hoje até acabar' : 'Oferta da semana'),
                 comboId: comboId || undefined,
                 brindeProdutoId: brindeProdutoId || undefined,
+                // Relâmpago não faz sentido com recorrência — só "semana".
+                diasSemana: tipo === 'semana' ? diasSemana : undefined,
               });
             }}
           >

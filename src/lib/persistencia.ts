@@ -16,7 +16,7 @@ const CHAVE = 'ribeirao-mock-v1';
 // Versão atual do schema do snapshot. Quando o formato mudar, incre-
 // mente e adicione uma migration em `migrarSnapshot`. Snapshots anti-
 // gos (sem `_v`) são tratados como versão 0.
-const VERSAO_ATUAL = 4;
+const VERSAO_ATUAL = 5;
 
 export const ESTABELECIMENTO_PADRAO: Estabelecimento = {
   nomeFantasia: 'Empório Ribeirão',
@@ -70,6 +70,14 @@ function migrarSnapshot(s: SnapshotOffline): SnapshotOffline {
     // v3 → v4: adicionadas `receitasFavoritas` (favoritos da cliente).
     s.receitasFavoritas = s.receitasFavoritas ?? [];
     v = 4;
+  }
+  if (v < 5) {
+    // v4 → v5: ofertas agora podem ter recorrência semanal
+    // (`diasSemana: number[]`). Snapshots antigos não tinham o campo —
+    // `undefined` mantém o comportamento legado (oferta vale todos os
+    // dias do intervalo).
+    s.ofertas = (s.ofertas ?? []).map((o) => ({ ...o, diasSemana: o.diasSemana ?? [] }));
+    v = 5;
   }
   s._v = v;
   return s;

@@ -112,6 +112,12 @@ export interface Indicacao {
   recompensaCreditadaEm?: string;
 }
 
+/**
+ * Oferta ativa dentro de um intervalo (`inicioEm` → `fimEm`) e, quando tem
+ * recorrência, só nos dias da semana marcados. Dias seguem `Date#getDay`
+ * (0 = domingo, 6 = sábado). Se `diasSemana` for `undefined` ou vazio, a
+ * oferta fica ativa em todos os dias do intervalo (comportamento legado).
+ */
 export interface Oferta {
   id: string;
   tipo: 'semana' | 'relampago';
@@ -127,7 +133,29 @@ export interface Oferta {
   ativa: boolean;
   comboId?: string;
   brindeProdutoId?: string;
+  /**
+   * Recorrência semanal. Quando definido, a oferta só fica visível nos
+   * dias da semana marcados, dentro do período `inicioEm`/`fimEm`. A cada
+   * virada de semana, a oferta reabre sozinha — sem precisar cadastrar
+   * uma nova. Use `[5, 6]` para "toda sexta e sábado".
+   */
+  diasSemana?: number[];
 }
+
+/** Rótulos canônicos dos 7 dias da semana (0 = domingo). */
+export const DIAS_SEMANA: { valor: number; curto: string; longo: string }[] = [
+  { valor: 0, curto: 'D', longo: 'Domingo' },
+  { valor: 1, curto: 'S', longo: 'Segunda' },
+  { valor: 2, curto: 'T', longo: 'Terça' },
+  { valor: 3, curto: 'Q', longo: 'Quarta' },
+  { valor: 4, curto: 'Q', longo: 'Quinta' },
+  { valor: 5, curto: 'S', longo: 'Sexta' },
+  { valor: 6, curto: 'S', longo: 'Sábado' },
+];
+
+export const DIAS_UTEIS = [1, 2, 3, 4, 5];
+export const FINS_DE_SEMANA = [0, 6];
+export const TODOS_OS_DIAS = [0, 1, 2, 3, 4, 5, 6];
 
 export interface Resgate {
   id: string;
