@@ -55,6 +55,11 @@
 html, body {
   background: var(--branco);
   color: var(--preto);
+  /* Corta scroll horizontal que algum componente da vitrine (geralmente
+     img absoluta ou carrossel que escapa do container) cause. Mantém
+     o scroll vertical normal. Sem isso, no mobile aparece uma faixa
+     branca à direita quando algum filho estourou a viewport. */
+  overflow-x: clip;
 }
 
 *:focus-visible {
